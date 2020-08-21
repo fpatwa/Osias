@@ -30,7 +30,7 @@ before_script:
   - virtualenv venv
   - source venv/bin/activate
 
-.run
+.run:
   script:
     - python setup.py bdist_wheel
     # an alternative approach is to install and run:
