@@ -30,6 +30,10 @@ before_script:
   - virtualenv venv
   - source venv/bin/activate
 
+bootstrap:
+  stage: bootstrap
+  tags: docker
+
 .run:
   script:
     - python setup.py bdist_wheel
