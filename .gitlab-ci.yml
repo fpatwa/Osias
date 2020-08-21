@@ -4,6 +4,7 @@ default:
   image: python:3.5-buster
 
 stages:
+  - .pre
   - bootstrap
   - deploy_ceph
   - deploy_openstack
@@ -31,13 +32,51 @@ before_script:
   - virtualenv venv
   - source venv/bin/activate
 
+pre_cleanup:
+  stage: .pre
+  tags:
+    - docker
+  script:
+    # Prepare a clean environment - cleanup servers to be used for deploy
+    # Ensure there is no ceph and openstack deployment on the servers
+    - uname -a
+    - python -V
+
 bootstrap:
   stage: bootstrap
   tags:
     - docker
   script:
+    # Run bootstrap across the servers for installing the pre-reqs for CEPH and openstack
     - python -V
 
+deploy:ceph:
+  stage: deploy_ceph
+  tags:
+    - docker
+  script:
+    # Deploy ceph on target servers using cephadm
+    - python -V
+
+deploy:openstack:
+  stage: deploy_openstack
+  tags:
+    - docker
+  script:
+    # Deploy openstack on target servers using kolla
+    # 1. Configure kolla options for ceph
+    # 2. Run Kolla pre-setup
+    # 3. Run Kolla deploy
+    - python -V
+
+test:
+  stage: test
+  tags:
+    - docker
+  script:
+    # Run refstack tests to ensure that the openstack deploy on target servers is functional
+    - python -V
+    
 .run:
   script:
     - python setup.py bdist_wheel
