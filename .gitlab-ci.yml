@@ -1,13 +1,14 @@
 default:
   # Official language image. Look for the different tagged releases at:
   # https://hub.docker.com/r/library/python/tags/
-  image: python:3.5-buster
+  image: python:3.7-buster
 
 stages:
   - .pre
   - bootstrap
   - deploy_ceph
   - deploy_openstack
+  - setup
   - test
   - cleanup
 
@@ -68,6 +69,15 @@ deploy:openstack:
     # 2. Run Kolla pre-setup
     # 3. Run Kolla deploy
     - python -V
+
+setup:openstack:
+  stage: setup
+  tags:
+    - docker
+  script:
+    - pip install python-openstackclient==5.2.1
+    - openstack -h
+    # Setup the openstack cloud with public network, images, flavors etc.
 
 test:
   stage: test
