@@ -27,30 +27,42 @@ cache:
     - .cache/pip
     - venv/
 
-.setup:
+.base_setup:
   tags:
     - docker-runner
-
+  variables:
+    NODE1: 10.245.122.30
+    NODE2: 10.245.122.32
+    NODE3: 10.245.122.33
+    EXEC_SCRIPT: test.sh
+    
 before_script:
+  # Setup and add SSH_PRIVATE_KEY to ssh agent
+  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+  - eval $(ssh-agent -s)
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  #
   - python -V  # Print out python version for debugging
   - pip install virtualenv
   - virtualenv venv
   - source venv/bin/activate
+  - echo "hostname;uname -a;exit" > test.sh
 
 pre_cleanup:
   stage: .pre
   extends:
-    - .setup
+    - .base_setup
   script:
     # Prepare a clean environment - cleanup servers to be used for deploy
     # Ensure there is no ceph and openstack deployment on the servers
-    - uname -a
-    - python -V
+    - python3 deploy.py -s $EXEC_SCRIPT -n $NODE2
 
 bootstrap:
   stage: bootstrap
   extends:
-    - .setup
+    - .base_setup
   script:
     # Run bootstrap across the servers for installing the pre-reqs for CEPH and openstack
     - python -V
@@ -58,7 +70,7 @@ bootstrap:
 deploy:ceph:
   stage: deploy_ceph
   extends:
-    - .setup
+    - .base_setup
   script:
     # Deploy ceph on target servers using cephadm
     - python -V
@@ -66,7 +78,7 @@ deploy:ceph:
 deploy:openstack:
   stage: deploy_openstack
   extends:
-    - .setup
+    - .base_setup
   script:
     # Deploy openstack on target servers using kolla
     # 1. Configure kolla options for ceph
@@ -77,7 +89,7 @@ deploy:openstack:
 setup:openstack:
   stage: setup
   extends:
-    - .setup
+    - .base_setup
   script:
     - pip install python-openstackclient==5.2.1
     - openstack -h
@@ -86,7 +98,7 @@ setup:openstack:
 test:
   stage: test
   extends:
-    - .setup
+    - .base_setup
   script:
     # Run refstack tests to ensure that the openstack deploy on target servers is functional
     - python -V
