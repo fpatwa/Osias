@@ -16,6 +16,7 @@ class ssh_tool():
             keyls = ['-i', self.sshkey]
 
         call_list = ['ssh'] + keyls + ['-o', 'StrictHostKeyChecking=no',
+                                       '-o', 'ConnectTimeout=10',
                                        '-o', 'BatchMode=yes']
 
         if option:
@@ -50,6 +51,18 @@ class ssh_tool():
         else:
             return ret
 
+    def check_access(self):
+        # Check if the machine is accessible:
+        for i in range(30):
+            out = self.ssh('uname -a', test=False)
+            if out == 0:
+                print('Successfully connected to {}'.format(self.ip))
+                return True
+            else:
+                print('Failed to connect to {}, Retry in 20 seconds'.format(self.ip))
+                time.sleep(20)
+        return False
+
     def scp_to(self, file_path_local, file_path_remote='', test=True):
 
         if (self.sshkey is None):
@@ -73,17 +86,6 @@ class ssh_tool():
             assert ret == 0
 
         return ret
-
-    def check_access(self):
-        # Check if the machine is accessible:
-        for i in range(60):
-            out = self.ssh('uname -a', test=False)
-            if out == 0:
-                print('Successfully connected to {}'.format(self.ip))
-                return True
-            else:
-                time.sleep(5)
-        return False
 
     def scp_from(self, file_path_local, file_path_remote='', test=True):
 

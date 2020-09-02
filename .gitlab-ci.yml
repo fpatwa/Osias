@@ -4,7 +4,7 @@ default:
   image: python:3.7-buster
 
 stages:
-  - .pre
+  - pre_cleanup
   - bootstrap
   - deploy_ceph
   - deploy_openstack
@@ -31,52 +31,61 @@ cache:
   tags:
     - docker-runner
   variables:
-    NODE1: 10.245.122.30
-    NODE2: 10.245.122.32
-    NODE3: 10.245.122.33
-    EXEC_SCRIPT: test.sh
-    
+    EXCEC_SCRIPT: test.sh
+
 before_script:
   # Setup and add SSH_PRIVATE_KEY to ssh agent
-  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+  - 'which ssh-agent || ( apt-get update -qqy && apt-get install openssh-client -qqy )'
   - eval $(ssh-agent -s)
   - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
   - mkdir -p ~/.ssh
   - chmod 700 ~/.ssh
   #
-  - python -V  # Print out python version for debugging
-  - pip install virtualenv
-  - virtualenv venv
-  - source venv/bin/activate
-  - echo "hostname;uname -a;exit" > test.sh
+  #- python -V  # Print out python version for debugging
+  #- pip install virtualenv
+  #- virtualenv venv
+  #- source venv/bin/activate
 
 pre_cleanup:
-  stage: .pre
+  stage: pre_cleanup
   extends:
     - .base_setup
   script:
+    # Configure the networking and bridge for openstack.
+    #- for node in $NODES_PUBLIC_IP; do python3 deploy.py --scp "rc.local" -c -n $node;done
+    #- for node in $NODES_PUBLIC_IP; do python3 deploy.py -c "echo '01-netcfg.yaml copied'" --scp "01-netcfg.yaml" -n $node;done
+    #- for node in $NODES_PUBLIC_IP; do python3 deploy.py -c "echo '02-netcfg.yaml copied'" --scp "02-netcfg.yaml" -n $node;done
+    - for node in $NODES_PUBLIC_IP; do python3 deploy.py --sudo --scp -c "bootstrap_servers.sh" -n $node;done
     # Prepare a clean environment - cleanup servers to be used for deploy
     # Ensure there is no ceph and openstack deployment on the servers
-    - python3 deploy.py -s $EXEC_SCRIPT -n $NODE2
-
-bootstrap:
+    - python3 deploy.py --scp -c "cleanup.sh" --args "$NODES_PRIVATE_IP" -n $DEPLOY_NODE_IP
+    # Restart the nodes to complete the cleanup
+    - for node in $NODES_PUBLIC_IP; do python3 deploy.py --sudo -c "shutdown -r 1" -n $node;done
+    # Verify that the servers are up and online.
+    - for node in $NODES_PUBLIC_IP; do python3 deploy.py -c "echo Server is UP!" -n $node;done
+ 
+bootstrap:openstack:
   stage: bootstrap
+  needs: ["pre_cleanup"]
   extends:
     - .base_setup
   script:
     # Run bootstrap across the servers for installing the pre-reqs for CEPH and openstack
-    - python -V
+    - python3 deploy.py --scp -c "bootstrap_openstack.sh" -n $DEPLOY_NODE_IP
 
 deploy:ceph:
   stage: deploy_ceph
+  needs: ["bootstrap:openstack"]
   extends:
     - .base_setup
   script:
     # Deploy ceph on target servers using cephadm
-    - python -V
+    - python3 deploy.py --sudo --scp -c "bootstrap_ceph.sh" --args "$DEPLOY_NODE_PRIVATE_IP" -n $DEPLOY_NODE_IP
+    - python3 deploy.py --sudo --scp -c "deploy_ceph.sh" -n $DEPLOY_NODE_IP
 
 deploy:openstack:
   stage: deploy_openstack
+  needs: ["deploy:ceph"]
   extends:
     - .base_setup
   script:
@@ -84,10 +93,11 @@ deploy:openstack:
     # 1. Configure kolla options for ceph
     # 2. Run Kolla pre-setup
     # 3. Run Kolla deploy
-    - python -V
+    - python3 deploy.py --scp -c "deploy_openstack.sh" -n $DEPLOY_NODE_IP
 
 setup:openstack:
   stage: setup
+  needs: ["deploy:openstack"]
   extends:
     - .base_setup
   script:
@@ -101,7 +111,8 @@ test:
     - .base_setup
   script:
     # Run refstack tests to ensure that the openstack deploy on target servers is functional
-    - python -V
+    - python3 deploy.py --sudo --scp -c "verifications.sh" -n $DEPLOY_NODE_IP
+
     
 .run:
   script:
