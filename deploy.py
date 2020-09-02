@@ -17,11 +17,26 @@ def parse_args():
         required=False,
         help="The path to the SSH key used to access the target node")
     parser.add_argument(
-        "-s",
-        "--script_name",
+        "--sudo",
+        action="store_true",
+        required=False,
+        help="Option to elevate to sudo")
+    parser.add_argument(
+        "--scp",
+        action="store_true",
+        required=False,
+        help="Option to scp script to the target node")
+    parser.add_argument(
+        "-c",
+        "--command",
         type=str,
         required=True,
-        help="The name of the script that will scp'ed to the target node and run")
+        help="The command/script that will be run on the target node")
+    parser.add_argument(
+        "--args",
+        type=str,
+        required=False,
+        help="Arguments that will be passed in to the script to be run on the target node")
     parser.add_argument(
         "-n",
         "--target_node",
@@ -47,8 +62,24 @@ def main():
             'ERROR: Failed to connect to target node with IP {} using SSH'.format(
                 args.target_node))
 
-    client.scp_to(args.script_name)
-    client.ssh('source ' + args.script_name)
+    cmd = args.command
+
+    if args.args:
+        cmd = ''.join((args.command, ' "', args.args, '"'))
+
+    if args.scp:
+        if not os.path.isfile(args.command):
+            raise Exception(
+                'ERROR: Specified script to scp {} does not exist', format(
+                    args.command))
+        else:
+            cmd = ''.join(('source ', cmd))
+            client.scp_to(args.command)
+
+    if args.sudo:
+        cmd = ''.join(('sudo -s ', cmd))
+
+    client.ssh(cmd)
 
 
 if __name__ == '__main__':
