@@ -1,3 +1,4 @@
+#!/bin/bash
 
 # Dependencies
 sudo apt-get update

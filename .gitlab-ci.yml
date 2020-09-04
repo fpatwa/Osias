@@ -101,8 +101,9 @@ setup:openstack:
   extends:
     - .base_setup
   script:
-    - pip install python-openstackclient==5.2.1
-    - openstack -h
+    # - pip install python-openstackclient==5.2.1
+    # - openstack -h
+    - python3 deploy.py --sudo --scp -c "day2_openstack.sh" -n $DEPLOY_NODE_IP
     # Setup the openstack cloud with public network, images, flavors etc.
 
 test:
@@ -111,6 +112,7 @@ test:
     - .base_setup
   script:
     # Run refstack tests to ensure that the openstack deploy on target servers is functional
+    
     - python3 deploy.py --sudo --scp -c "verifications.sh" -n $DEPLOY_NODE_IP
 
     
