@@ -1,4 +1,6 @@
+#!/bin/bash
 
+cd /home/"$USER"
 git clone https://github.com/openstack/refstack-client
 cd refstack-client
 ./setup_env -t 24.0.0
