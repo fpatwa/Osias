@@ -21,9 +21,9 @@ do
     echo ""
     echo "Working on Node [$node]"
 
-    # Remove all docker containers and ceph images
-    ssh $node sudo docker rm -f $(sudo docker ps -q)
-    ssh $node sudo docker rmi $(docker images -a -q)
+    # This will remove: all stopped containers, all networks not used by at least one container, 
+    # all volumes not used by at least one container, all dangling images, all build cache
+    ssh $node sudo docker system prune --volumes --force
 
     # Get the last device in the device list (most likely this is the secondary disk used for ceph)
     device=$(ssh $node lsblk |grep disk |tail -1 |awk '{print $1}')
