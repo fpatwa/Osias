@@ -64,3 +64,4 @@ trigger-jobs:
     include:
       - artifact: jobs-config.yml
         job: generate-config
+    strategy: depend
