@@ -24,10 +24,10 @@ variables:
 #
 # If you want to also cache the installed packages, you have to install
 # them in a virtualenv and cache it as well.
-cache:
-  paths:
-    - .cache/pip
-    - venv/
+#cache:
+#  paths:
+#    - .cache/pip
+#    - venv/
 
 .base_setup:
   tags:
@@ -52,7 +52,7 @@ generate-config:
   stage: generate_config
   script:
     - chmod +x generate_configs.sh
-    - ./generate_configs.sh "$NODES"
+    - ./generate_configs.sh "$NODES_PUBLIC_IP"
     - git status
   artifacts:
     paths:
