@@ -51,7 +51,7 @@ before_script:
 generate-config:
   stage: generate_config
   script:
-    - ./generate_configs "$NODES"
+    - ./generate_configs.sh "$NODES"
     - git status
   artifacts:
     paths:
