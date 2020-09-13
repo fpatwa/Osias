@@ -51,6 +51,7 @@ before_script:
 generate-config:
   stage: generate_config
   script:
+    - chmod +x generate_configs.sh
     - ./generate_configs.sh "$NODES"
     - git status
   artifacts:
