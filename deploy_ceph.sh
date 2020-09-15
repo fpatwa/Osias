@@ -24,10 +24,11 @@ ceph osd pool create volumes
 ceph osd pool create images
 ceph osd pool create backups
 ceph osd pool create vms
-ceph osd pool set volumes min_size 2
-ceph osd pool set images min_size 2
-ceph osd pool set backups min_size 2
-ceph osd pool set vms min_size 2
+#ceph osd pool create metrics
+#ceph osd pool set volumes min_size 2
+#ceph osd pool set images min_size 2
+#ceph osd pool set backups min_size 2
+#ceph osd pool set vms min_size 2
 echo "######################"
 echo "## Initialize Pools ##"
 echo "######################"
@@ -35,9 +36,11 @@ sudo ./cephadm shell -- rbd pool init volumes
 sudo ./cephadm shell -- rbd pool init images
 sudo ./cephadm shell -- rbd pool init backups
 sudo ./cephadm shell -- rbd pool init vms
+sudo ./cephadm shell -- rbd pool init metrics
 sudo ./cephadm shell -- ceph auth get-or-create client.glance mon 'profile rbd' osd 'profile rbd pool=images' mgr 'profile rbd pool=images'
 sudo ./cephadm shell -- ceph auth get-or-create client.cinder mon 'profile rbd' osd 'profile rbd pool=volumes, profile rbd pool=vms, profile rbd-read-only pool=images' mgr 'profile rbd pool=volumes, profile rbd pool=vms'
 ./cephadm shell -- ceph auth get-or-create client.cinder-backup mon 'profile rbd' osd 'profile rbd pool=backups' mgr 'profile rbd pool=backups'
+sudo ./cephadm shell -- ceph auth get-or-create client.gnocchi mon 'profile rbd' osd 'profile rbd pool=metrics' mgr 'profile rbd pool=metrics'
 
 # Get cinder-backup ready
 mkdir -p /etc/kolla/config/cinder/cinder-backup
@@ -72,3 +75,11 @@ cp /etc/ceph/ceph.conf /etc/kolla/config/nova/ceph.conf
 ./cephadm shell -- ceph auth get-or-create client.cinder > /etc/kolla/config/nova/ceph.client.cinder.keyring
 sed -i $'s/\t//g' /etc/kolla/config/nova/ceph.conf
 sed -i $'s/\t//g' /etc/kolla/config/nova/ceph.client.cinder.keyring
+
+# Get Gnocchi ready
+#sudo mkdir -p  /etc/kolla/config/gnocchi
+#sudo chown -R ubuntu:ubuntu /etc/kolla/config/
+#cp /etc/ceph/ceph.conf /etc/kolla/config/gnocchi/ceph.conf
+#./cephadm shell -- ceph auth get-or-create client.gnocchi  > /etc/kolla/config/gnocchi/ceph.client.gnocchi.keyring
+#sed -i $'s/\t//g' /etc/kolla/config/gnocchi/ceph.conf
+#sed -i $'s/\t//g' /etc/kolla/config/gnocchi/ceph.client.gnocchi.keyring

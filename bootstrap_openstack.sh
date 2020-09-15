@@ -40,6 +40,7 @@ cp /opt/kolla/venv/share/kolla-ansible/ansible/inventory/* .
 
 # Globals file is completely commented out besides these variables.
 cat >>/etc/kolla/globals.yml <<__EOF__
+# Basic Options
 kolla_base_distro: "centos"
 kolla_install_type: "source"
 openstack_release: "ussuri"
@@ -62,6 +63,31 @@ glance_backend_swift: "no"
 cinder_backend_ceph: "yes"
 cinder_backup_driver: "ceph"
 nova_backend_ceph: "yes"
+
+# Recommended Global Options:
+enable_mariabackup: "yes"
+enable_neutron_agent_ha: "yes"
+glance_enable_rolling_upgrade: "yes"
+
+# Desired Global Options:
+#enable_aodh: "yes"
+#enable_prometheus: "yes"
+#enable_ceilometer: "yes"
+#enable_panko: "yes"
+#enable_neutron_metering: "yes"
+
+#enable_telegraf: "yes"
+#enable_watcher: "yes"
+
+#enable_gnocchi: "yes
+#ceph_gnocchi_pool_name: "metrics"
+#gnocchi_backend_storage: "ceph"
+#gnocchi_incoming_storage: "{{ 'redis' if enable_redis | bool else '' }}"
+
+#enable_central_logging: "yes"
+#enable_grafana: "yes"
+
+#enable_skydive: "yes"
 __EOF__
 
 # Update multinode file

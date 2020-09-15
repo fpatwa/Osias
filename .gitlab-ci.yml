@@ -112,8 +112,9 @@ test:
     - .base_setup
   script:
     # Run refstack tests to ensure that the openstack deploy on target servers is functional
-    
-    - python3 deploy.py --sudo --scp -c "verifications.sh" -n $DEPLOY_NODE_IP
+    - python3 deploy.py --scp -c "verifications-setup.sh" -n $DEPLOY_NODE_IP
+    - python3 deploy.py --scp -c "refstack.sh" -n $DEPLOY_NODE_IP
+    - python3 deploy.py --scp -c "tempest-stress.sh" -n $DEPLOY_NODE_IP
 
     
 .run:
