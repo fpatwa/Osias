@@ -4,34 +4,16 @@ default:
   image: python:3.7-buster
 
 stages:
-  - pre_cleanup
-  - bootstrap
-  - deploy_ceph
-  - deploy_openstack
-  - setup
-  - test
   - cleanup
-
-# Change pip's cache directory to be inside the project directory since we can
-# only cache local items.
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-
-# Pip's cache doesn't store the python packages
-# https://pip.pypa.io/en/stable/reference/pip_install/#caching
-#
-# If you want to also cache the installed packages, you have to install
-# them in a virtualenv and cache it as well.
-cache:
-  paths:
-    - .cache/pip
-    - venv/
+  - bootstrap
+  - ceph
+  - openstack
+  - post_deploy
+  - test
 
 .base_setup:
   tags:
     - docker-runner
-  variables:
-    EXCEC_SCRIPT: test.sh
 
 before_script:
   # Setup and add SSH_PRIVATE_KEY to ssh agent
@@ -40,25 +22,18 @@ before_script:
   - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
   - mkdir -p ~/.ssh
   - chmod 700 ~/.ssh
-  #
-  #- python -V  # Print out python version for debugging
-  #- pip install virtualenv
-  #- virtualenv venv
-  #- source venv/bin/activate
 
-pre_cleanup:
-  stage: pre_cleanup
+cleanup:
+  stage: cleanup
   extends:
     - .base_setup
   script:
     # Configure the networking and bridge for openstack.
-    #- for node in $NODES_PUBLIC_IP; do python3 deploy.py --scp "rc.local" -c -n $node;done
-    #- for node in $NODES_PUBLIC_IP; do python3 deploy.py -c "echo '01-netcfg.yaml copied'" --scp "01-netcfg.yaml" -n $node;done
-    #- for node in $NODES_PUBLIC_IP; do python3 deploy.py -c "echo '02-netcfg.yaml copied'" --scp "02-netcfg.yaml" -n $node;done
     - for node in $NODES_PUBLIC_IP; do python3 deploy.py --sudo --scp -c "bootstrap_servers.sh" -n $node;done
     # Prepare a clean environment - cleanup servers to be used for deploy
     # Ensure there is no ceph and openstack deployment on the servers
-    - python3 deploy.py --scp -c "cleanup.sh" --args "$NODES_PRIVATE_IP" -n $DEPLOY_NODE_IP
+    - python3 deploy.py --scp -c "cleanup.sh" --args "cleanup_master" -n $DEPLOY_NODE_IP
+    - for node in $NODES_PUBLIC_IP; do python3 deploy.py --scp -c "cleanup.sh" --args "cleanup_nodes" -n $node;done
     # Restart the nodes to complete the cleanup
     - for node in $NODES_PUBLIC_IP; do python3 deploy.py --sudo -c "shutdown -r 1" -n $node;done
     # Verify that the servers are up and online.
@@ -66,45 +41,48 @@ pre_cleanup:
  
 bootstrap:openstack:
   stage: bootstrap
-  needs: ["pre_cleanup"]
   extends:
     - .base_setup
   script:
-    # Run bootstrap across the servers for installing the pre-reqs for CEPH and openstack
+    # Run bootstrap across the servers for installing the pre-reqs for openstack
     - python3 deploy.py --scp -c "bootstrap_openstack.sh" -n $DEPLOY_NODE_IP
 
 deploy:ceph:
-  stage: deploy_ceph
-  needs: ["bootstrap:openstack"]
+  stage: ceph
   extends:
     - .base_setup
   script:
-    # Deploy ceph on target servers using cephadm
+    # Run bootstrap across the servers for installing the pre-reqs for CEPH
     - python3 deploy.py --sudo --scp -c "bootstrap_ceph.sh" --args "$DEPLOY_NODE_PRIVATE_IP" -n $DEPLOY_NODE_IP
+    # Deploy ceph on target servers using cephadm
+    # Configure kolla options for ceph
     - python3 deploy.py --sudo --scp -c "deploy_ceph.sh" -n $DEPLOY_NODE_IP
 
+openstack:pull:
+  stage: ceph
+  extends:
+    - .base_setup
+  script:
+    - python3 deploy.py -c "cd /opt/kolla; source venv/bin/activate; kolla-ansible -i multinode prechecks" -n $DEPLOY_NODE_IP
+    - python3 deploy.py -c "cd /opt/kolla; source venv/bin/activate; kolla-ansible -i multinode pull" -n $DEPLOY_NODE_IP
+
 deploy:openstack:
-  stage: deploy_openstack
-  needs: ["deploy:ceph"]
+  stage: openstack
   extends:
     - .base_setup
   script:
     # Deploy openstack on target servers using kolla
-    # 1. Configure kolla options for ceph
-    # 2. Run Kolla pre-setup
-    # 3. Run Kolla deploy
+    # 1. Run Kolla pre-setup
+    # 2. Run Kolla deploy
     - python3 deploy.py --scp -c "deploy_openstack.sh" -n $DEPLOY_NODE_IP
 
-setup:openstack:
-  stage: setup
-  needs: ["deploy:openstack"]
+post_deploy:setup:openstack:
+  stage: post_deploy
   extends:
     - .base_setup
   script:
-    # - pip install python-openstackclient==5.2.1
-    # - openstack -h
-    - python3 deploy.py --sudo --scp -c "day2_openstack.sh" -n $DEPLOY_NODE_IP
     # Setup the openstack cloud with public network, images, flavors etc.
+    - python3 deploy.py --sudo --scp -c "day2_openstack.sh" -n $DEPLOY_NODE_IP
 
 test:
   stage: test
@@ -115,31 +93,7 @@ test:
     - python3 deploy.py --scp -c "verifications-setup.sh" -n $DEPLOY_NODE_IP
     - python3 deploy.py --scp -c "refstack.sh" -n $DEPLOY_NODE_IP
     - python3 deploy.py --scp -c "tempest-stress.sh" -n $DEPLOY_NODE_IP
-
-    
-.run:
-  script:
-    - python setup.py bdist_wheel
-    # an alternative approach is to install and run:
-    - pip install dist/*
-    # run the command here
-  artifacts:
-    paths:
-      - dist/*.whl
-
-.test:
-  script:
-    - python setup.py test
-    - pip install tox flake8  # you can also use tox
-    - tox -e py36,flake8
-
-.pages:
-  script:
-    - pip install sphinx sphinx-rtd-theme
-    - cd doc ; make html
-    - mv build/html/ ../public/
-  artifacts:
-    paths:
-      - public
-  only:
-    - master
+  #artifacts:
+  #  paths:
+  #    - /home/ubuntu/refstack-client/.tempest/.stestr/0.json
+  #    - /home/ubuntu/refstack-client/.tempest/.stestr/0
