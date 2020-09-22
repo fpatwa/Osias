@@ -4,10 +4,11 @@ default:
   image: python:3.7-buster
 
 stages:
+  - bootstrap_networking
   - cleanup
   - bootstrap
-  - ceph
-  - openstack
+  - pre_deploy
+  - deploy
   - post_deploy
   - test
 
@@ -23,21 +24,24 @@ before_script:
   - mkdir -p ~/.ssh
   - chmod 700 ~/.ssh
 
+bootstrap_networking:
+  stage: bootstrap_networking
+  extends:
+    - .base_setup
+  script:
+    # Configure the networking and bridge for openstack.
+    - python3 deploy.py bootstrap_networking
+
 cleanup:
   stage: cleanup
   extends:
     - .base_setup
   script:
-    # Configure the networking and bridge for openstack.
-    - for node in $NODES_PUBLIC_IP; do python3 deploy.py --sudo --scp -c "bootstrap_servers.sh" -n $node;done
     # Prepare a clean environment - cleanup servers to be used for deploy
     # Ensure there is no ceph and openstack deployment on the servers
-    - python3 deploy.py --scp -c "cleanup.sh" --args "cleanup_master" -n $DEPLOY_NODE_IP
-    - for node in $NODES_PUBLIC_IP; do python3 deploy.py --scp -c "cleanup.sh" --args "cleanup_nodes" -n $node;done
     # Restart the nodes to complete the cleanup
-    - for node in $NODES_PUBLIC_IP; do python3 deploy.py --sudo -c "shutdown -r 1" -n $node;done
     # Verify that the servers are up and online.
-    - for node in $NODES_PUBLIC_IP; do python3 deploy.py -c "echo Server is UP!" -n $node;done
+    - python3 deploy.py cleanup
  
 bootstrap:openstack:
   stage: bootstrap
@@ -45,44 +49,44 @@ bootstrap:openstack:
     - .base_setup
   script:
     # Run bootstrap across the servers for installing the pre-reqs for openstack
-    - python3 deploy.py --scp -c "bootstrap_openstack.sh" -n $DEPLOY_NODE_IP
+    - python3 deploy.py bootstrap_openstack
 
-deploy:ceph:
-  stage: ceph
+ceph:deploy:
+  stage: pre_deploy
   extends:
     - .base_setup
   script:
     # Run bootstrap across the servers for installing the pre-reqs for CEPH
-    - python3 deploy.py --sudo --scp -c "bootstrap_ceph.sh" --args "$DEPLOY_NODE_PRIVATE_IP" -n $DEPLOY_NODE_IP
+    - python3 deploy.py bootstrap_ceph
     # Deploy ceph on target servers using cephadm
     # Configure kolla options for ceph
-    - python3 deploy.py --sudo --scp -c "deploy_ceph.sh" -n $DEPLOY_NODE_IP
+    - python3 deploy.py deploy_ceph
 
 openstack:pull:
-  stage: ceph
+  stage: pre_deploy
   extends:
     - .base_setup
   script:
-    - python3 deploy.py -c "cd /opt/kolla; source venv/bin/activate; kolla-ansible -i multinode prechecks" -n $DEPLOY_NODE_IP
-    - python3 deploy.py -c "cd /opt/kolla; source venv/bin/activate; kolla-ansible -i multinode pull" -n $DEPLOY_NODE_IP
+    # Pull openstack kolla images
+    - python3 deploy.py pre_deploy_openstack
 
 deploy:openstack:
-  stage: openstack
+  stage: deploy
   extends:
     - .base_setup
   script:
     # Deploy openstack on target servers using kolla
     # 1. Run Kolla pre-setup
     # 2. Run Kolla deploy
-    - python3 deploy.py --scp -c "deploy_openstack.sh" -n $DEPLOY_NODE_IP
+    - python3 deploy.py deploy_openstack
 
-post_deploy:setup:openstack:
+post_deploy:openstack:
   stage: post_deploy
   extends:
     - .base_setup
   script:
     # Setup the openstack cloud with public network, images, flavors etc.
-    - python3 deploy.py --sudo --scp -c "day2_openstack.sh" -n $DEPLOY_NODE_IP
+    - python3 deploy.py post_deploy_openstack
 
 test:
   stage: test
@@ -90,9 +94,9 @@ test:
     - .base_setup
   script:
     # Run refstack tests to ensure that the openstack deploy on target servers is functional
-    - python3 deploy.py --scp -c "verifications-setup.sh" -n $DEPLOY_NODE_IP
-    - python3 deploy.py --scp -c "refstack.sh" -n $DEPLOY_NODE_IP
-    - python3 deploy.py --scp -c "tempest-stress.sh" -n $DEPLOY_NODE_IP
+    - python3 deploy.py test_setup
+    - python3 deploy.py test_refstack
+    - python3 deploy.py test_stress
   #artifacts:
   #  paths:
   #    - /home/ubuntu/refstack-client/.tempest/.stestr/0.json

@@ -1,15 +1,7 @@
 #!/bin/bash
 
-# Cleanup for stress-test:
-sudo rm -r "$HOME"/tempest-stress
-
-# Cleanup for refstack:
-sudo rm -r "$HOME"/refstack-client
-
-# General cleanup applicable to both:
-sudo rm "$HOME"/root.crt
-rm $HOME/accounts.yaml
-rm $HOME/tempest.conf
+set -e
+set -u
 
 # Copy files necessary for both:
 sudo cp /etc/kolla/certificates/ca/root.crt "$HOME"/root.crt

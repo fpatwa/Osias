@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e
+set -u
+
 source /etc/kolla/admin-openrc.sh
 
 git clone https://github.com/openstack/refstack-client
