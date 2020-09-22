@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e
+set -u
+
 MONITOR_IP=$1
 
 # Fetch most recent version of cephadm
@@ -16,5 +19,5 @@ sudo ./cephadm install
 sudo mkdir -p /etc/ceph
 sudo ./cephadm bootstrap --mon-ip "$MONITOR_IP"
 
-ceph -v
-ceph status
+sudo ceph -v
+sudo ceph status

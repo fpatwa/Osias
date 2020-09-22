@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e
+set -u
+
 CIRROS_URL="http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
 MYDNS="10.250.53.202"
 PUBLICIP=$(/sbin/ifconfig br0 | grep 'inet ' | awk '{print $2}')
@@ -8,7 +11,7 @@ POOL_START="${PUBLICIP%.*}.49"
 POOL_END="${PUBLICIP%.*}.249"
 POOL_GATEWAY="${PUBLICIP%.*}.253"
 
-pip3 install python-openstackclient
+sudo pip3 install python-openstackclient
 sudo chown "$USER":"$USER" /etc/kolla/admin-openrc.sh
 echo "export OS_CACERT=/etc/kolla/certificates/ca/root.crt" >> /etc/kolla/admin-openrc.sh
 source /etc/kolla/admin-openrc.sh
