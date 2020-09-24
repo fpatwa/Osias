@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e
-set -u
+set -euxo pipefail
 
 cd /opt/kolla
 source venv/bin/activate

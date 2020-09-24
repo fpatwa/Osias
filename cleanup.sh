@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 function_name=$1
 
 function cleanup_master() {
@@ -18,6 +20,34 @@ function cleanup_master() {
     # Cleanup kolla and ansible directories
     sudo rm -fr /etc/kolla /etc/ansible /opt/kolla
 
+    # disable automatic creation of OSD on available ddevices
+    sudo ceph orch apply osd --all-available-devices --unmanaged=true
+    # Now remove all of the OSDs
+    osds=$(sudo ceph osd ls)
+    for osd in $osds
+    do
+        sudo ceph orch osd rm $osd --force           
+    done
+    # Get all the available hosts
+    hosts=$(sudo ceph orch host ls |awk '{print $1}' |grep -v HOST)
+    # Cycle through the hosts, stop the osd service
+    for host in $hosts
+    do
+        osd_service=$(ssh -o StrictHostKeyChecking=no $host systemctl |grep ceph |grep osd |awk '{print $1}')
+        ssh -o StrictHostKeyChecking=no $host sudo systemctl stop $osd_service
+        sleep 1
+        ssh -o StrictHostKeyChecking=no $host sudo systemctl disable $osd_service
+        ssh -o StrictHostKeyChecking=no $host sudo systemctl daemon-reload
+    done
+    # Sleep for 30 seconds to ensure that all osd's are removed.
+    sleep 30
+    # Cycle through the hosts, and zap the osd device
+    for host in $hosts
+    do
+        host_device=$(ssh -o StrictHostKeyChecking=no $host lsblk |grep disk |tail -1 |awk '{print $1}')
+        sudo ceph orch device zap --force $host /dev/$host_device
+    done
+
     # Get all the fsids
     fsids=$(sudo cephadm ls |grep fsid |cut -d"\"" -f 4|uniq)
 
@@ -28,7 +58,7 @@ function cleanup_master() {
 
 function cleanup_nodes() {
     # ceph services cleanup
-    ceph_services=$(sudo systemctl |grep ceph |grep "\.service" |awk '{print $2}')
+    ceph_services=$(sudo systemctl |grep ceph |grep "\.service" |awk '{print $1}')
     for ceph_service in $ceph_services
     do
         sudo systemctl stop $ceph_service

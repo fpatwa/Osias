@@ -4,85 +4,9 @@ import argparse
 import os
 import sys
 import time
+import toml
 from ssh_tool import ssh_tool
 
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        "-i",
-        "--sshkey",
-        type=str,
-        required=False,
-        help="The path to the SSH key used to access the target node")
-    parser.add_argument(
-        "-c",
-        "--command",
-        type=str,
-        required=False,
-        help="The command that will be run on the target node")
-    parser.add_argument(
-        "-n",
-        "--target_node",
-        type=str,
-        required=False,
-        help="The target node IP address that will the specified script will run on")
-    parser.add_argument(
-        "operation",
-        type=str,
-        choices=['cleanup',
-                 'bootstrap_networking',
-                 'bootstrap_openstack',
-                 'bootstrap_ceph',
-                 'pre_deploy_openstack',
-                 'deploy_ceph',
-                 'deploy_openstack',
-                 'post_deploy_openstack',
-                 'test_setup',
-                 'test_refstack',
-                 'test_stress',
-                 'run_command'],
-        help="Operation to perform")
-
-    args = parser.parse_args()
-    print(args)
-
-    return args
-
-def convert_to_list(parm):
-    if type(parm) is str:
-        tmpList = []
-        tmpList.append(parm)
-        return tmpList
-    return parm
-
-def create_ssh_client(target_node):
-    client = ssh_tool('ubuntu', target_node)
-    if not client.check_access():
-        print('Failed to connect to target node with IP {} using SSH'.format(
-            target_node))
-        raise Exception(
-            'ERROR: Failed to connect to target node with IP {} using SSH'.format(
-                target_node))
-    return client
-
-def run_script_on_server(script, servers, args=None):
-    servers = convert_to_list(servers)
-    for server in servers:
-        client = create_ssh_client(server)
-        client.scp_to(script)
-        if args:
-            cmd = ''.join((script, ' "', args, '"'))
-        else:
-            cmd = script
-        client.ssh(''.join(('source ', cmd)))
-
-def run_cmd_on_server(cmd, servers):
-    servers = convert_to_list(servers)
-    for server in servers:
-        client = create_ssh_client(server)
-        client.ssh(cmd)
 
 def setup_kolla_configs(controller_nodes, network_nodes, storage_nodes,
                         compute_nodes, monitoring_nodes, servers_public_ip):
@@ -174,6 +98,7 @@ sed -i 's/monitoring01/{MONITORING_NODES}/' multinode
 
 # Update storage nodes
 sed -i 's/storage01/{STORAGE_NODES}/g' multinode
+
 '''.format(CONTROLLER_NODES=CONTROLLER_NODES,
            NETWORK_NODES=NETWORK_NODES,
            COMPUTE_NODES=COMPUTE_NODES,
@@ -183,8 +108,7 @@ sed -i 's/storage01/{STORAGE_NODES}/g' multinode
     with open('configure_kolla.sh', 'w') as f:
         f.write('#!/bin/bash')
         f.write('\n\n')
-        f.write('set -e\n')
-        f.write('set -u')
+        f.write('set -euxo pipefail')
         f.write('\n\n')
         f.write(globals_file)
         f.write('\n\n')
@@ -202,8 +126,7 @@ def setup_ceph_node_permisions(storage_nodes):
     with open('configure_ceph_node_permissions.sh', 'w') as f:
         f.write('#!/bin/bash')
         f.write("\n\n")
-        f.write('set -e\n')
-        f.write('set -u')
+        f.write('set -euxo pipefail')
         f.write('\n\n')
         f.write(copy_keys)
         f.write('\n\n')
@@ -211,47 +134,194 @@ def setup_ceph_node_permisions(storage_nodes):
         f.write('\n\n')
         f.write(add_ceph_hosts)
 
+####################
+# Utility functions
+####################
+class parser:
+    def __init__(self, config):
+        self.data = toml.loads(config)
+
+    def get_server_ips(self, node_type, ip_type):
+        data = self.data.get(node_type)
+        ips = []
+        for myips in data.values():
+            ips.append(myips[ip_type])
+        return ips
+
+    def get_all_public_ips(self):
+        data = self.data.keys()
+        ALL_PUBLIC_IPS = []
+        for my_node_type in data:
+            ips = parser.get_server_ips(self, node_type=my_node_type, ip_type="public")
+            ALL_PUBLIC_IPS.extend(ips)
+        ALL_PUBLIC_IPS = list((dict.fromkeys(ALL_PUBLIC_IPS))) # remove duplicates from list
+        ALL_PUBLIC_IPS = list(filter(None, ALL_PUBLIC_IPS))  # remove null values from list
+        return ALL_PUBLIC_IPS
+
+def convert_to_list(parm):
+    if type(parm) is str:
+        tmpList = []
+        tmpList.append(parm)
+        return tmpList
+    return parm
+
+def create_ssh_client(target_node):
+    client = ssh_tool('ubuntu', target_node)
+    if not client.check_access():
+        print('Failed to connect to target node with IP {} using SSH'.format(
+            target_node))
+        raise Exception(
+            'ERROR: Failed to connect to target node with IP {} using SSH'.format(
+                target_node))
+    return client
+
+def run_script_on_server(script, servers, args=None):
+    servers = convert_to_list(servers)
+    for server in servers:
+        client = create_ssh_client(server)
+        client.scp_to(script)
+        if args:
+            cmd = ''.join((script, ' "', args, '"'))
+        else:
+            cmd = script
+        client.ssh(''.join(('source ', cmd)))
+
+def run_cmd_on_server(cmd, servers):
+    servers = convert_to_list(servers)
+    for server in servers:
+        client = create_ssh_client(server)
+        client.ssh(cmd)
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "-i",
+        "--sshkey",
+        type=str,
+        required=False,
+        help="The path to the SSH key used to access the target node")
+    parser.add_argument(
+        "-c",
+        "--command",
+        type=str,
+        required=False,
+        help="The command that will be run on the target node")
+    parser.add_argument(
+        "-n",
+        "--target_node",
+        type=str,
+        required=False,
+        help="The target node IP address that will the specified script will run on")
+    parser.add_argument(
+        "--config",
+        type=str,
+        required=False,
+        help="The config file in toml format defining all servers and their IPs")
+    parser.add_argument(
+        "--file_path",
+        type=str,
+        required=False,
+        help="path of files to be copied from the deployment node")
+    parser.add_argument(
+        "operation",
+        type=str,
+        choices=['cleanup',
+                 'bootstrap_networking',
+                 'bootstrap_openstack',
+                 'bootstrap_ceph',
+                 'pre_deploy_openstack',
+                 'deploy_ceph',
+                 'deploy_openstack',
+                 'post_deploy_openstack',
+                 'test_setup',
+                 'test_refstack',
+                 'test_stress',
+                 'complete_openstack_install',
+                 'copy_files',
+                 'run_command'],
+        help="Operation to perform")
+
+    args = parser.parse_args()
+    print(args)
+
+    return args
+
+def cleanup(servers_public_ip):
+    run_script_on_server('cleanup.sh', servers_public_ip[0], args='cleanup_master')
+    run_script_on_server('cleanup.sh', servers_public_ip, args='cleanup_nodes')
+    run_cmd_on_server('sudo -s rm -fr /home/ubuntu/*', servers_public_ip)
+    run_cmd_on_server('sudo -s shutdown -r 1', servers_public_ip)
+    run_cmd_on_server('echo Server is UP!', servers_public_ip)
+
+def bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
+                        storage_nodes, compute_nodes, monitoring_nodes):
+    run_script_on_server('bootstrap_kolla.sh', servers_public_ip[0])
+    setup_kolla_configs(controller_nodes, network_nodes,  storage_nodes,
+                        compute_nodes, monitoring_nodes, servers_public_ip)
+    run_script_on_server('configure_kolla.sh', servers_public_ip[0])
+    run_script_on_server('bootstrap_openstack.sh', servers_public_ip[0])    
+
+def bootstrap_ceph(servers_public_ip, storage_nodes):
+    run_script_on_server('bootstrap_ceph.sh', servers_public_ip[0], args=storage_nodes[0])
+
+def deploy_ceph(servers_public_ip, storage_nodes):
+    setup_ceph_node_permisions(storage_nodes)
+    run_script_on_server('configure_ceph_node_permissions.sh', servers_public_ip[0])
+    run_script_on_server('deploy_ceph.sh', servers_public_ip[0])
+
+
 def main():
     args = parse_args()
 
-    servers_public_ip = ['10.245.122.30', '10.245.122.32', '10.245.122.33']
+    if args.config:
+        config = parser(args.config)
+        controller_nodes = config.get_server_ips(node_type="control", ip_type="private")
+        network_nodes = config.get_server_ips(node_type="network", ip_type="private")
+        storage_nodes = config.get_server_ips(node_type="storage", ip_type="private")
+        compute_nodes = config.get_server_ips(node_type="compute", ip_type="private")
+        monitoring_nodes = config.get_server_ips(node_type="monitor", ip_type="private")
+        servers_public_ip = config.get_all_public_ips()
 
-    controller_nodes = ['192.168.22.30', '192.168.22.32', '192.168.22.33']
-    network_nodes = ['192.168.22.30', '192.168.22.32']
-    monitoring_nodes = ['']
-    storage_nodes = ['192.168.22.30', '192.168.22.32', '192.168.22.33']
-    compute_nodes = ['192.168.22.33']
+        cmd = ''.join((args.operation, '.sh'))
 
-    cmd = ''.join((args.operation, '.sh'))
-
-    if args.operation == 'cleanup':
-        # Run command on deploy node
-        run_script_on_server(cmd, servers_public_ip[0], args='cleanup_master')
-        run_script_on_server(cmd, servers_public_ip, args='cleanup_nodes')
-        run_cmd_on_server('sudo -s rm -fr /home/ubuntu/*', servers_public_ip)
-        run_cmd_on_server('sudo -s shutdown -r 1', servers_public_ip)
-        run_cmd_on_server('echo Server is UP!', servers_public_ip)
-    elif args.operation == 'bootstrap_networking':
-        run_script_on_server(cmd, servers_public_ip)
-    elif args.operation == 'bootstrap_ceph':
-        run_script_on_server(cmd, servers_public_ip[0], args=controller_nodes[0])
-    elif args.operation == 'bootstrap_openstack':
-        run_script_on_server('bootstrap_kolla.sh', servers_public_ip[0])
-        setup_kolla_configs(controller_nodes, network_nodes,  storage_nodes,
-                            compute_nodes, monitoring_nodes, servers_public_ip)
-        run_script_on_server('configure_kolla.sh', servers_public_ip[0])
-        run_script_on_server(cmd, servers_public_ip[0])
-    elif args.operation == 'deploy_ceph':
-        setup_ceph_node_permisions(storage_nodes)
-        run_script_on_server('configure_ceph_node_permissions.sh', servers_public_ip[0])
-        run_script_on_server(cmd, servers_public_ip[0])
-    elif args.operation in ['pre_deploy_openstack',
-                            'deploy_openstack',
-                            'post_deploy_openstack',
-                            'test_setup',
-                            'test_refstack',
-                            'test_stress']:
-        run_script_on_server(cmd, servers_public_ip[0])
+        if args.operation == 'cleanup':
+           cleanup(servers_public_ip)
+        elif args.operation == 'bootstrap_networking':
+            run_script_on_server(cmd, servers_public_ip)
+        elif args.operation == 'bootstrap_ceph':
+            bootstrap_ceph(servers_public_ip, storage_nodes)
+        elif args.operation == 'bootstrap_openstack':
+            bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
+                                storage_nodes, compute_nodes, monitoring_nodes)
+        elif args.operation == 'deploy_ceph':
+            deploy_ceph(servers_public_ip, storage_nodes)
+        elif args.operation in ['pre_deploy_openstack',
+                                'deploy_openstack',
+                                'post_deploy_openstack',
+                                'test_setup',
+                                'test_refstack',
+                                'test_stress']:
+            run_script_on_server(cmd, servers_public_ip[0])
+        elif args.operation == 'copy_files':
+            if args.file_path:
+                client = create_ssh_client(servers_public_ip[0])
+                client.scp_from(args.file_path)
+            else:
+                raise Exception(
+                    'ERROR: file_path argument not specified.\n' +
+                    'If operation is specified as [copy_files] then the ' +
+                    'optional arguments [--file_path] has to be set.')
+        elif args.operation == 'complete_openstack_install':
+            run_script_on_server('bootstrap_networking.sh', servers_public_ip)
+            bootstrap_ceph(servers_public_ip, storage_nodes)
+            bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
+                                storage_nodes, compute_nodes, monitoring_nodes)
+            deploy_ceph(servers_public_ip, storage_nodes)
+            run_script_on_server('pre_deploy_openstack.sh', servers_public_ip[0])
+            run_script_on_server('deploy_openstack.sh', servers_public_ip[0])
+            run_script_on_server('test_setup.sh', servers_public_ip[0])
+            run_script_on_server('test_refstack.sh', servers_public_ip[0])
     elif args.operation == 'run_command':
         # If command is specified then only perform it
         if args.command and args.target_node:

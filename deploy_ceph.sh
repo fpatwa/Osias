@@ -1,9 +1,9 @@
 #!/bin/bash
 
-set -e
-set -u
+set -euxo pipefail
 
 sudo ceph orch host ls
+sleep 30
 sudo ceph orch device ls --refresh
 sudo ceph orch apply osd --all-available-devices
 
@@ -26,9 +26,8 @@ sudo rbd pool init vms
 sudo mkdir -p /etc/kolla/config/cinder/cinder-backup
 sudo chown -R ubuntu:ubuntu /etc/kolla/config/
 sudo cp /etc/ceph/ceph.conf /etc/kolla/config/cinder/cinder-backup/ceph.conf
-sudo ceph auth get-or-create client.cinder-backup mon 'profile rbd' osd 'profile rbd pool=backups' mgr 'profile rbd pool=backups'
+sudo ceph auth get-or-create client.cinder-backup mon 'profile rbd' osd 'profile rbd pool=backups' mgr 'profile rbd pool=backups' > /etc/kolla/config/cinder/cinder-backup/ceph.client.cinder-backup.keyring
 sudo ceph auth get-or-create client.cinder mon 'profile rbd' osd 'profile rbd pool=volumes, profile rbd pool=vms, profile rbd-read-only pool=images' mgr 'profile rbd pool=volumes, profile rbd pool=vms' > /etc/kolla/config/cinder/cinder-backup/ceph.client.cinder.keyring
-sudo ceph auth get-or-create client.cinder-backup >  /etc/kolla/config/cinder/cinder-backup/ceph.client.cinder-backup.keyring
 sudo sed -i $'s/\t//g' /etc/kolla/config/cinder/cinder-backup/ceph.conf
 sudo sed -i $'s/\t//g' /etc/kolla/config/cinder/cinder-backup/ceph.client.cinder.keyring
 sudo sed -i $'s/\t//g' /etc/kolla/config/cinder/cinder-backup/ceph.client.cinder-backup.keyring
@@ -45,8 +44,7 @@ sudo sed -i $'s/\t//g' /etc/kolla/config/cinder/cinder-volume/ceph.client.cinder
 sudo mkdir -p /etc/kolla/config/glance
 sudo chown -R ubuntu:ubuntu /etc/kolla/config/
 sudo cp /etc/ceph/ceph.conf /etc/kolla/config/glance/ceph.conf
-sudo ceph auth get-or-create client.glance mon 'profile rbd' osd 'profile rbd pool=images' mgr 'profile rbd pool=images'
-sudo ceph auth get-or-create client.glance > /etc/kolla/config/glance/ceph.client.glance.keyring
+sudo ceph auth get-or-create client.glance mon 'profile rbd' osd 'profile rbd pool=images' mgr 'profile rbd pool=images' > /etc/kolla/config/glance/ceph.client.glance.keyring
 sudo sed -i $'s/\t//g' /etc/kolla/config/glance/ceph.conf
 sudo sed -i $'s/\t//g' /etc/kolla/config/glance/ceph.client.glance.keyring
 

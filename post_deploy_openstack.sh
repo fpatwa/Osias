@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e
-set -u
+set -euxo pipefail
 
 CIRROS_URL="http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
 MYDNS="10.250.53.202"
@@ -39,6 +38,7 @@ openstack flavor create --id 101 --vcpus 2 --ram 512 --disk 2 ref.micro
 
 wget $CIRROS_URL -O /tmp/CirrOS.img
 openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/CirrOS.img "CirrOS"
+openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/CirrOS.img "CirrOS-2"
 TENANT=$(openstack project list -f value -c ID --user admin)
 openstack network create --share --project "${TENANT}" --external --provider-network-type flat --provider-physical-network physnet1 public
 openstack subnet create --project "${TENANT}" --subnet-range "${PUBLIC_NETWORK}" --allocation-pool start="${POOL_START}",end="${POOL_END}" --dns-nameserver "${MYDNS}" --gateway "${POOL_GATEWAY}" --network public public_subnet

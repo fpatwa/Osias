@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e
-set -u
+set -euxo pipefail
 
 # Dependencies
 sudo apt-get update
@@ -40,3 +39,10 @@ sudo mkdir -p /etc/kolla
 sudo chown $USER:$USER /etc/kolla
 cp -r /opt/kolla/venv/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
 cp /opt/kolla/venv/share/kolla-ansible/ansible/inventory/* .
+
+# Add nova config path
+mkdir -p /etc/kolla/config/nova
+cat >> /etc/kolla/config/nova/nova.conf <<__EOF__
+allow_resize_to_same_host=True
+scheduler_default_filters=AllHostsFilter
+__EOF__

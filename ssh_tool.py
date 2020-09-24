@@ -87,7 +87,7 @@ class ssh_tool():
 
         return ret
 
-    def scp_from(self, file_path_local, file_path_remote='', test=True):
+    def scp_from(self, file_path_remote, file_path_local='.', test=True):
 
         if (self.sshkey is None):
             keyls = []

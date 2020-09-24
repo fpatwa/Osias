@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e
-set -u
+set -euxo pipefail
 
 # Copy files necessary for both:
 sudo cp /etc/kolla/certificates/ca/root.crt "$HOME"/root.crt
@@ -11,16 +10,21 @@ sudo chown "$USER":"$USER" "$HOME"/root.crt
 source /etc/kolla/admin-openrc.sh
 ADMIN_PASS="$(cat /etc/kolla/admin-openrc.sh  | grep  "OS_PASSWORD=" | cut -d '=' -f2)"
 CIRROSID="$(openstack image list -f value -c ID --name CirrOS)"
+CIRROSID2="$(openstack image list -f value -c ID --name CirrOS-2)"
 PUBLICNETWORKID="$(openstack network list --external -c ID -f value)"
 PUBLICNETWORKNAME="$(openstack network list --external -c Name -f value)"
-URILINK="$(openstack endpoint list --service identity --interface public -c URL -f value)/v3"
+URILINKV2="$(openstack endpoint list --service identity --interface public -c URL -f value)/v2.0"
+URILINKV3="$(openstack endpoint list --service identity --interface public -c URL -f value)/v3"
 REGION="$(openstack region list -c Region -f value)"
 
 
 cat > $HOME/accounts.yaml <<__EOF__
-- username: 'admin'
-  project_name: 'admin'
-  password: '$ADMIN_PASS'
+- username: 'swiftop'
+  project_name: 'openstack'
+  password: 'a_big_secret'
+  roles:
+  - 'Member'
+  - 'ResellerAdmin'
 __EOF__
 
 
@@ -34,8 +38,8 @@ log_file = $HOME/Tempest.log
 catalog_type = identity
 disable_ssl_certificate_validation = False
 ca_certificates_file = $HOME/root.crt
-uri = $URILINK
-uri_v3 = $URILINK
+uri = $URILINKV2
+uri_v3 = $URILINKV3
 auth_version = v3
 region = $REGION
 v3_endpoint_type = publicURL
@@ -61,10 +65,9 @@ admin_password = $ADMIN_PASS
 admin_domain_name = Default
 
 [object-storage]
-reseller_admin_role = ResellerAdmin
 region = $REGION
-#operator_role = member
-operator_role = SwiftOperator
+operator_role = Member
+reseller_admin_role = ResellerAdmin
 endpoint_type = internal
 
 [object-storage-feature-enabled]
@@ -80,8 +83,9 @@ max_microversion = 2.79
 flavor_ref = 100
 flavor_ref_alt = 101
 image_ref = $CIRROSID
-image_ref_alt = $CIRROSID
+image_ref_alt = $CIRROSID2
 endpoint_type = publicURL
+fixed_network_name = mynet
 
 [compute-feature-enabled]
 validation.run_validation = True

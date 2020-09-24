@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e
-set -u
+set -euxo pipefail
 
 sudo apt-get install bridge-utils -qqy
 
@@ -44,7 +43,7 @@ network:
 __EOF__'
 
 INTERNALIP=$(/sbin/ifconfig eno1 | grep 'inet ' | awk '{print $2}')
-PUBLICIP=$(/sbin/ifconfig eno2 | grep 'inet ' | awk '{print $2}')
+PUBLICIP=$(/sbin/ifconfig eno2 | grep 'inet ' | awk '{print $2}') || true
 # IF PUBLICIP is null, check for br0
 [ -z "$PUBLICIP" ] && PUBLICIP=$(/sbin/ifconfig br0 | grep 'inet ' | awk '{print $2}')
         
