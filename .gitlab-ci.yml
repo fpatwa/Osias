@@ -6,11 +6,13 @@ default:
 stages:
   - bootstrap_networking
   - cleanup
-  - bootstrap
+  - bootstrap_openstack
   - pre_deploy
   - deploy
   - post_deploy
-  - test
+  - test_setup
+  - test_refstack
+  - test_stress
 
 .base_setup:
   tags:
@@ -23,6 +25,7 @@ before_script:
   - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
   - mkdir -p ~/.ssh
   - chmod 700 ~/.ssh
+  - pip3 install toml
 
 bootstrap_networking:
   stage: bootstrap_networking
@@ -30,7 +33,7 @@ bootstrap_networking:
     - .base_setup
   script:
     # Configure the networking and bridge for openstack.
-    - python3 deploy.py bootstrap_networking
+    - python3 deploy.py bootstrap_networking --config "$MULTINODE"
 
 cleanup:
   stage: cleanup
@@ -41,15 +44,15 @@ cleanup:
     # Ensure there is no ceph and openstack deployment on the servers
     # Restart the nodes to complete the cleanup
     # Verify that the servers are up and online.
-    - python3 deploy.py cleanup
+    - python3 deploy.py cleanup --config "$MULTINODE"
  
 bootstrap:openstack:
-  stage: bootstrap
+  stage: bootstrap_openstack
   extends:
     - .base_setup
   script:
     # Run bootstrap across the servers for installing the pre-reqs for openstack
-    - python3 deploy.py bootstrap_openstack
+    - python3 deploy.py bootstrap_openstack --config "$MULTINODE"
 
 ceph:deploy:
   stage: pre_deploy
@@ -57,10 +60,10 @@ ceph:deploy:
     - .base_setup
   script:
     # Run bootstrap across the servers for installing the pre-reqs for CEPH
-    - python3 deploy.py bootstrap_ceph
+    - python3 deploy.py bootstrap_ceph --config "$MULTINODE"
     # Deploy ceph on target servers using cephadm
     # Configure kolla options for ceph
-    - python3 deploy.py deploy_ceph
+    - python3 deploy.py deploy_ceph --config "$MULTINODE"
 
 openstack:pull:
   stage: pre_deploy
@@ -68,7 +71,7 @@ openstack:pull:
     - .base_setup
   script:
     # Pull openstack kolla images
-    - python3 deploy.py pre_deploy_openstack
+    - python3 deploy.py pre_deploy_openstack --config "$MULTINODE"
 
 deploy:openstack:
   stage: deploy
@@ -78,7 +81,7 @@ deploy:openstack:
     # Deploy openstack on target servers using kolla
     # 1. Run Kolla pre-setup
     # 2. Run Kolla deploy
-    - python3 deploy.py deploy_openstack
+    - python3 deploy.py deploy_openstack --config "$MULTINODE"
 
 post_deploy:openstack:
   stage: post_deploy
@@ -86,18 +89,37 @@ post_deploy:openstack:
     - .base_setup
   script:
     # Setup the openstack cloud with public network, images, flavors etc.
-    - python3 deploy.py post_deploy_openstack
+    - python3 deploy.py post_deploy_openstack --config "$MULTINODE"
 
-test:
-  stage: test
+test:setup:
+  stage: test_setup
+  extends:
+    - .base_setup
+  script:
+    - python3 deploy.py test_setup --config "$MULTINODE"
+
+test:refstack:
+  stage: test_refstack
   extends:
     - .base_setup
   script:
     # Run refstack tests to ensure that the openstack deploy on target servers is functional
-    - python3 deploy.py test_setup
-    - python3 deploy.py test_refstack
-    - python3 deploy.py test_stress
-  #artifacts:
-  #  paths:
-  #    - /home/ubuntu/refstack-client/.tempest/.stestr/0.json
-  #    - /home/ubuntu/refstack-client/.tempest/.stestr/0
+    - python3 deploy.py test_refstack --config "$MULTINODE"
+    # Copy over the test output files
+    - python3 deploy.py copy_files --config "$MULTINODE" --file_path "/home/ubuntu/refstack-client/.tempest/.stestr/0*"
+  allow_failure: true
+  artifacts:
+    paths:
+      - ./0
+      - ./0.json
+    when: always
+
+test:stress:
+  stage: test_stress
+  extends:
+    - .base_setup
+  script:
+    - python3 deploy.py test_stress --config "$MULTINODE"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "master"'
+      allow_failure: true

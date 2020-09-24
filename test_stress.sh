@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e
-set -u
+set -euxo pipefail
 
 source /etc/kolla/admin-openrc.sh
 
@@ -17,5 +16,6 @@ python setup.py install
 mkdir -p  $HOME/tempest-stress/etc
 cp $HOME/accounts.yaml $HOME/tempest-stress/etc/accounts.yaml
 cp $HOME/tempest.conf $HOME/tempest-stress/etc/tempest.conf
-run-tempest-stress -h
-#run-tempest-stress -d 600 -a
+
+# Run the stress test for 10 min (600 sec)
+run-tempest-stress -d 600 -a
