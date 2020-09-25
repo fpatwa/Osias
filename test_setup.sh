@@ -54,7 +54,7 @@ api_v3 = True
 #img_file = cirros-0.4.0-x86_64-disk.img
 
 [auth]
-tempest_roles = admin
+# tempest_roles = admin
 use_dynamic_credentials = True
 test_accounts_file = $HOME/refstack-client/etc/accounts.yaml
 default_credentials_domain_name = Default
