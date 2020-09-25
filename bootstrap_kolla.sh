@@ -43,6 +43,10 @@ cp /opt/kolla/venv/share/kolla-ansible/ansible/inventory/* .
 # Add nova config path
 mkdir -p /etc/kolla/config/nova
 cat >> /etc/kolla/config/nova/nova.conf <<__EOF__
+[DEFAULT]
+cpu_allocation_ratio = 16.0
+ram_allocation_ratio = 1.5
+reserved_host_memory_mb = 10240
 allow_resize_to_same_host=True
 scheduler_default_filters=AllHostsFilter
 __EOF__
