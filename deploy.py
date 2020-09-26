@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import toml
+import subprocess
 from ssh_tool import ssh_tool
 
 
@@ -119,9 +120,9 @@ def setup_ceph_node_permisions(storage_nodes):
     copy_ssh_id = ''
     add_ceph_hosts = ''
     for node in storage_nodes:
-        copy_keys += ''.join(('sudo ssh ', node, ' sudo cp /home/ubuntu/.ssh/authorized_keys /root/.ssh/authorized_keys', '\n'))
-        copy_ssh_id += ''.join(('sudo ssh-copy-id -f -i /etc/ceph/ceph.pub root@$(ssh ', node, ' hostname)', '\n'))
-        add_ceph_hosts += ''.join(('sudo ceph orch host add $(ssh ', node, ' hostname)', '\n'))
+        copy_keys += ''.join(('ssh -o StrictHostKeyChecking=no ', node, ' sudo cp /home/ubuntu/.ssh/authorized_keys /root/.ssh/authorized_keys', '\n'))
+        copy_ssh_id += ''.join(('ssh-copy-id -f -i /etc/ceph/ceph.pub -o StrictHostKeyChecking=no root@$(ssh -o StrictHostKeyChecking=no ', node, ' hostname)', '\n'))
+        add_ceph_hosts += ''.join(('sudo ceph orch host add $(ssh -o StrictHostKeyChecking=no ', node, ' hostname)', '\n'))
 
     with open('configure_ceph_node_permissions.sh', 'w') as f:
         f.write('#!/bin/bash')
@@ -181,9 +182,14 @@ def run_script_on_server(script, servers, args=None):
         client = create_ssh_client(server)
         client.scp_to(script)
         if args:
-            cmd = ''.join((script, ' "', args, '"'))
+            arguments = ''
+            for arg in args:
+                arguments += ''.join((' "', arg, '"'))
+            cmd = ''.join((script, arguments))
         else:
             cmd = script
+        
+        print(cmd)
         client.ssh(''.join(('source ', cmd)))
 
 def run_cmd_on_server(cmd, servers):
@@ -191,6 +197,44 @@ def run_cmd_on_server(cmd, servers):
     for server in servers:
         client = create_ssh_client(server)
         client.ssh(cmd)
+
+def run_cmd(command):
+    stdout = None
+    try:
+        stdout = subprocess.check_output(command, stderr=subprocess.STDOUT)
+        ret = 0
+    except subprocess.CalledProcessError as e:
+        ret = e.returncode
+        print(e)
+        print(stdout)
+
+    if ret != 0:
+        print(stdout)
+
+    assert ret == 0
+
+    return stdout
+
+def create_new_ssh_key():
+    cleanup_cmd = ['rm', '-f', 'deploy_id_rsa']
+    run_cmd(cleanup_cmd)
+    cleanup_cmd = ['rm', '-f', 'deploy_id_rsa.pub']
+    run_cmd(cleanup_cmd)
+
+    create_key_cmd = ['ssh-keygen', '-q', '-t', 'rsa', '-N', '', '-f', './deploy_id_rsa']
+    run_cmd(create_key_cmd)
+
+    with open('deploy_id_rsa', 'r') as f:
+        ssh_priv_key = f.read()
+    with open('deploy_id_rsa.pub', 'r') as f:
+        ssh_public_key = f.read()
+
+    cleanup_cmd = ['rm', '-f', 'deploy_id_rsa']
+    run_cmd(cleanup_cmd)
+    cleanup_cmd = ['rm', '-f', 'deploy_id_rsa.pub']
+    run_cmd(cleanup_cmd)
+
+    return ssh_priv_key, ssh_public_key
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -248,8 +292,8 @@ def parse_args():
     return args
 
 def cleanup(servers_public_ip):
-    run_script_on_server('cleanup.sh', servers_public_ip[0], args='cleanup_master')
-    run_script_on_server('cleanup.sh', servers_public_ip, args='cleanup_nodes')
+    run_script_on_server('cleanup.sh', servers_public_ip[0], args=['cleanup_master'])
+    run_script_on_server('cleanup.sh', servers_public_ip, args=['cleanup_nodes'])
     run_cmd_on_server('sudo -s rm -fr /home/ubuntu/*', servers_public_ip)
     run_cmd_on_server('sudo -s shutdown -r 1', servers_public_ip)
     run_cmd_on_server('echo Server is UP!', servers_public_ip)
@@ -260,10 +304,12 @@ def bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
     setup_kolla_configs(controller_nodes, network_nodes,  storage_nodes,
                         compute_nodes, monitoring_nodes, servers_public_ip)
     run_script_on_server('configure_kolla.sh', servers_public_ip[0])
+    ssh_priv_key, ssh_public_key = create_new_ssh_key()
+    run_script_on_server('bootstrap_ssh_access.sh', servers_public_ip, args=[ssh_priv_key, ssh_public_key])
     run_script_on_server('bootstrap_openstack.sh', servers_public_ip[0])    
 
 def bootstrap_ceph(servers_public_ip, storage_nodes):
-    run_script_on_server('bootstrap_ceph.sh', servers_public_ip[0], args=storage_nodes[0])
+    run_script_on_server('bootstrap_ceph.sh', servers_public_ip[0], args=[storage_nodes[0]])
 
 def deploy_ceph(servers_public_ip, storage_nodes):
     setup_ceph_node_permisions(storage_nodes)

@@ -10,6 +10,9 @@ curl --silent --remote-name --location https://github.com/ceph/ceph/raw/octopus/
 # Add ceph GPG Key
 wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
 
+# Ensure the repo is update as cephadm does a install using apt
+sudo apt update
+
 chmod +x cephadm
 sudo ./cephadm add-repo --release octopus
 sudo ./cephadm install ceph-common
