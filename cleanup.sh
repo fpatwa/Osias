@@ -57,6 +57,19 @@ function cleanup_master() {
 }
 
 function cleanup_nodes() {
+    # This will remove: all stopped containers, all networks not used by at least one container,
+    # all volumes not used by at least one container, all dangling images, all build cache
+    sudo docker rm -f $(sudo docker ps -aq)
+    sudo docker system prune --volumes --force -a
+
+    # Cleanup up ssh know hosts
+    rm -f ~/.ssh/known_hosts
+
+    # Cleanup kolla dirs
+    sudo rm -fr /etc/kolla /opt/kolla
+}
+
+function cleanup_storage_nodes() {
     # ceph services cleanup
     ceph_services=$(sudo systemctl |grep ceph |grep "\.service" |awk '{print $1}')
     for ceph_service in $ceph_services
@@ -73,11 +86,6 @@ function cleanup_nodes() {
     sudo systemctl daemon-reload
     sudo systemctl reset-failed
 
-    # This will remove: all stopped containers, all networks not used by at least one container,
-    # all volumes not used by at least one container, all dangling images, all build cache
-    sudo docker rm -f $(sudo docker ps -aq)
-    sudo docker system prune --volumes --force -a
-
     # Get the last device in the device list (most likely this is the secondary disk used for ceph)
     device=$(sudo lsblk |grep disk |tail -1 |awk '{print $1}')
     echo "INFO: Working working on device [$device]"
@@ -88,12 +96,6 @@ function cleanup_nodes() {
     sudo wipefs -af /dev/$device
     # remove all logical devices that use the /dev/mapper driver
     sudo dmsetup remove_all
-
-    # Cleanup up ssh know hosts
-    rm -f ~/.ssh/known_hosts
-
-    # Cleanup kolla dirs
-    sudo rm -fr /etc/kolla /opt/kolla
 }
 
 $function_name
