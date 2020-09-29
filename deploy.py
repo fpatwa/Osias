@@ -291,8 +291,9 @@ def parse_args():
 
     return args
 
-def cleanup(servers_public_ip):
+def cleanup(servers_public_ip, storage_nodes_public_ip):
     run_script_on_server('cleanup.sh', servers_public_ip[0], args=['cleanup_master'])
+    run_script_on_server('cleanup.sh', storage_nodes_public_ip, args=['cleanup_storage_nodes'])
     run_script_on_server('cleanup.sh', servers_public_ip, args=['cleanup_nodes'])
     run_cmd_on_server('sudo -s rm -fr /home/ubuntu/*', servers_public_ip)
     run_cmd_on_server('sudo -s shutdown -r 1', servers_public_ip)
@@ -325,14 +326,16 @@ def main():
         controller_nodes = config.get_server_ips(node_type="control", ip_type="private")
         network_nodes = config.get_server_ips(node_type="network", ip_type="private")
         storage_nodes = config.get_server_ips(node_type="storage", ip_type="private")
+        storage_nodes_public_ip = config.get_server_ips(node_type="storage", ip_type="public")
         compute_nodes = config.get_server_ips(node_type="compute", ip_type="private")
         monitoring_nodes = config.get_server_ips(node_type="monitor", ip_type="private")
         servers_public_ip = config.get_all_public_ips()
 
+
         cmd = ''.join((args.operation, '.sh'))
 
         if args.operation == 'cleanup':
-           cleanup(servers_public_ip)
+           cleanup(servers_public_ip, storage_nodes_public_ip)
         elif args.operation == 'bootstrap_networking':
             run_script_on_server(cmd, servers_public_ip)
         elif args.operation == 'bootstrap_ceph':
