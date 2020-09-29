@@ -83,22 +83,22 @@ cd /opt/kolla
 
 # Update multinode file
 # Update control nodes
-sed -i 's/control01/{CONTROLLER_NODES}/g' multinode
-sed -i '/control02/d' multinode
-sed -i '/control03/d' multinode
+sed -i 's/^control01/{CONTROLLER_NODES}/g' multinode
+sed -i '/^control02/d' multinode
+sed -i '/^control03/d' multinode
 
 # Update Network nodes
-sed -i 's/network01/{NETWORK_NODES}/g' multinode
-sed -i '/network02/d' multinode
+sed -i 's/^network01/{NETWORK_NODES}/g' multinode
+sed -i '/^network02/d' multinode
 
 # Update compute nodes
-sed -i 's/compute01/{COMPUTE_NODES}/g' multinode
+sed -i 's/^compute01/{COMPUTE_NODES}/g' multinode
 
 # Update monitor nodes
-sed -i 's/monitoring01/{MONITORING_NODES}/' multinode
+sed -i 's/^monitoring01/{MONITORING_NODES}/' multinode
 
 # Update storage nodes
-sed -i 's/storage01/{STORAGE_NODES}/g' multinode
+sed -i 's/^storage01/{STORAGE_NODES}/g' multinode
 
 '''.format(CONTROLLER_NODES=CONTROLLER_NODES,
            NETWORK_NODES=NETWORK_NODES,
