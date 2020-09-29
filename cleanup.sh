@@ -89,6 +89,9 @@ function cleanup_nodes() {
     # remove all logical devices that use the /dev/mapper driver
     sudo dmsetup remove_all
 
+    # Cleanup up ssh know hosts
+    rm -f ~/.ssh/known_hosts
+
     # Cleanup kolla dirs
     sudo rm -fr /etc/kolla /opt/kolla
 }
