@@ -69,6 +69,7 @@ openstack:pull:
   stage: pre_deploy
   extends:
     - .base_setup
+  retry: 2
   script:
     # Pull openstack kolla images
     - python3 deploy.py pre_deploy_openstack --config "$MULTINODE"
