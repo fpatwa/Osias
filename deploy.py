@@ -159,6 +159,115 @@ class parser:
         ALL_PUBLIC_IPS = list(filter(None, ALL_PUBLIC_IPS))  # remove null values from list
         return ALL_PUBLIC_IPS
 
+    def get_each_servers_ips(self):
+        data = self.data.keys()
+        SERVERS = []
+        for my_node_type in data:
+            data = self.data.get(my_node_type)
+            for key, value in data.items():
+                if value['public']: # Remove any empty servers
+                    SERVERS.extend([value])
+                    # Remove duplicate servers from the list
+        SERVERS = [i for n, i in enumerate(SERVERS) if i not in SERVERS[:n]]
+        return SERVERS
+
+def setup_networking(INTERNAL_IP, PUBLIC_IP, DATA_IP=None):
+    common_networking_file = '''
+INTERNAL_NIC="$(netstat -ie | grep -B1 "{INTERNAL_IP}" |head -n1 | awk '{{print $1}}' | tr -dc '[:alnum:]')"
+PUBLIC_GATEWAY=$(ip r | grep ^default | awk '{{print $3}}')
+#NAMESERVER="$(systemd-resolve --status | grep 'DNS Servers' | awk '{{print $3}}')"
+NAMESERVER_MAIN="nameservers:
+                                addresses:
+"
+NAMESERVER=( $(cat /run/systemd/resolve/resolv.conf | grep nameserver | awk '{{print $2}}') )
+for i in "${{NAMESERVER[@]}}"
+do
+    NAMESERVER_MAIN+="                                - $i
+"
+done
+
+PUBLIC_NIC="$(netstat -ie | grep -B1 "{PUBLIC_IP}" |head -n1 | awk '{{print $1}}' | tr -dc '[:alnum:]')"
+if [ "$PUBLIC_NIC" = "br0" ]; then
+   PUBLIC_NIC="$(brctl show br0 | grep br0 | awk '{{print $4}}')"
+fi
+sudo sh -c "cat > /etc/netplan/01-netcfg.yaml <<__EOF__
+network:
+        version: 2
+        renderer: networkd
+        ethernets:
+                $INTERNAL_NIC:
+                        dhcp4: no
+                        addresses: [{INTERNAL_IP}/24]
+                        mtu: 1500
+__EOF__"
+
+sudo sh -c "cat > /etc/netplan/02-netcfg.yaml <<__EOF__
+network:
+        version: 2
+        renderer: networkd
+        ethernets:
+                $PUBLIC_NIC:
+                         dhcp4: no
+        bridges:
+                br0:
+                         interfaces: [$PUBLIC_NIC]
+                         addresses: [{PUBLIC_IP}/24]
+                         gateway4: $PUBLIC_GATEWAY
+                         mtu: 1500
+                         $NAMESERVER_MAIN
+__EOF__"
+
+sudo chown root:root /etc/netplan/01-netcfg.yaml
+sudo chown root:root /etc/netplan/02-netcfg.yaml
+sudo chmod 644 /etc/netplan/01-netcfg.yaml
+sudo chmod 644 /etc/netplan/02-netcfg.yaml
+# if file does not exist, exit happy.
+sudo mv /etc/netplan/50-cloud-init.yaml /root/50-cloud-init.yaml.bckup || true
+'''.format(INTERNAL_IP = INTERNAL_IP, PUBLIC_IP = PUBLIC_IP)
+    with open('bootstrap_networking_'+PUBLIC_IP+'.sh', 'w') as f:
+        f.write('#!/bin/bash')
+        f.write('\n\n')
+        f.write('set -euxo pipefail')
+        f.write('\n\n')
+        f.write(common_networking_file)
+
+    if DATA_IP:
+        data_networking_file = '''
+DATA_NIC="$(netstat -ie | grep -B1 "{DATA_IP}" |head -n1 | awk '{{print $1}}' | tr -dc '[:alnum:]')"
+sudo sh -c "cat > /etc/netplan/03-netcfg.yaml <<__EOF__
+network:
+        version: 2
+        renderer: networkd
+        ethernets:
+                $DATA_NIC:
+                        dhcp4: no
+                        addresses: [{DATA_IP}/16]
+                        mtu: 9000
+__EOF__"
+'''.format(DATA_IP = DATA_IP)
+        with open('bootstrap_networking_'+PUBLIC_IP+'.sh', 'a') as f:
+            #f.write('#!/bin/bash')
+            #f.write('\n\n')
+            #f.write('set -euxo pipefail')
+            f.write('\n\n')
+            f.write(data_networking_file)
+
+def bootstrap_networking(dict_list_of_server_ips, servers_public_ip):
+    run_script_on_server("bootstrap_networking.sh", servers_public_ip)
+    servers = dict_list_of_server_ips
+    for server in servers:
+        PUBLIC_IP = server['public']
+        INTERNAL_IP = server['private']
+        if server.get('data')!=None:
+            DATA_IP = server['data']
+            if DATA_IP:
+                setup_networking(INTERNAL_IP=INTERNAL_IP, PUBLIC_IP=PUBLIC_IP, DATA_IP=DATA_IP)
+            else:
+                setup_networking(INTERNAL_IP=INTERNAL_IP, PUBLIC_IP=PUBLIC_IP)
+        else:
+            setup_networking(INTERNAL_IP=INTERNAL_IP, PUBLIC_IP=PUBLIC_IP)
+        run_script_on_server('bootstrap_networking_'+PUBLIC_IP+'.sh', PUBLIC_IP)
+
 def convert_to_list(parm):
     if type(parm) is str:
         tmpList = []
@@ -188,7 +297,7 @@ def run_script_on_server(script, servers, args=None):
             cmd = ''.join((script, arguments))
         else:
             cmd = script
-        
+
         print(cmd)
         client.ssh(''.join(('source ', cmd)))
 
@@ -307,7 +416,7 @@ def bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
     run_script_on_server('configure_kolla.sh', servers_public_ip[0])
     ssh_priv_key, ssh_public_key = create_new_ssh_key()
     run_script_on_server('bootstrap_ssh_access.sh', servers_public_ip, args=[ssh_priv_key, ssh_public_key])
-    run_script_on_server('bootstrap_openstack.sh', servers_public_ip[0])    
+    run_script_on_server('bootstrap_openstack.sh', servers_public_ip[0])
 
 def bootstrap_ceph(servers_public_ip, storage_nodes):
     run_script_on_server('bootstrap_ceph.sh', servers_public_ip[0], args=[storage_nodes[0]])
@@ -330,6 +439,7 @@ def main():
         compute_nodes = config.get_server_ips(node_type="compute", ip_type="private")
         monitoring_nodes = config.get_server_ips(node_type="monitor", ip_type="private")
         servers_public_ip = config.get_all_public_ips()
+        dict_list_of_server_ips = config.get_each_servers_ips()
 
 
         cmd = ''.join((args.operation, '.sh'))
@@ -337,7 +447,7 @@ def main():
         if args.operation == 'cleanup':
            cleanup(servers_public_ip, storage_nodes_public_ip)
         elif args.operation == 'bootstrap_networking':
-            run_script_on_server(cmd, servers_public_ip)
+            bootstrap_networking(dict_list_of_server_ips, servers_public_ip)
         elif args.operation == 'bootstrap_ceph':
             bootstrap_ceph(servers_public_ip, storage_nodes)
         elif args.operation == 'bootstrap_openstack':
