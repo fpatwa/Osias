@@ -6,6 +6,8 @@ import sys
 import time
 import toml
 import subprocess
+import shlex
+import json
 from ssh_tool import ssh_tool
 
 
@@ -307,30 +309,30 @@ def run_cmd_on_server(cmd, servers):
         client = create_ssh_client(server)
         client.ssh(cmd)
 
-def run_cmd(command):
+def run_cmd(command, output=True):
     stdout = None
+    print("\nCommand Issued: \n\t{}\n".format(command))
     try:
-        stdout = subprocess.check_output(command, stderr=subprocess.STDOUT)
+        stdout = subprocess.check_output(shlex.split(command), stderr=subprocess.STDOUT)
         ret = 0
     except subprocess.CalledProcessError as e:
         ret = e.returncode
         print(e)
-        print(stdout)
-
-    if ret != 0:
-        print(stdout)
 
     assert ret == 0
+
+    if output:
+        print(stdout.decode())
 
     return stdout
 
 def create_new_ssh_key():
-    cleanup_cmd = ['rm', '-f', 'deploy_id_rsa']
+    cleanup_cmd = 'rm -f deploy_id_rsa'
     run_cmd(cleanup_cmd)
-    cleanup_cmd = ['rm', '-f', 'deploy_id_rsa.pub']
+    cleanup_cmd = 'rm -f deploy_id_rsa.pub'
     run_cmd(cleanup_cmd)
 
-    create_key_cmd = ['ssh-keygen', '-q', '-t', 'rsa', '-N', '', '-f', './deploy_id_rsa']
+    create_key_cmd = 'ssh-keygen -q -t rsa -N \'\' -f ./deploy_id_rsa'
     run_cmd(create_key_cmd)
 
     with open('deploy_id_rsa', 'r') as f:
@@ -338,9 +340,9 @@ def create_new_ssh_key():
     with open('deploy_id_rsa.pub', 'r') as f:
         ssh_public_key = f.read()
 
-    cleanup_cmd = ['rm', '-f', 'deploy_id_rsa']
+    cleanup_cmd = 'rm -f deploy_id_rsa'
     run_cmd(cleanup_cmd)
-    cleanup_cmd = ['rm', '-f', 'deploy_id_rsa.pub']
+    cleanup_cmd = 'rm -f deploy_id_rsa.pub'
     run_cmd(cleanup_cmd)
 
     return ssh_priv_key, ssh_public_key
@@ -369,7 +371,7 @@ def parse_args():
     parser.add_argument(
         "--config",
         type=str,
-        required=False,
+        required=True,
         help="The config file in toml format defining all servers and their IPs")
     parser.add_argument(
         "--file_path",
@@ -377,9 +379,25 @@ def parse_args():
         required=False,
         help="path of files to be copied from the deployment node")
     parser.add_argument(
+        "--MAAS_URL",
+        type=str,
+        required=False,
+        help="The URL of the remote API, e.g. http://example.com/MAAS/ or " +
+                 "http://example.com/MAAS/api/2.0/ if you wish to specify the " +
+                 "API version.")
+    parser.add_argument(
+        "--MAAS_API_KEY",
+        type=str,
+        required=False,
+        help="The credentials, also known as the API key, for the remote " +
+                 "MAAS server. These can be found in the user preferences page " +
+                 "in the web UI; they take the form of a long random-looking " +
+                 "string composed of three parts, separated by colons.")
+    parser.add_argument(
         "operation",
         type=str,
         choices=['cleanup',
+                 'reprovision_servers',
                  'bootstrap_networking',
                  'bootstrap_openstack',
                  'bootstrap_ceph',
@@ -426,6 +444,14 @@ def deploy_ceph(servers_public_ip, storage_nodes):
     run_script_on_server('configure_ceph_node_permissions.sh', servers_public_ip[0])
     run_script_on_server('deploy_ceph.sh', servers_public_ip[0])
 
+def reprovision_servers(maas_url, maas_api_key):
+    run_cmd('maas login admin {} {}'.format(maas_url, maas_api_key))
+    machine_list = run_cmd('maas admin machines read', output=False)
+    machine_list = json.loads(machine_list)
+    for machine in machine_list:
+        print(machine["hostname"])
+        print('\t {}\n'.format(machine["ip_addresses"]))
+
 
 def main():
     args = parse_args()
@@ -441,11 +467,18 @@ def main():
         servers_public_ip = config.get_all_public_ips()
         dict_list_of_server_ips = config.get_each_servers_ips()
 
-
         cmd = ''.join((args.operation, '.sh'))
 
         if args.operation == 'cleanup':
            cleanup(servers_public_ip, storage_nodes_public_ip)
+        elif args.operation == 'reprovision_servers':
+            if args.MAAS_URL and args.MAAS_API_KEY:
+                reprovision_servers(args.MAAS_URL, args.MAAS_API_KEY)
+            else:
+                raise Exception(
+                    'ERROR: MAAS_API_KEY and/or MAAS_URL argument not specified.\n' +
+                    'If operation is specified as [reprovision_servers] then ' +
+                    'the optional arguments [--MAAS_URL] and [--MAAS_API_KEY] have to be set.')
         elif args.operation == 'bootstrap_networking':
             bootstrap_networking(dict_list_of_server_ips, servers_public_ip)
         elif args.operation == 'bootstrap_ceph':
