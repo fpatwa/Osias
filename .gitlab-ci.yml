@@ -77,4 +77,4 @@ cleanup:
     - pwd
     - ls
   rules:
-    - if: '$MAAS_REFRESH_SERVERS' == "false"'
+    - if: '$MAAS_REFRESH_SERVERS == "false"'
