@@ -6,13 +6,12 @@ default:
 stages:
   - generate_config
   - triggers
-  - pre_cleanup
+  - cleanup
   - bootstrap
   - deploy_ceph
   - deploy_openstack
   - setup
   - test
-  - cleanup
 
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
@@ -48,7 +47,7 @@ before_script:
   #- virtualenv venv
   #- source venv/bin/activate
 
-generate-config:
+.generate-config:
   stage: generate_config
   script:
     - chmod +x generate_configs.sh
@@ -58,10 +57,24 @@ generate-config:
     paths:
       - jobs-config.yml
 
-trigger-jobs:
+.trigger-jobs:
   stage: triggers
   trigger:
     include:
       - artifact: jobs-config.yml
         job: generate-config
     strategy: depend
+
+cleanup:
+  stage: cleanup
+  extends:
+    - .base_setup
+  script:
+    # Prepare a clean environment - cleanup servers to be used for deploy
+    # Ensure there is no ceph and openstack deployment on the servers
+    # Restart the nodes to complete the cleanup
+    # Verify that the servers are up and online.
+    - pwd
+    - ls
+  rules:
+    - if: '$MAAS_REFRESH_SERVERS' == "false"'
