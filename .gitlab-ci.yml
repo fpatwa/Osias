@@ -76,5 +76,7 @@ cleanup:
     # Verify that the servers are up and online.
     - pwd
     - ls
+    - echo $CI_COMMIT_BRANCH
   rules:
-    - if: '$MAAS_REFRESH_SERVERS == "false"'
+  #  - if: '$MAAS_REFRESH_SERVERS == "false"'
+     - if: '$CI_COMMIT_BRANCH != "master"'
