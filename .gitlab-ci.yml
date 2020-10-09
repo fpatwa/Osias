@@ -3,6 +3,12 @@ default:
   # https://hub.docker.com/r/library/python/tags/
   image: python:3.7-buster
 
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
 stages:
   - reprovision_servers
   - bootstrap_networking
@@ -35,6 +41,12 @@ reprovision_servers:
   image: utsaics/maas:2.8
   script:
     - python3 deploy.py reprovision_servers --config "$MULTINODE" --MAAS_URL "$MAAS_URL" --MAAS_API_KEY "$MAAS_API_KEY"
+  rules:
+    - if: '$REPROVISION_SERVERS == "false"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
 
 bootstrap_networking:
   stage: bootstrap_networking
@@ -54,6 +66,12 @@ cleanup:
     # Restart the nodes to complete the cleanup
     # Verify that the servers are up and online.
     - python3 deploy.py cleanup --config "$MULTINODE"
+  rules:
+    - if: '$REPROVISION_SERVERS == "true"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
  
 bootstrap:openstack:
   stage: bootstrap_openstack
