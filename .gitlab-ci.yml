@@ -77,6 +77,7 @@ cleanup:
     - pwd
     - ls
     - echo $CI_COMMIT_BRANCH
+    - echo $CI_PIPELINE_SOURCE
   rules:
   #  - if: '$MAAS_REFRESH_SERVERS == "false"'
      - if: '$CI_COMMIT_BRANCH != "master"'
