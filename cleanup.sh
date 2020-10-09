@@ -72,6 +72,9 @@ function cleanup_nodes() {
 
     # Cleanup kolla dirs
     sudo rm -fr /etc/kolla /opt/kolla
+
+    # Remove the docker package
+    sudo rm -fr /etc/apt/sources.list.d/docker.list
 }
 
 function cleanup_storage_nodes() {
@@ -113,6 +116,9 @@ function cleanup_storage_nodes() {
     
     # remove all logical devices that use the /dev/mapper driver
     sudo dmsetup remove_all
+
+    # Remove the ceph package
+    sudo rm -fr /etc/apt/sources.list.d/ceph.list
 }
 
 $function_name
