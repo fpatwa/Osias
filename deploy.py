@@ -58,6 +58,7 @@ def parse_args():
         "operation",
         type=str,
         choices=['cleanup',
+                 'reboot_servers',
                  'reprovision_servers',
                  'bootstrap_networking',
                  'bootstrap_openstack',
@@ -99,8 +100,6 @@ def cleanup(servers_public_ip, storage_nodes_public_ip):
     utils.run_script_on_server('cleanup.sh', storage_nodes_public_ip, args=['cleanup_storage_nodes'])
     utils.run_script_on_server('cleanup.sh', servers_public_ip, args=['cleanup_nodes'])
     utils.run_cmd_on_server('sudo -s rm -fr /home/ubuntu/*', servers_public_ip)
-    utils.run_cmd_on_server('sudo -s shutdown -r 1', servers_public_ip)
-    utils.run_cmd_on_server('echo Server is UP!', servers_public_ip)
 
 def bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
                         storage_nodes, compute_nodes, monitoring_nodes):
@@ -120,14 +119,13 @@ def deploy_ceph(servers_public_ip, storage_nodes):
     utils.run_script_on_server('configure_ceph_node_permissions.sh', servers_public_ip[0])
     utils.run_script_on_server('deploy_ceph.sh', servers_public_ip[0])
 
-def reprovision_servers(maas_url, maas_api_key):
+def reprovision_servers(servers_public_ip, maas_url, maas_api_key):
     utils.run_cmd('maas login admin {} {}'.format(maas_url, maas_api_key))
     machine_list = utils.run_cmd('maas admin machines read', output=False)
     machine_list = json.loads(machine_list)
     for machine in machine_list:
         print(machine["hostname"])
         print('\t {}\n'.format(machine["ip_addresses"]))
-
 
 def main():
     args = parse_args()
@@ -149,7 +147,7 @@ def main():
            cleanup(servers_public_ip, storage_nodes_public_ip)
         elif args.operation == 'reprovision_servers':
             if args.MAAS_URL and args.MAAS_API_KEY:
-                reprovision_servers(args.MAAS_URL, args.MAAS_API_KEY)
+                reprovision_servers(servers_public_ip, args.MAAS_URL, args.MAAS_API_KEY)
             else:
                 raise Exception(
                     'ERROR: MAAS_API_KEY and/or MAAS_URL argument not specified.\n' +
@@ -164,6 +162,9 @@ def main():
                                 storage_nodes, compute_nodes, monitoring_nodes)
         elif args.operation == 'deploy_ceph':
             deploy_ceph(servers_public_ip, storage_nodes)
+        elif args.operation == 'reboot_servers':
+            utils.run_cmd_on_server('sudo -s shutdown -r 1', servers_public_ip)
+            utils.run_cmd_on_server('echo Server is UP!', servers_public_ip)
         elif args.operation in ['pre_deploy_openstack',
                                 'deploy_openstack',
                                 'post_deploy_openstack',

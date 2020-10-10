@@ -13,6 +13,7 @@ stages:
   - reprovision_servers
   - bootstrap_networking
   - cleanup
+  - reboot_servers
   - bootstrap_openstack
   - pre_deploy
   - deploy
@@ -63,8 +64,6 @@ cleanup:
   script:
     # Prepare a clean environment - cleanup servers to be used for deploy
     # Ensure there is no ceph and openstack deployment on the servers
-    # Restart the nodes to complete the cleanup
-    # Verify that the servers are up and online.
     - python3 deploy.py cleanup --config "$MULTINODE"
   rules:
     - if: '$REPROVISION_SERVERS == "true"'
@@ -72,7 +71,16 @@ cleanup:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
- 
+
+reboot_servers:
+  stage: reboot_servers
+  extends:
+    - .base_setup
+  script:
+    # Restart the nodes
+    # Verify that the servers are up and online.
+    - python3 deploy.py reboot_servers --config "$MULTINODE"
+
 bootstrap:openstack:
   stage: bootstrap_openstack
   extends:

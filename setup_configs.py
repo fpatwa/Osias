@@ -178,7 +178,9 @@ sudo chown root:root /etc/netplan/02-netcfg.yaml
 sudo chmod 644 /etc/netplan/01-netcfg.yaml
 sudo chmod 644 /etc/netplan/02-netcfg.yaml
 # if file does not exist, exit happy.
-sudo mv /etc/netplan/50-cloud-init.yaml /root/50-cloud-init.yaml.bckup || true
+if [ -f "/etc/netplan/50-cloud-init.yaml" ];then
+    sudo mv /etc/netplan/50-cloud-init.yaml /root/50-cloud-init.yaml.bckup
+fi
 '''.format(INTERNAL_IP = INTERNAL_IP, PUBLIC_IP = PUBLIC_IP)
     with open('bootstrap_networking_'+PUBLIC_IP+'.sh', 'w') as f:
         f.write('#!/bin/bash')
