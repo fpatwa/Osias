@@ -7,6 +7,7 @@ import time
 import json
 import utils
 import setup_configs
+import maas
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -119,13 +120,9 @@ def deploy_ceph(servers_public_ip, storage_nodes):
     utils.run_script_on_server('configure_ceph_node_permissions.sh', servers_public_ip[0])
     utils.run_script_on_server('deploy_ceph.sh', servers_public_ip[0])
 
-def reprovision_servers(servers_public_ip, maas_url, maas_api_key):
+def reprovision_servers(maas_url, maas_api_key, servers_public_ip):
     utils.run_cmd('maas login admin {} {}'.format(maas_url, maas_api_key))
-    machine_list = utils.run_cmd('maas admin machines read', output=False)
-    machine_list = json.loads(machine_list)
-    for machine in machine_list:
-        print(machine["hostname"])
-        print('\t {}\n'.format(machine["ip_addresses"]))
+    maas.servers(servers_public_ip).deploy()
 
 def main():
     args = parse_args()
@@ -147,7 +144,7 @@ def main():
            cleanup(servers_public_ip, storage_nodes_public_ip)
         elif args.operation == 'reprovision_servers':
             if args.MAAS_URL and args.MAAS_API_KEY:
-                reprovision_servers(servers_public_ip, args.MAAS_URL, args.MAAS_API_KEY)
+                reprovision_servers(args.MAAS_URL, args.MAAS_API_KEY, servers_public_ip)
             else:
                 raise Exception(
                     'ERROR: MAAS_API_KEY and/or MAAS_URL argument not specified.\n' +
