@@ -8,6 +8,9 @@ sudo chown "$USER":"$USER" "$HOME"/root.crt
 
 # Create accounts and tempest files:
 source /etc/kolla/admin-openrc.sh
+openstack flavor create --id 100 --vcpus 1 --ram 1024 --swap 1024 --disk 10 ref.nano
+openstack flavor create --id 101 --vcpus 2 --ram 2048 --swap 1024 --disk 20 ref.micro
+
 ADMIN_PASS="$(cat /etc/kolla/admin-openrc.sh  | grep  "OS_PASSWORD=" | cut -d '=' -f2)"
 CIRROSID="$(openstack image list -f value -c ID --name CirrOS)"
 CIRROSID2="$(openstack image list -f value -c ID --name CirrOS-2)"
@@ -17,14 +20,52 @@ URILINKV2="$(openstack endpoint list --service identity --interface public -c UR
 URILINKV3="$(openstack endpoint list --service identity --interface public -c URL -f value)/v3"
 REGION="$(openstack region list -c Region -f value)"
 
-
 cat > $HOME/accounts.yaml <<__EOF__
-- username: 'swiftop'
-  project_name: 'openstack'
-  password: 'a_big_secret'
+- password: tempest_01
+  project_name: tempest_01
+  username: tempest_01
+  types:
+    - admin
   roles:
-  - 'Member'
-  - 'ResellerAdmin'
+    - admin
+
+- password: tempest_02
+  project_name: tempest_02
+  username: tempest_02
+  types:
+    - admin
+  roles:
+    - admin
+#
+# reseller_admin
+#
+- password: tempest_03
+  project_name: tempest_03
+  username: tempest_03
+  types:
+    - reseller_admin
+  roles:
+    - ResellerAdmin
+- password: tempest_04
+  project_name: tempest_04
+  username: tempest_04
+  types:
+    - reseller_admin
+  roles:
+    - ResellerAdmin
+#
+# member
+#
+- password: tempest_05
+  project_name: tempest_05
+  username: tempest_05
+  roles:
+    - member
+- password: tempest_06
+  project_name: tempest_06
+  username: tempest_06
+  roles:
+    - member
 __EOF__
 
 
@@ -55,7 +96,7 @@ api_v3 = True
 
 [auth]
 # tempest_roles = admin
-use_dynamic_credentials = True
+use_dynamic_credentials = False
 test_accounts_file = $HOME/refstack-client/etc/accounts.yaml
 default_credentials_domain_name = Default
 create_isolated_networks = True

@@ -33,8 +33,7 @@ openstack flavor create --id 16 --vcpus 4 --ram 4096 --disk 40 cb2.large
 openstack flavor create --id 17 --vcpus 1 --ram 3072 --disk 40 mb2.small
 openstack flavor create --id 18 --vcpus 2 --ram 6144 --disk 40 mb2.medium
 openstack flavor create --id 19 --vcpus 4 --ram 12288 --disk 40 mb2.large
-openstack flavor create --id 100 --vcpus 1 --ram 256 --disk 1 ref.nano
-openstack flavor create --id 101 --vcpus 2 --ram 512 --disk 2 ref.micro
+
 
 wget $CIRROS_URL -O /tmp/CirrOS.img
 openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/CirrOS.img "CirrOS"
