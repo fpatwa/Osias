@@ -33,7 +33,7 @@ before_script:
   - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
   - mkdir -p ~/.ssh
   - chmod 700 ~/.ssh
-  - pip3 install toml
+  - pip3 install toml timeout_decorator
 
 reprovision_servers:
   stage: reprovision_servers
