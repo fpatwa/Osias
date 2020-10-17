@@ -119,14 +119,17 @@ lock_path = /tmp
 
 [compute]
 min_compute_nodes = 3
-min_microversion = 2.1
-max_microversion = 2.79
+min_microversion = 2.65 # Maximum in Rocky
+max_microversion = 2.87  # Maximum in Ussuri https://docs.openstack.org/nova/latest/reference/api-microversion-history.html#id1
 flavor_ref = 100
 flavor_ref_alt = 101
 image_ref = $CIRROSID
 image_ref_alt = $CIRROSID2
 endpoint_type = publicURL
 fixed_network_name = mynet
+build_interval = 2
+build_timeout = 300
+ready_wait = 0
 
 [compute-feature-enabled]
 validation.run_validation = True
@@ -196,8 +199,8 @@ image_ssh_password = gocubsgo
 
 #[volume]
 #backend_names = block
-#min_microversion = 3.0
-#max_microversion = 3.59
+#min_microversion = 3.55 # Maximum in Rocky
+#max_microversion = 3.60 # Maximum in Ussuri
 #volume_size = 1
 
 [network]
