@@ -61,7 +61,7 @@ def parse_args():
         choices=['cleanup',
                  'reboot_servers',
                  'reprovision_servers',
-                 'install_packages'
+                 'install_packages',
                  'bootstrap_networking',
                  'bootstrap_openstack',
                  'bootstrap_ceph',

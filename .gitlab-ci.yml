@@ -36,7 +36,7 @@ before_script:
   - chmod 700 ~/.ssh
   - pip3 install toml timeout_decorator
 
-reprovision_servers:
+.reprovision_servers:
   stage: reprovision_servers
   extends:
     - .base_setup
