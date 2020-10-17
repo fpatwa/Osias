@@ -2,10 +2,6 @@
 
 set -euxo pipefail
 
-# Dependencies
-sudo apt-get update
-sudo apt-get -y install python3-dev libffi-dev gcc libssl-dev python3-pip python3-venv
-
 # basedir and venv
 sudo mkdir /opt/kolla
 sudo chown $USER:$USER /opt/kolla
@@ -30,7 +26,6 @@ __EOF__
 # Fix: python_apt broken/old on pypi
 git clone https://salsa.debian.org/apt-team/python-apt/ -b 1.8.6
 cd python-apt
-sudo apt-get -y install libapt-pkg-dev
 python setup.py install
 cd ..
 

@@ -61,6 +61,7 @@ def parse_args():
         choices=['cleanup',
                  'reboot_servers',
                  'reprovision_servers',
+                 'install_packages'
                  'bootstrap_networking',
                  'bootstrap_openstack',
                  'bootstrap_ceph',
@@ -169,6 +170,8 @@ def main():
                                 'test_refstack',
                                 'test_stress']:
             utils.run_script_on_server(cmd, servers_public_ip[0])
+        elif args.operation == 'install_packages':
+            utils.run_script_on_server(cmd, servers_public_ip)            
         elif args.operation == 'copy_files':
             if args.file_path:
                 client = utils.create_ssh_client(servers_public_ip[0])

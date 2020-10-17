@@ -11,8 +11,9 @@ workflow:
 
 stages:
   - reprovision_servers
-  - bootstrap_networking
   - cleanup
+  - install_packages
+  - bootstrap_networking
   - reboot_servers
   - bootstrap_openstack
   - pre_deploy
@@ -49,14 +50,6 @@ reprovision_servers:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
 
-bootstrap_networking:
-  stage: bootstrap_networking
-  extends:
-    - .base_setup
-  script:
-    # Configure the networking and bridge for openstack.
-    - python3 deploy.py bootstrap_networking --config "$MULTINODE"
-
 cleanup:
   stage: cleanup
   extends:
@@ -71,6 +64,22 @@ cleanup:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
+
+install_packages:
+  stage: install_packages
+  extends:
+    - .base_setup
+  script:
+    # Update, Upgrade and Install Required APT packages.
+    - python3 deploy.py install_packages --config "$MULTINODE"
+
+bootstrap_networking:
+  stage: bootstrap_networking
+  extends:
+    - .base_setup
+  script:
+    # Configure the networking and bridge for openstack.
+    - python3 deploy.py bootstrap_networking --config "$MULTINODE"
 
 reboot_servers:
   stage: reboot_servers
