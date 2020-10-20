@@ -3,8 +3,8 @@
 set -euxo pipefail
 
 # Dependencies
-sudo apt-get update
-sudo apt-get -y install python3-dev libffi-dev gcc libssl-dev python3-pip python3-venv
+#sudo apt-get update
+#sudo apt-get -y install python3-dev libffi-dev gcc libssl-dev python3-pip python3-venv
 
 # basedir and venv
 sudo mkdir /opt/kolla

@@ -6,7 +6,7 @@ MONITOR_IP=$1
 CEPH_RELEASE="octopus"
 
 # Update to fetch the latest package index
-sudo apt update
+#sudo apt update
 
 # Fetch most recent version of cephadm
 curl --silent --remote-name --location https://github.com/ceph/ceph/raw/$CEPH_RELEASE/src/cephadm/cephadm

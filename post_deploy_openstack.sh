@@ -10,7 +10,7 @@ POOL_START="${PUBLICIP%.*}.49"
 POOL_END="${PUBLICIP%.*}.249"
 POOL_GATEWAY="${PUBLICIP%.*}.253"
 
-sudo pip3 install python-openstackclient
+# sudo pip3 install python-openstackclient
 sudo chown "$USER":"$USER" /etc/kolla/admin-openrc.sh
 echo "export OS_CACERT=/etc/kolla/certificates/ca/root.crt" >> /etc/kolla/admin-openrc.sh
 source /etc/kolla/admin-openrc.sh

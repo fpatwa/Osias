@@ -4,7 +4,13 @@ set -euxo pipefail
 
 sudo apt update -y && sudo apt full-upgrade -y && sudo apt autoremove -y && sudo apt clean -y && sudo apt autoclean -y
 
+# For networking:
 sudo apt-get install bridge-utils -qqy
+# For Kolla:
+sudo apt-get -y install python3-dev libffi-dev gcc libssl-dev python3-pip python3-venv
+
+# For Post-deploy openstack:
+sudo pip3 install python-openstackclient
 
 sudo sh -c 'cat > /etc/rc.local <<__EOF__
 #!/bin/sh -e

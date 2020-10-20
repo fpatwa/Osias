@@ -65,3 +65,6 @@ sudo sed -i $'s/\t//g' /etc/kolla/config/nova/ceph.client.nova.keyring
 #sudo ceph auth get-or-create client.gnocchi mon 'profile rbd' osd 'profile rbd pool=metrics' mgr 'profile rbd pool=metrics' > /etc/kolla/config/gnocchi/ceph.client.gnocchi.keyring
 #sudo sed -i $'s/\t//g' /etc/kolla/config/gnocchi/ceph.conf
 #sudo sed -i $'s/\t//g' /etc/kolla/config/gnocchi/ceph.client.gnocchi.keyring
+
+sudo ceph -v
+sudo ceph status

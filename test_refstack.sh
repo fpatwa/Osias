@@ -8,6 +8,17 @@ MYDNS="10.250.53.202"
 
 openstack role create ResellerAdmin
 
+openstack user create swiftop --password a_big_secret
+openstack project create --enable openstack
+openstack role add Member --user swiftop --project openstack
+openstack role add ResellerAdmin --user swiftop --project openstack
+	
+TENANT=$(openstack project list -f value -c ID --user swiftop)
+openstack network create --project "${TENANT}" mynet
+openstack subnet create --project "${TENANT}" --subnet-range 192.168.100.0/24 --dns-nameserver "${MYDNS}" --network mynet mysubnet
+openstack router create --enable --project "${TENANT}" myrouter
+openstack router add subnet myrouter mysubnet
+
 # Create tempest admin users.
 openstack user create tempest_01 --password tempest_01
 openstack project create --enable tempest_01
@@ -40,7 +51,7 @@ openstack role add member --user tempest_06 --project tempest_06
 #openstack router create --enable --project "${TENANT}" myrouter
 #openstack router add subnet myrouter mysubnet
 
-git clone https://github.com/openstack/refstack-client
+git clone https://opendev.org/osf/refstack-client.git
 cd refstack-client
 ./setup_env -t 24.0.0
 

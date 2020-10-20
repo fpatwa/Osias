@@ -21,51 +21,12 @@ URILINKV3="$(openstack endpoint list --service identity --interface public -c UR
 REGION="$(openstack region list -c Region -f value)"
 
 cat > $HOME/accounts.yaml <<__EOF__
-- password: tempest_01
-  project_name: tempest_01
-  username: tempest_01
-  types:
-    - admin
-  roles:
-    - admin
-
-- password: tempest_02
-  project_name: tempest_02
-  username: tempest_02
-  types:
-    - admin
-  roles:
-    - admin
-#
-# reseller_admin
-#
-- password: tempest_03
-  project_name: tempest_03
-  username: tempest_03
-  types:
-    - reseller_admin
-  roles:
-    - ResellerAdmin
-- password: tempest_04
-  project_name: tempest_04
-  username: tempest_04
-  types:
-    - reseller_admin
-  roles:
-    - ResellerAdmin
-#
-# member
-#
-- password: tempest_05
-  project_name: tempest_05
-  username: tempest_05
-  roles:
-    - member
-- password: tempest_06
-  project_name: tempest_06
-  username: tempest_06
-  roles:
-    - member
+- username: 'swiftop'
+  project_name: 'openstack'
+  password: 'a_big_secret'
+ 	roles:
+	- 'Member'
+	- 'ResellerAdmin'
 __EOF__
 
 
@@ -96,7 +57,7 @@ api_v3 = True
 
 [auth]
 # tempest_roles = admin
-use_dynamic_credentials = False
+use_dynamic_credentials = True
 test_accounts_file = $HOME/refstack-client/etc/accounts.yaml
 default_credentials_domain_name = Default
 create_isolated_networks = True
@@ -119,8 +80,9 @@ lock_path = /tmp
 
 [compute]
 min_compute_nodes = 3
-min_microversion = 2.65 # Maximum in Rocky
-max_microversion = 2.87  # Maximum in Ussuri https://docs.openstack.org/nova/latest/reference/api-microversion-history.html#id1
+min_microversion = 2.1
+max_microversion = latest
+#2.87  # Maximum in Ussuri https://docs.openstack.org/nova/latest/reference/api-microversion-history.html#id1
 flavor_ref = 100
 flavor_ref_alt = 101
 image_ref = $CIRROSID
@@ -206,6 +168,9 @@ image_ssh_password = gocubsgo
 [network]
 public_network_id = $PUBLICNETWORKID
 floating_network_name = $PUBLICNETWORKNAME
+project_network_cidr = 10.101.0.0/16
+build_timeout = 300
+build_interval = 1
 
 [heat_plugin]
 minimal_instance_type = 100
