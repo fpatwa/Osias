@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-CIRROS_URL="http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+CIRROS_URL="http://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img"
 MYDNS="10.250.53.202"
 PUBLICIP=$(/sbin/ifconfig br0 | grep 'inet ' | awk '{print $2}')
 PUBLIC_NETWORK="${PUBLICIP%.*}.0/24"
