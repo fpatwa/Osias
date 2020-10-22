@@ -13,10 +13,10 @@ cd /opt/kolla
 python3 -m venv venv
 source venv/bin/activate
 pip install -U pip
-pip install -U 'ansible<2.10'
+pip install -U 'ansible<2.9'
 pip install kolla-ansible
 
-# Ansible config
+# General Ansible config
 sudo mkdir -p /etc/ansible
 sudo chown $USER:$USER /etc/ansible
 cat >>/etc/ansible/ansible.cfg <<__EOF__
@@ -25,6 +25,26 @@ host_key_checking=False
 pipelining=True
 forks=100
 interpreter_python=/usr/bin/python3
+__EOF__
+
+# Openstack Ansible config:
+# Mitogen 0.2.9 is compatible with ansible<2.9
+# Pull this patch of mitogen to fix the ansible_python_interpreter issues.
+#wget https://networkgenomics.com/try/mitogen-0.2.9.tar.gz
+#tar -xvf mitogen-0.2.9.tar.gz -C /opt/kolla/
+pip3 install -U https://github.com/dw/mitogen/archive/a60c6c1.zip
+
+
+# Kolla specific Ansible configs
+cat >>/opt/kolla/ansible.cfg <<__EOF__
+[defaults]
+strategy_plugins = /opt/kolla/venv/lib/python3.6/site-packages/ansible_mitogen/plugins/strategy
+strategy = mitogen_linear
+host_key_checking=False
+pipelining=True
+forks=100
+interpreter_python=/usr/bin/python3
+ansible_python_interpreter=/usr/bin/python3
 __EOF__
 
 # Fix: python_apt broken/old on pypi
