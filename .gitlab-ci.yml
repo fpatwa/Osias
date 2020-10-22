@@ -80,6 +80,13 @@ reboot_servers:
     # Restart the nodes
     # Verify that the servers are up and online.
     - python3 deploy.py reboot_servers --config "$MULTINODE"
+  rules:
+    - if: '$REPROVISION_SERVERS == "true"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
 
 bootstrap:openstack:
   stage: bootstrap_openstack
