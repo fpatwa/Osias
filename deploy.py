@@ -81,20 +81,8 @@ def parse_args():
 
     return args
 
-def bootstrap_networking(dict_list_of_server_ips, servers_public_ip):
+def bootstrap_networking(servers_public_ip):
     utils.run_script_on_server("bootstrap_networking.sh", servers_public_ip)
-    for server in dict_list_of_server_ips:
-        PUBLIC_IP = server['public']
-        INTERNAL_IP = server['private']
-        if server.get('data') != None:
-            DATA_IP = server['data']
-            if DATA_IP:
-                setup_configs.setup_networking_configs(INTERNAL_IP=INTERNAL_IP, PUBLIC_IP=PUBLIC_IP, DATA_IP=DATA_IP)
-            else:
-                setup_configs.setup_networking_configs(INTERNAL_IP=INTERNAL_IP, PUBLIC_IP=PUBLIC_IP)
-        else:
-            setup_configs.setup_networking_configs(INTERNAL_IP=INTERNAL_IP, PUBLIC_IP=PUBLIC_IP)
-        utils.run_script_on_server('bootstrap_networking_'+PUBLIC_IP+'.sh', PUBLIC_IP)
 
 def cleanup(servers_public_ip, storage_nodes_public_ip):
     utils.run_script_on_server('cleanup.sh', servers_public_ip[0], args=['cleanup_master'])
@@ -136,7 +124,6 @@ def main():
         compute_nodes = config.get_server_ips(node_type="compute", ip_type="private")
         monitoring_nodes = config.get_server_ips(node_type="monitor", ip_type="private")
         servers_public_ip = config.get_all_public_ips()
-        dict_list_of_server_ips = config.get_each_servers_ips()
 
         cmd = ''.join((args.operation, '.sh'))
 
@@ -151,7 +138,7 @@ def main():
                     'If operation is specified as [reprovision_servers] then ' +
                     'the optional arguments [--MAAS_URL] and [--MAAS_API_KEY] have to be set.')
         elif args.operation == 'bootstrap_networking':
-            bootstrap_networking(dict_list_of_server_ips, servers_public_ip)
+            bootstrap_networking(servers_public_ip)
         elif args.operation == 'bootstrap_ceph':
             bootstrap_ceph(servers_public_ip, storage_nodes)
         elif args.operation == 'bootstrap_openstack':
