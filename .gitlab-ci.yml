@@ -13,7 +13,6 @@ stages:
   - reprovision_servers
   - bootstrap_networking
   - cleanup
-  - reboot_servers
   - bootstrap_openstack
   - pre_deploy
   - deploy

@@ -19,7 +19,7 @@ pip install kolla-ansible
 # General Ansible config
 sudo mkdir -p /etc/ansible
 sudo chown $USER:$USER /etc/ansible
-cat >>/etc/ansible/ansible.cfg <<__EOF__
+cat > /etc/ansible/ansible.cfg <<__EOF__
 [defaults]
 host_key_checking=False
 pipelining=True
@@ -34,7 +34,7 @@ pip3 install -U https://github.com/dw/mitogen/archive/a60c6c1.zip
 
 
 # Kolla specific Ansible configs
-cat >>/opt/kolla/ansible.cfg <<__EOF__
+cat > /opt/kolla/ansible.cfg <<__EOF__
 [defaults]
 strategy_plugins = /opt/kolla/venv/lib/python3.6/site-packages/ansible_mitogen/plugins/strategy
 strategy = mitogen_linear
@@ -46,11 +46,11 @@ ansible_python_interpreter=/usr/bin/python3
 __EOF__
 
 # Fix: python_apt broken/old on pypi
-git clone https://salsa.debian.org/apt-team/python-apt/ -b 1.8.6
-cd python-apt
-sudo apt-get -y install libapt-pkg-dev
-python setup.py install
-cd ..
+#git clone https://salsa.debian.org/apt-team/python-apt/ -b 1.8.6
+#cd python-apt
+#sudo apt-get -y install libapt-pkg-dev
+#python setup.py install
+#cd ..
 
 # Configure kolla
 sudo mkdir -p /etc/kolla
@@ -60,7 +60,7 @@ cp /opt/kolla/venv/share/kolla-ansible/ansible/inventory/* .
 
 # Add nova config path
 mkdir -p /etc/kolla/config/nova
-cat >> /etc/kolla/config/nova/nova.conf <<__EOF__
+cat > /etc/kolla/config/nova/nova.conf <<__EOF__
 [DEFAULT]
 cpu_allocation_ratio = 16.0
 ram_allocation_ratio = 1.5
