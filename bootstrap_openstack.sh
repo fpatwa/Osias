@@ -11,4 +11,3 @@ kolla-ansible -i multinode bootstrap-servers
 
 # Enable docker group for $USER
 sudo usermod -aG docker $USER
-deactivate
