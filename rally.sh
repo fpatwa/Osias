@@ -27,7 +27,7 @@ openstack:
       project_name: admin
 __EOF__
 
-rally db create
+rally db ensure
 rally env create --name my_openstack --spec env.yaml
 rally env check
 
@@ -42,8 +42,7 @@ rally verify list-verifiers
 wget "https://refstack.openstack.org/api/v1/guidelines/2020.06/tests?target=platform&type=required&alias=true&flag=false" -O 2020.06-test-list.txt
 
 # Begin tempest/refstack tests.
-rally verify start --load-list 2020.06-test-list.txt --concurrency 8
-
+rally verify start
 # References:
 # https://readthedocs.org/projects/rally/downloads/pdf/latest/
 # https://rally.readthedocs.io/en/3.1.0/install_and_upgrade/install.html
