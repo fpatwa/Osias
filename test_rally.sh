@@ -36,13 +36,19 @@ rally deployment check
 rally deployment create --fromenv --name=existing
 rally deployment list
 
+#rally task validate
+
 # List verifiers
 rally verify create-verifier --type tempest --name tempest-verifier --source https://github.com/openstack/tempest.git  --version 24.0.0
 rally verify list-verifiers
 wget "https://refstack.openstack.org/api/v1/guidelines/2020.06/tests?target=platform&type=required&alias=true&flag=false" -O 2020.06-test-list.txt
 
-# Begin tempest/refstack tests.
+# Begin refstack certification (233) tests.
+rally verify start --load-list 2020.06-test-list.txt
+
+# Begin rally (1000+) tests 
 rally verify start
+
 # References:
 # https://readthedocs.org/projects/rally/downloads/pdf/latest/
 # https://rally.readthedocs.io/en/3.1.0/install_and_upgrade/install.html

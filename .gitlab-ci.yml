@@ -184,7 +184,7 @@ test:rally:
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     # Copy over the test output files
-    - python3 deploy.py copy_files --config "$MULTINODE" --file_path "/home/ubuntu/refstack-client/.tempest/.stestr/0*"
+    - python3 deploy.py copy_files --config "$MULTINODE" --file_path "/home/ubuntu/rally/.tempest/.stestr/0*"
   allow_failure: true
   artifacts:
     paths:

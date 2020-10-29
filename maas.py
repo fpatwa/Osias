@@ -22,7 +22,7 @@ class servers:
         self.machine_list = deployment_list
         return deployment_list
 
-    @timeout_decorator.timeout(1500, timeout_exception=StopIteration)
+    @timeout_decorator.timeout(1700, timeout_exception=StopIteration)
     def waiting(self, server_list, desired_status):
         while len(server_list) > 0:
             machine_info_list = utils.run_cmd('maas admin machines {}'.format("read"), output=False)
