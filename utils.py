@@ -38,6 +38,14 @@ class parser:
                     # Remove duplicate servers from the list
         SERVERS = [i for n, i in enumerate(SERVERS) if i not in SERVERS[:n]]
         return SERVERS
+    
+    def bool_check_ips_exist(self, node_type, ip_type):
+        data = self.data.get(node_type)
+        for key,value in data.items():
+            if value[ip_type]:
+                return True
+            else:
+                return False
 
 def convert_to_list(parm):
     if type(parm) is str:

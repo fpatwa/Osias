@@ -91,20 +91,20 @@ def cleanup(servers_public_ip, storage_nodes_public_ip):
     utils.run_cmd_on_server('sudo -s rm -fr /home/ubuntu/*', servers_public_ip)
 
 def bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
-                        storage_nodes, compute_nodes, monitoring_nodes):
+                        storage_nodes_private_ip, compute_nodes, monitoring_nodes):
     utils.run_script_on_server('bootstrap_kolla.sh', servers_public_ip[0])
-    setup_configs.setup_kolla_configs(controller_nodes, network_nodes,  storage_nodes,
+    setup_configs.setup_kolla_configs(controller_nodes, network_nodes,  storage_nodes_private_ip,
                                       compute_nodes, monitoring_nodes, servers_public_ip)
     utils.run_script_on_server('configure_kolla.sh', servers_public_ip[0])
     ssh_priv_key, ssh_public_key = utils.create_new_ssh_key()
     utils.run_script_on_server('bootstrap_ssh_access.sh', servers_public_ip, args=[ssh_priv_key, ssh_public_key])
     utils.run_script_on_server('bootstrap_openstack.sh', servers_public_ip[0])
 
-def bootstrap_ceph(servers_public_ip, storage_nodes):
-    utils.run_script_on_server('bootstrap_ceph.sh', servers_public_ip[0], args=[storage_nodes[0]])
+def bootstrap_ceph(servers_public_ip, storage_nodes_data_ip):
+    utils.run_script_on_server('bootstrap_ceph.sh', servers_public_ip[0], args=[storage_nodes_data_ip[0]])
 
-def deploy_ceph(servers_public_ip, storage_nodes):
-    setup_configs.setup_ceph_node_permisions(storage_nodes)
+def deploy_ceph(servers_public_ip, storage_nodes_data_ip):
+    setup_configs.setup_ceph_node_permisions(storage_nodes_data_ip)
     utils.run_script_on_server('configure_ceph_node_permissions.sh', servers_public_ip[0])
     utils.run_script_on_server('deploy_ceph.sh', servers_public_ip[0])
 
@@ -119,7 +119,11 @@ def main():
         config = utils.parser(args.config)
         controller_nodes = config.get_server_ips(node_type="control", ip_type="private")
         network_nodes = config.get_server_ips(node_type="network", ip_type="private")
-        storage_nodes = config.get_server_ips(node_type="storage", ip_type="private")
+        if config.bool_check_ips_exist(node_type="storage", ip_type="data"):
+            storage_nodes_data_ip = config.get_server_ips(node_type="storage", ip_type="data")
+        else:
+            storage_nodes_data_ip = config.get_server_ips(node_type="storage", ip_type="private")
+        storage_nodes_private_ip = config.get_server_ips(node_type="storage", ip_type="private")
         storage_nodes_public_ip = config.get_server_ips(node_type="storage", ip_type="public")
         compute_nodes = config.get_server_ips(node_type="compute", ip_type="private")
         monitoring_nodes = config.get_server_ips(node_type="monitor", ip_type="private")
@@ -140,12 +144,12 @@ def main():
         elif args.operation == 'bootstrap_networking':
             bootstrap_networking(servers_public_ip)
         elif args.operation == 'bootstrap_ceph':
-            bootstrap_ceph(servers_public_ip, storage_nodes)
+            bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
         elif args.operation == 'bootstrap_openstack':
             bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
-                                storage_nodes, compute_nodes, monitoring_nodes)
+                                storage_nodes_private_ip, compute_nodes, monitoring_nodes)
         elif args.operation == 'deploy_ceph':
-            deploy_ceph(servers_public_ip, storage_nodes)
+            deploy_ceph(servers_public_ip, storage_nodes_data_ip)
         elif args.operation == 'reboot_servers':
             utils.run_cmd_on_server('sudo -s shutdown -r 1', servers_public_ip)
             utils.run_cmd_on_server('echo Server is UP!', servers_public_ip)
@@ -167,10 +171,10 @@ def main():
                     'optional arguments [--file_path] has to be set.')
         elif args.operation == 'complete_openstack_install':
             utils.run_script_on_server('bootstrap_networking.sh', servers_public_ip)
-            bootstrap_ceph(servers_public_ip, storage_nodes)
+            bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
             bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
-                                storage_nodes, compute_nodes, monitoring_nodes)
-            deploy_ceph(servers_public_ip, storage_nodes)
+                                storage_nodes_private_ip, compute_nodes, monitoring_nodes)
+            deploy_ceph(servers_public_ip, storage_nodes_data_ip)
             utils.run_script_on_server('pre_deploy_openstack.sh', servers_public_ip[0])
             utils.run_script_on_server('deploy_openstack.sh', servers_public_ip[0])
             utils.run_script_on_server('test_setup.sh', servers_public_ip[0])
