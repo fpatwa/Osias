@@ -21,6 +21,7 @@ stages:
   - test_setup
   - test_refstack
   - test_stress
+  - test_rally
 
 .base_setup:
   tags:
@@ -170,3 +171,23 @@ test:stress:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "master"'
       allow_failure: true
+
+test:rally:
+  stage: test_rally
+  extends:
+    - .base_setup
+  script:
+    # Run refstack tests to ensure that the openstack deploy on target servers is functional
+    - python3 deploy.py test_rally --config "$MULTINODE"
+  after_script:
+    # Setup and add SSH_PRIVATE_KEY to ssh agent
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    # Copy over the test output files
+    - python3 deploy.py copy_files --config "$MULTINODE" --file_path "/home/ubuntu/refstack-client/.tempest/.stestr/0*"
+  allow_failure: true
+  artifacts:
+    paths:
+      - ./0
+      - ./0.json
+    when: always

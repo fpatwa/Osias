@@ -71,6 +71,7 @@ def parse_args():
                  'test_setup',
                  'test_refstack',
                  'test_stress',
+                 'test_rally',
                  'complete_openstack_install',
                  'copy_files',
                  'run_command'],
@@ -158,7 +159,8 @@ def main():
                                 'post_deploy_openstack',
                                 'test_setup',
                                 'test_refstack',
-                                'test_stress']:
+                                'test_stress',
+                                'test_rally']:
             utils.run_script_on_server(cmd, servers_public_ip[0])
         elif args.operation == 'copy_files':
             if args.file_path:
@@ -179,6 +181,7 @@ def main():
             utils.run_script_on_server('deploy_openstack.sh', servers_public_ip[0])
             utils.run_script_on_server('test_setup.sh', servers_public_ip[0])
             utils.run_script_on_server('test_refstack.sh', servers_public_ip[0])
+            utils.run_script_on_server('test_rally.sh', servers_public_ip[0])
     elif args.operation == 'run_command':
         # If command is specified then only perform it
         if args.command and args.target_node:
