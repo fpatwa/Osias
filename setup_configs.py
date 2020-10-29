@@ -114,7 +114,7 @@ def setup_ceph_node_permisions(storage_nodes):
     for node in storage_nodes:
         copy_keys += ''.join(('ssh -o StrictHostKeyChecking=no ', node, ' sudo cp /home/ubuntu/.ssh/authorized_keys /root/.ssh/authorized_keys', '\n'))
         copy_ssh_id += ''.join(('ssh-copy-id -f -i /etc/ceph/ceph.pub -o StrictHostKeyChecking=no root@$(ssh -o StrictHostKeyChecking=no ', node, ' hostname)', '\n'))
-        add_ceph_hosts += ''.join(('sudo ceph orch host add $(ssh -o StrictHostKeyChecking=no ', node, ' hostname)', '\n'))
+        add_ceph_hosts += ''.join(('sudo ceph orch host add $(ssh -o StrictHostKeyChecking=no ', node, ' hostname) ', node, '\n'))
 
     with open('configure_ceph_node_permissions.sh', 'w') as f:
         f.write('#!/bin/bash')
