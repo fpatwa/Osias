@@ -6,7 +6,7 @@ mkdir rally
 cd rally/
 python3 -m venv venv
 source venv/bin/activate
-pip install setuptools==40.3.0
+pip install setuptools==40.3.0 wheel==0.34.1 requests==2.22.0
 pip install rally-openstack
 
 source /etc/kolla/admin-openrc.sh
