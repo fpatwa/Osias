@@ -42,7 +42,7 @@ reprovision_servers:
     - .base_setup
   image: utsaics/maas:2.8
   script:
-    - python3 deploy.py reprovision_servers --config "$MULTINODE" --MAAS_URL "$MAAS_URL" --MAAS_API_KEY "$MAAS_API_KEY"
+    - python3 -u deploy.py reprovision_servers --config "$MULTINODE" --MAAS_URL "$MAAS_URL" --MAAS_API_KEY "$MAAS_API_KEY"
   rules:
     - if: '$REPROVISION_SERVERS == "false"'
       when: never
@@ -56,7 +56,7 @@ bootstrap_networking:
     - .base_setup
   script:
     # Configure the networking and bridge for openstack.
-    - python3 deploy.py bootstrap_networking --config "$MULTINODE"
+    - python3 -u deploy.py bootstrap_networking --config "$MULTINODE"
 
 cleanup:
   stage: cleanup
@@ -65,7 +65,7 @@ cleanup:
   script:
     # Prepare a clean environment - cleanup servers to be used for deploy
     # Ensure there is no ceph and openstack deployment on the servers
-    - python3 deploy.py cleanup --config "$MULTINODE"
+    - python3 -u deploy.py cleanup --config "$MULTINODE"
   rules:
     - if: '$REPROVISION_SERVERS == "true"'
       when: never
@@ -80,7 +80,7 @@ reboot_servers:
   script:
     # Restart the nodes
     # Verify that the servers are up and online.
-    - python3 deploy.py reboot_servers --config "$MULTINODE"
+    - python3 -u deploy.py reboot_servers --config "$MULTINODE"
   rules:
     - if: '$REPROVISION_SERVERS == "true"'
       when: never
@@ -95,7 +95,7 @@ bootstrap:openstack:
     - .base_setup
   script:
     # Run bootstrap across the servers for installing the pre-reqs for openstack
-    - python3 deploy.py bootstrap_openstack --config "$MULTINODE"
+    - python3 -u deploy.py bootstrap_openstack --config "$MULTINODE"
 
 ceph:deploy:
   stage: pre_deploy
@@ -103,10 +103,10 @@ ceph:deploy:
     - .base_setup
   script:
     # Run bootstrap across the servers for installing the pre-reqs for CEPH
-    - python3 deploy.py bootstrap_ceph --config "$MULTINODE"
+    - python3 -u deploy.py bootstrap_ceph --config "$MULTINODE"
     # Deploy ceph on target servers using cephadm
     # Configure kolla options for ceph
-    - python3 deploy.py deploy_ceph --config "$MULTINODE"
+    - python3 -u deploy.py deploy_ceph --config "$MULTINODE"
 
 openstack:pull:
   stage: pre_deploy
@@ -115,7 +115,7 @@ openstack:pull:
   retry: 2
   script:
     # Pull openstack kolla images
-    - python3 deploy.py pre_deploy_openstack --config "$MULTINODE"
+    - python3 -u deploy.py pre_deploy_openstack --config "$MULTINODE"
 
 deploy:openstack:
   stage: deploy
@@ -125,7 +125,7 @@ deploy:openstack:
     # Deploy openstack on target servers using kolla
     # 1. Run Kolla pre-setup
     # 2. Run Kolla deploy
-    - python3 deploy.py deploy_openstack --config "$MULTINODE"
+    - python3 -u deploy.py deploy_openstack --config "$MULTINODE"
 
 post_deploy:openstack:
   stage: post_deploy
@@ -133,14 +133,14 @@ post_deploy:openstack:
     - .base_setup
   script:
     # Setup the openstack cloud with public network, images, flavors etc.
-    - python3 deploy.py post_deploy_openstack --config "$MULTINODE"
+    - python3 -u deploy.py post_deploy_openstack --config "$MULTINODE"
 
 test:setup:
   stage: test_setup
   extends:
     - .base_setup
   script:
-    - python3 deploy.py test_setup --config "$MULTINODE"
+    - python3 -u deploy.py test_setup --config "$MULTINODE"
 
 test:refstack:
   stage: test_refstack
@@ -148,13 +148,13 @@ test:refstack:
     - .base_setup
   script:
     # Run refstack tests to ensure that the openstack deploy on target servers is functional
-    - python3 deploy.py test_refstack --config "$MULTINODE"
+    - python3 -u deploy.py test_refstack --config "$MULTINODE"
   after_script:
     # Setup and add SSH_PRIVATE_KEY to ssh agent
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     # Copy over the test output files
-    - python3 deploy.py copy_files --config "$MULTINODE" --file_path "/home/ubuntu/refstack-client/.tempest/.stestr/0*"
+    - python3 -u deploy.py copy_files --config "$MULTINODE" --file_path "/home/ubuntu/refstack-client/.tempest/.stestr/0*"
   allow_failure: true
   artifacts:
     paths:
@@ -167,7 +167,7 @@ test:stress:
   extends:
     - .base_setup
   script:
-    - python3 deploy.py test_stress --config "$MULTINODE"
+    - python3 -u deploy.py test_stress --config "$MULTINODE"
   rules:
     - if: '$CI_PIPELINE_SOURCE == "master"'
       allow_failure: true
@@ -177,16 +177,18 @@ test:rally:
   extends:
     - .base_setup
   script:
-    # Run refstack tests to ensure that the openstack deploy on target servers is functional
-    - python3 deploy.py test_rally --config "$MULTINODE"
+    # Run refstack tests through rally to ensure that the openstack deploy on target servers is functional
+    - python3 -u deploy.py test_rally --config "$MULTINODE"
   after_script:
     # Setup and add SSH_PRIVATE_KEY to ssh agent
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     # Copy over the test output files
-    - python3 deploy.py copy_files --config "$MULTINODE" --file_path "/home/ubuntu/report.html"
+    - python3 -u deploy.py copy_files --config "$MULTINODE" --file_path "/home/ubuntu/report.html"
   allow_failure: true
   artifacts:
     paths:
       - ./report.html
     when: always
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'

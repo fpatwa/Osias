@@ -3,6 +3,7 @@
 set -euxo pipefail
 
 CIRROS_URL="http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+UBUNTU_URL="https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img"
 MYDNS="10.250.53.202"
 PUBLICIP=$(/sbin/ifconfig br0 | grep 'inet ' | awk '{print $2}')
 PUBLIC_NETWORK="${PUBLICIP%.*}.0/24"
@@ -37,8 +38,9 @@ openstack flavor create --id 100 --vcpus 1 --ram 256 --disk 1 ref.nano
 openstack flavor create --id 101 --vcpus 2 --ram 512 --disk 2 ref.micro
 
 wget $CIRROS_URL -O /tmp/CirrOS.img
+wget $UBUNTU_URL -O /tmp/Ubuntu.img
 openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/CirrOS.img "CirrOS"
-openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/CirrOS.img "CirrOS-2"
+openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/Ubuntu.img "Ubuntu"
 TENANT=$(openstack project list -f value -c ID --user admin)
 openstack network create --share --project "${TENANT}" --external --provider-network-type flat --provider-physical-network physnet1 public
 openstack subnet create --project "${TENANT}" --subnet-range "${PUBLIC_NETWORK}" --allocation-pool start="${POOL_START}",end="${POOL_END}" --dns-nameserver "${MYDNS}" --gateway "${POOL_GATEWAY}" --network public public_subnet

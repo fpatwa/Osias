@@ -43,6 +43,68 @@ rally verify create-verifier --type tempest --name tempest-verifier --source htt
 rally verify list-verifiers
 wget "https://refstack.openstack.org/api/v1/guidelines/2020.06/tests?target=platform&type=required&alias=true&flag=false" -O 2020.06-test-list.txt
 
+
+cat > refstack.conf << __EOF__
+[auth]
+create_isolated_networks = True
+
+[compute]
+min_compute_nodes = 3
+min_microversion = 2.1
+max_microversion = 2.87
+# max_microversion = 2.79
+endpoint_type = publicURL
+fixed_network_name = mynet
+
+[compute-feature-enabled]
+validation.run_validation = True
+live_migration = True
+live_migrate_paused_instances = True
+preserve_ports = True
+console_output = True
+resize = True
+attach_encrypted_volume = False
+pause = True
+shelve = True
+suspend = True
+cold_migration = True
+vnc_console = True
+
+[identity]
+catalog_type = identity
+
+[identity-feature-enabled]
+api_v2 = False
+api_v3 = True
+
+[image]
+image_path = https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+http_image = https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+
+[network-feature-enabled]
+ipv6_subnet_attributes = False
+ipv6 = False
+
+[object-storage]
+region = RegionOne
+endpoint_type = internal
+
+[object-storage-feature-enabled]
+discoverability = True
+
+[validation]
+auth_method = keypair
+ip_version_for_ssh = 4
+network_for_ssh = public
+security_group = True
+security_group_rules = True
+image_ssh_password = gocubsgo
+
+__EOF__
+
+rally verify configure-verifier --reconfigure --extend refstack.conf
+rally verify configure-verifier  --show
+
 # Begin refstack certification (233) tests.
 rally verify start --load-list 2020.06-test-list.txt
 
