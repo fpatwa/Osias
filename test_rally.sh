@@ -46,8 +46,11 @@ wget "https://refstack.openstack.org/api/v1/guidelines/2020.06/tests?target=plat
 # Begin refstack certification (233) tests.
 rally verify start --load-list 2020.06-test-list.txt
 
+UUID="$(rally verify list | grep tempest-verifier | awk '{print $2}')"
+rally verify report "$UUID" --type html --to /home/ubuntu/report.html
+
 # Begin rally (1000+) tests 
-rally verify start
+#rally verify start
 
 # References:
 # https://readthedocs.org/projects/rally/downloads/pdf/latest/
