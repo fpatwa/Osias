@@ -126,3 +126,33 @@ def setup_ceph_node_permisions(storage_nodes):
         f.write(copy_ssh_id)
         f.write('\n\n')
         f.write(add_ceph_hosts)
+
+def setup_nova_conf(compute_nodes):
+    CPU_MODELS = ''
+    for node in compute_nodes:
+        CPU_MODELS += ''.join(('models+="$(ssh -o StrictHostKeyChecking=no ', node, ' cat /sys/devices/cpu/caps/pmu_name) "', '\n'))
+    MULTILINE_CMD='''
+
+# Remove duplicates and trailing spaces
+models="$(echo "$models" | xargs -n1 | sort -u | xargs)"
+# Replace spaces with commas
+models="${models// /,}"
+
+cat >> /etc/kolla/config/nova.conf <<__EOF__
+[libvirt]
+cpu_mode = custom
+cpu_models = $models
+cpu_model_extra_flags = pcid, vmx, pdpe1gb
+__EOF__
+
+'''
+    with open('setup_nova_conf.sh', 'w') as f:
+        f.write('#!/bin/bash')
+        f.write("\n\n")
+        f.write('set -euxo pipefail')
+        f.write('\n\n')
+        f.write("models=''")
+        f.write('\n\n')
+        f.write(CPU_MODELS)
+        f.write('\n\n')
+        f.write(MULTILINE_CMD)

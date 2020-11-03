@@ -99,6 +99,8 @@ def bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
     ssh_priv_key, ssh_public_key = utils.create_new_ssh_key()
     utils.run_script_on_server('bootstrap_ssh_access.sh', servers_public_ip, args=[ssh_priv_key, ssh_public_key])
     utils.run_script_on_server('bootstrap_openstack.sh', servers_public_ip[0])
+    setup_configs.setup_nova_conf(compute_nodes)
+    utils.run_script_on_server('setup_nova_conf.sh',servers_public_ip[0])
 
 def bootstrap_ceph(servers_public_ip, storage_nodes_data_ip):
     utils.run_script_on_server('bootstrap_ceph.sh', servers_public_ip[0], args=[storage_nodes_data_ip[0]])
