@@ -8,7 +8,10 @@ sudo chown "$USER":"$USER" "$HOME"/root.crt
 
 # Create accounts and tempest files:
 source /etc/kolla/admin-openrc.sh
-ADMIN_PASS="$(cat /etc/kolla/admin-openrc.sh  | grep  "OS_PASSWORD=" | cut -d '=' -f2)"
+openstack flavor create --id 100 --vcpus 1 --ram 256 --disk 1 ref.nano
+openstack flavor create --id 101 --vcpus 2 --ram 512 --disk 2 ref.micro
+
+ADMIN_PASS="$(grep 'OS_PASSWORD=' '/etc/kolla/admin-openrc.sh' | cut -d '=' -f2)"
 CIRROSID="$(openstack image list -f value -c ID --name CirrOS)"
 CIRROSID2="$(openstack image list -f value -c ID --name CirrOS-2)"
 PUBLICNETWORKID="$(openstack network list --external -c ID -f value)"

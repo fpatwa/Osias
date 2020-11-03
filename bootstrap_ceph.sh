@@ -40,5 +40,8 @@ sudo ./cephadm install
 sudo mkdir -p /etc/ceph
 sudo ./cephadm bootstrap --mon-ip "$MONITOR_IP"
 
+# Turn on telemetry and accept Community Data License Agreement - Sharing
+sudo ceph telemetry on --license sharing-1-0
+
 sudo ceph -v
 sudo ceph status
