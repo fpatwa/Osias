@@ -2,8 +2,7 @@
 
 import toml
 import subprocess
-import shlex
-from ssh_tool import ssh_tool
+from ssh import SshClient
 
 
 class parser:
@@ -55,7 +54,7 @@ def convert_to_list(parm):
     return parm
 
 def create_ssh_client(target_node):
-    client = ssh_tool('ubuntu', target_node)
+    client = SshClient('ubuntu', target_node)
     if not client.check_access():
         print('Failed to connect to target node with IP {} using SSH'.format(
             target_node))
@@ -90,7 +89,7 @@ def run_cmd(command, output=True):
     stdout = None
     print("\nCommand Issued: \n\t{}\n".format(command))
     try:
-        stdout = subprocess.check_output(shlex.split(command), stderr=subprocess.STDOUT)
+        stdout = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
         ret = 0
     except subprocess.CalledProcessError as e:
         ret = e.returncode
@@ -104,22 +103,16 @@ def run_cmd(command, output=True):
     return stdout
 
 def create_new_ssh_key():
-    cleanup_cmd = 'rm -f deploy_id_rsa'
-    run_cmd(cleanup_cmd)
-    cleanup_cmd = 'rm -f deploy_id_rsa.pub'
-    run_cmd(cleanup_cmd)
-
-    create_key_cmd = 'ssh-keygen -q -t rsa -N \'\' -f ./deploy_id_rsa'
-    run_cmd(create_key_cmd)
+    run_cmd('rm -f deploy_id_rsa')
+    run_cmd('rm -f deploy_id_rsa.pub')
+    run_cmd('ssh-keygen -q -t rsa -N \'\' -f ./deploy_id_rsa')
 
     with open('deploy_id_rsa', 'r') as f:
         ssh_priv_key = f.read()
     with open('deploy_id_rsa.pub', 'r') as f:
         ssh_public_key = f.read()
 
-    cleanup_cmd = 'rm -f deploy_id_rsa'
-    run_cmd(cleanup_cmd)
-    cleanup_cmd = 'rm -f deploy_id_rsa.pub'
-    run_cmd(cleanup_cmd)
+    run_cmd('rm -f deploy_id_rsa')
+    run_cmd('rm -f deploy_id_rsa.pub')
 
     return ssh_priv_key, ssh_public_key
