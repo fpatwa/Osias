@@ -14,7 +14,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -U pip
 pip install -U 'ansible<2.9'
-pip install 'kolla-ansible<=11'
+pip install 'kolla-ansible<11'
 
 # General Ansible config
 sudo mkdir -p /etc/ansible
