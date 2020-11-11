@@ -27,6 +27,61 @@ openstack:
       project_name: admin
 __EOF__
 
+cat > perf_cinder_pp.yaml << __EOF__
+CinderVolumes.create_and_delete_volume:
+    -
+      args:
+        size: 20
+        image:
+          name: "Ubuntu_20.04_LTS"
+      runner:
+        type: "constant"
+        times: 200
+        concurrency: 20
+      context:
+        users:
+          tenants: 1
+      sla:
+        failure_rate:
+          max: 1
+__EOF__
+
+cat > perf_keystone_pp.yaml << __EOF__
+KeystoneBasic.authenticate_user_and_validate_token:
+    -
+      args: {}
+      runner:
+        type: "constant"
+        times: 500
+        concurrency: 50
+      context:
+          users:
+              tenants: 5
+              users_per_tenant: 10
+      sla:
+        failure_rate:
+           max: 1
+__EOF__
+
+cat > perf_nova_pp.yaml << __EOF__
+NovaServers.boot_and_delete_server:
+    -
+      args:
+        flavor:
+          name: "gp1.medium"
+        image:
+          name: "Ubuntu_20.04_LTS"
+        force_delete: false
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+__EOF__
+
 rally db ensure
 rally env create --name my_openstack --spec env.yaml
 rally env check
@@ -110,6 +165,10 @@ rally verify start --load-list 2020.06-test-list.txt
 
 UUID="$(rally verify list | grep tempest-verifier | awk '{print $2}')"
 rally verify report "$UUID" --type html --to /home/ubuntu/report.html
+
+rally task start --abort-on-sla-failure perf_keystone_pp.yaml
+rally task start --abort-on-sla-failure perf_cinder_pp.yaml
+rally task start --abort-on-sla-failure perf_nova_pp.yaml
 
 # Begin rally (1000+) tests 
 #rally verify start
