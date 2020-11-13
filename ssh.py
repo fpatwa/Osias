@@ -52,14 +52,9 @@ class SshClient:
                 )
                 ret = 0
             except subprocess.CalledProcessError as e:
-                ret = e.returncode
-                print(e)
-                print(stdout)
+                raise Exception(e.output.decode()) from e
         else:
             ret = subprocess.call(call_list)
-
-        if ret != 0:
-            print(stdout)
 
         # By default, it is not ok to fail
         if test:
