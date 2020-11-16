@@ -1,8 +1,8 @@
 """Provides a class to function as a ssh client to interact with a remote IP via ssh
 """
 
-import subprocess
 import time
+import utils
 
 
 class SshClient:
@@ -13,24 +13,6 @@ class SshClient:
         self.__username = username
         self.__ip_address = ip_address
         self.__ssh_key = ssh_key
-
-    def __run(command, test=True, silent=True):
-        if not silent:
-            print(f"\n[Command Issued:]\n\t{command}\n"
-
-        stdout = None
-        try:
-            stdout = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
-        except subprocess.CalledProcessError as e:
-            if test:
-                raise Exception(e.output.decode()) from e
-            else:
-                print(e.output.decode())
-
-        if not silent:
-            print(f"\n[Command Output:]\n{stdout.decode()}\n")
-
-        return stdout
 
     def ssh(self, command, option=None, test=True, silent=False):
         """Connect to remote end using ssh"""
@@ -59,10 +41,9 @@ class SshClient:
 
         call_list.extend([self.__username + "@" + self.__ip_address, command])
 
-        if not silent:
-            print("SshClient ssh: " + " ".join(call_list))
+        print("SshClient ssh: " + " ".join(call_list))
 
-        return self.__run(call_list, test, silent)
+        return utils.run_cmd(call_list, test)
 
     def check_access(self):
         """Check access to the remote end"""
@@ -106,7 +87,7 @@ class SshClient:
 
         print("SshClient scp: " + " ".join(call_list))
 
-        return self.__run(call_list, silent=False)
+        return utils.run_cmd(call_list)
 
     def scp_from(self, file_path_remote, file_path_local="."):
         """SCP a file from the remote end to local path"""
@@ -134,4 +115,4 @@ class SshClient:
 
         print("SshClient scp: " + " ".join(call_list))
 
-        return self.__run(call_list, silent=False)
+        return utils.run_cmd(call_list)

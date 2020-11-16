@@ -85,20 +85,21 @@ def run_cmd_on_server(cmd, servers):
         client = create_ssh_client(server)
         client.ssh(cmd)
 
-def run_cmd(command, output=True):
-    stdout = None
-    print("\nCommand Issued: \n\t{}\n".format(command))
+def run_cmd(command, test=True, output=True):
+    """Run the specified command"""
+    print(f"\n[Command Issued:]\n\t{command}\n"
+
+    stdout = ''
     try:
         stdout = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
-        ret = 0
     except subprocess.CalledProcessError as e:
-        ret = e.returncode
-        print(e)
-
-    assert ret == 0
+        if test:
+            raise Exception(e.output.decode()) from e
+        else:
+            print(e.output.decode())
 
     if output:
-        print(stdout.decode())
+        print(f"\n[Command Output:]\n{stdout.decode()}\n")
 
     return stdout
 
