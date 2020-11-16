@@ -26,6 +26,7 @@ Each server in MaaS needs the following configuration:
 
 To bypass the use of MaaS, make sure you have
 * Ubuntu installed,
+* Passwordless sudo,
 * your br0 configured on your public nic with an IP, and
 * your gitlab SSH public key installed.
 * Also, set `REPROVISION_SERVERS=false` variable in GitLab, so it doesn't try to access the MaaS server.
