@@ -87,7 +87,7 @@ def run_cmd_on_server(cmd, servers):
 
 def run_cmd(command, test=True, output=True):
     """Run the specified command"""
-    print(f"\n[Command Issued:]\n\t{command}\n"
+    print(f"\n[Command Issued:]\n\t{command}\n")
 
     stdout = ''
     try:
