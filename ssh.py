@@ -43,7 +43,7 @@ class SshClient:
 
         print("SshClient ssh: " + " ".join(call_list))
 
-        return utils.run_cmd(call_list, test)
+        return utils.run_cmd(" ".join(call_list), test)
 
     def check_access(self):
         """Check access to the remote end"""
@@ -87,7 +87,7 @@ class SshClient:
 
         print("SshClient scp: " + " ".join(call_list))
 
-        return utils.run_cmd(call_list)
+        return utils.run_cmd(" ".join(call_list))
 
     def scp_from(self, file_path_remote, file_path_local="."):
         """SCP a file from the remote end to local path"""
@@ -115,4 +115,4 @@ class SshClient:
 
         print("SshClient scp: " + " ".join(call_list))
 
-        return utils.run_cmd(call_list)
+        return utils.run_cmd(" ".join(call_list))

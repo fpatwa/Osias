@@ -87,7 +87,7 @@ def run_cmd_on_server(cmd, servers):
 
 def run_cmd(command, test=True, output=True):
     """Run the specified command"""
-    print(f"\n[Command Issued:]\n\t{command}\n")
+    print(f"\n[Command Issued]\n\t{command}\n")
 
     stdout = ''
     try:
@@ -99,7 +99,7 @@ def run_cmd(command, test=True, output=True):
             print(e.output.decode())
 
     if output:
-        print(f"\n[Command Output:]\n{stdout.decode()}\n")
+        print(f"\n[Command Output]\n{stdout.decode()}\n")
 
     return stdout
 
