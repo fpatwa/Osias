@@ -14,7 +14,7 @@ class SshClient:
         self.__ip_address = ip_address
         self.__ssh_key = ssh_key
 
-    def ssh(self, command, option=None, test=True, silent=False):
+    def ssh(self, command, option=None, test=True):
         """Connect to remote end using ssh"""
         if self.__ssh_key is None:
             keyls = []

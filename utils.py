@@ -92,11 +92,14 @@ def run_cmd(command, test=True, output=True):
     stdout = ''
     try:
         stdout = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+        if not test:
+            return 0
     except subprocess.CalledProcessError as e:
         if test:
             raise Exception(e.output.decode()) from e
         else:
             print(e.output.decode())
+            return e.returncode
 
     if output:
         print(f"\n[Command Output]\n{stdout.decode()}\n")
