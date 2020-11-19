@@ -8,6 +8,13 @@ import utils
 class SshClient:
     """Function as a ssh client to interact with a remote IP"""
 
+    __SSH_OPTIONS_TEMPLATE = (
+        "-o StrictHostKeyChecking=no "
+        + "-o UserKnownHostsFile=/dev/null "
+        + "-o ConnectTimeout=10 "
+        + "-o BatchMode=yes "
+    )
+
     def __init__(self, username, ip_address, ssh_key=None):
         """Initialize ssh credentials"""
         self.__username = username
@@ -16,33 +23,25 @@ class SshClient:
 
     def ssh(self, command, option=None, test=True):
         """Connect to remote end using ssh"""
-        if self.__ssh_key is None:
-            keyls = []
+        if self.__ssh_key:
+            keyls = f"-i {self.__ssh_key}"
         else:
-            keyls = ["-i", self.__ssh_key]
-
-        call_list = (
-            ["ssh"]
-            + keyls
-            + [
-                "-o",
-                "StrictHostKeyChecking=no",
-                "-o",
-                "UserKnownHostsFile=/dev/null",
-                "-o",
-                "ConnectTimeout=10",
-                "-o",
-                "BatchMode=yes",
-            ]
-        )
+            keyls = ""
 
         if option:
-            call_list.extend(["-o", option])
+            extra_option = f"{option}"
+        else:
+            extra_option = ""
 
-        call_list.extend([self.__username + "@" + self.__ip_address, command])
-        ssh_cmd = ' '.join(call_list)
+        ssh_cmd = "ssh "
+                  + f"{keyls} "
+                  + f"{self.__SSH_OPTIONS_TEMPLATE} "
+                  + f"{extra_option} "
+                  + f"{self.__username}@"
+                  + f"{self.__ip_address} "
+                  + f"{command}"
 
-        return utils.run_cmd(''.join((ssh_cmd, ' ', command)), test)
+        return utils.run_cmd(ssh_cmd, test)
 
     def check_access(self):
         """Check access to the remote end"""
