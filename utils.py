@@ -91,7 +91,7 @@ def run_cmd(command, test=True, output=True):
 
     output = ''
     try:
-        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, executable='/bin/bash')
         if not test:
             return 0
     except subprocess.CalledProcessError as e:
