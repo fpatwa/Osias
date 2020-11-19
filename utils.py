@@ -102,7 +102,7 @@ def run_cmd(command, test=True, output=True):
             return e.returncode
 
     if output:
-        print(f"\n[Command Output]\n{stdout.decode()}\n")
+        print(f"\n[Command Output]\n{output.decode()}\n")
 
     return output
 
