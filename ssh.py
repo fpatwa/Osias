@@ -33,13 +33,14 @@ class SshClient:
         else:
             extra_option = ""
 
-        ssh_cmd = "ssh "
+        ssh_cmd = ("ssh "
                   + f"{keyls} "
                   + f"{self.__SSH_OPTIONS_TEMPLATE} "
                   + f"{extra_option} "
                   + f"{self.__username}@"
                   + f"{self.__ip_address} "
                   + f"{command}"
+        )
 
         return utils.run_cmd(ssh_cmd, test)
 
