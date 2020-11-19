@@ -40,8 +40,9 @@ class SshClient:
             call_list.extend(["-o", option])
 
         call_list.extend([self.__username + "@" + self.__ip_address, command])
+        ssh_cmd = ' '.join(call_list, ' ')
 
-        return utils.run_cmd(' '.join(call_list), test)
+        return utils.run_cmd(''.join(ssh_cmd, command), test)
 
     def check_access(self):
         """Check access to the remote end"""
