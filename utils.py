@@ -89,9 +89,9 @@ def run_cmd(command, test=True, output=True):
     """Run the specified command"""
     print(f"\n[Command Issued]\n\t{command}\n")
 
-    stdout = ''
+    output = ''
     try:
-        stdout = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
         if not test:
             return 0
     except subprocess.CalledProcessError as e:
@@ -104,7 +104,7 @@ def run_cmd(command, test=True, output=True):
     if output:
         print(f"\n[Command Output]\n{stdout.decode()}\n")
 
-    return stdout
+    return output
 
 def create_new_ssh_key():
     run_cmd('rm -f deploy_id_rsa')

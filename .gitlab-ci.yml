@@ -25,6 +25,7 @@ stages:
 .base_setup:
   tags:
     - docker-runner
+  interruptible: true
 
 before_script:
   # Setup and add SSH_PRIVATE_KEY to ssh agent
