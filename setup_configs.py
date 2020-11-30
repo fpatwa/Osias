@@ -128,6 +128,12 @@ def setup_ceph_node_permisions(storage_nodes):
         f.write(add_ceph_hosts)
 
 def setup_nova_conf(compute_nodes):
+# Ref: https://www.openstack.org/videos/summits/berlin-2018/effective-virtual-cpu-configuration-in-nova
+# Identical host CPU's: host-passthrough
+# Mixed host CPU's: host-model or custom
+# NOTE: - PCID Flag is only necessary on custom mode and required to address the guest performance degradation as a result of vuln patches
+# - Intel VMX to expose the virtualization extensions to the guest,
+# - pdpe1gb to configure 1GB huge pages for CPU models that do not provide it.
     CPU_MODELS = ''
     for node in compute_nodes:
         CPU_MODELS += ''.join(('models+="$(ssh -o StrictHostKeyChecking=no ', node, ' cat /sys/devices/cpu/caps/pmu_name) "', '\n'))
@@ -135,14 +141,25 @@ def setup_nova_conf(compute_nodes):
 
 # Remove duplicates and trailing spaces
 models="$(echo "$models" | xargs -n1 | sort -u | xargs)"
+COUNT=$(wc -w <<< "$models")
+echo "THERE ARE $COUNT CPU ARCHITECTURES"
+if [ "$COUNT" -eq 1 ]
+then
+   MODE="host-passthrough"
+elif [ "$COUNT" -ge 2 ]
+then
+   MODE="host-model"
+fi
+echo "MODE IS SET TO: $MODE"
+
 # Replace spaces with commas
 models="${models// /,}"
 
 cat >> /etc/kolla/config/nova.conf <<__EOF__
 [libvirt]
-cpu_mode = custom
-cpu_models = $models
-cpu_model_extra_flags = pcid, vmx, pdpe1gb
+cpu_mode = $MODE
+# cpu_models = $models
+# cpu_model_extra_flags = pcid, vmx, pdpe1gb
 __EOF__
 
 '''
