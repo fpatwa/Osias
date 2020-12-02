@@ -8,6 +8,7 @@ import json
 import utils
 import setup_configs
 import maas
+from distutils.util import strtobool
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -91,10 +92,10 @@ def cleanup(servers_public_ip, storage_nodes_public_ip):
     utils.run_cmd_on_server('sudo -s rm -fr /home/ubuntu/*', servers_public_ip)
 
 def bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
-                        storage_nodes_private_ip, compute_nodes, monitoring_nodes):
+                        storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid):
     utils.run_script_on_server('bootstrap_kolla.sh', servers_public_ip[0])
     setup_configs.setup_kolla_configs(controller_nodes, network_nodes,  storage_nodes_private_ip,
-                                      compute_nodes, monitoring_nodes, servers_public_ip)
+                                      compute_nodes, monitoring_nodes, servers_public_ip, raid)
     utils.run_script_on_server('configure_kolla.sh', servers_public_ip[0])
     ssh_priv_key, ssh_public_key = utils.create_new_ssh_key()
     utils.run_script_on_server('bootstrap_ssh_access.sh', servers_public_ip, args=[ssh_priv_key, ssh_public_key])
@@ -110,9 +111,9 @@ def deploy_ceph(servers_public_ip, storage_nodes_data_ip):
     utils.run_script_on_server('configure_ceph_node_permissions.sh', servers_public_ip[0])
     utils.run_script_on_server('deploy_ceph.sh', servers_public_ip[0])
 
-def reprovision_servers(maas_url, maas_api_key, servers_public_ip):
+def reprovision_servers(maas_url, maas_api_key, servers_public_ip, raid):
     utils.run_cmd('maas login admin {} {}'.format(maas_url, maas_api_key))
-    maas.servers(servers_public_ip).deploy()
+    maas.servers(servers_public_ip, raid).deploy()
 
 def main():
     args = parse_args()
@@ -130,6 +131,7 @@ def main():
         compute_nodes = config.get_server_ips(node_type="compute", ip_type="private")
         monitoring_nodes = config.get_server_ips(node_type="monitor", ip_type="private")
         servers_public_ip = config.get_all_public_ips()
+        raid = bool(strtobool(config.get_variables(variable="RAID"))) #convert bool, err on invalid bool inputs.
 
         cmd = ''.join((args.operation, '.sh'))
 
@@ -137,7 +139,7 @@ def main():
            cleanup(servers_public_ip, storage_nodes_public_ip)
         elif args.operation == 'reprovision_servers':
             if args.MAAS_URL and args.MAAS_API_KEY:
-                reprovision_servers(args.MAAS_URL, args.MAAS_API_KEY, servers_public_ip)
+                reprovision_servers(args.MAAS_URL, args.MAAS_API_KEY, servers_public_ip, raid)
             else:
                 raise Exception(
                     'ERROR: MAAS_API_KEY and/or MAAS_URL argument not specified.\n' +
@@ -146,12 +148,18 @@ def main():
         elif args.operation == 'bootstrap_networking':
             bootstrap_networking(servers_public_ip)
         elif args.operation == 'bootstrap_ceph':
-            bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
+            if raid:
+                print("'Bootstrap_Ceph' is skipped due to RAID being enabled.")
+            else:
+                bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
         elif args.operation == 'bootstrap_openstack':
             bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
-                                storage_nodes_private_ip, compute_nodes, monitoring_nodes)
+                                storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid)
         elif args.operation == 'deploy_ceph':
-            deploy_ceph(servers_public_ip, storage_nodes_data_ip)
+            if raid:
+                print("'Deploy_Ceph' is skipped due to RAID being enabled.")
+            else:
+               deploy_ceph(servers_public_ip, storage_nodes_data_ip)
         elif args.operation == 'reboot_servers':
             utils.run_cmd_on_server('sudo -s shutdown -r 1', servers_public_ip)
             utils.run_cmd_on_server('echo Server is UP!', servers_public_ip)
@@ -173,12 +181,14 @@ def main():
                     'optional arguments [--file_path] has to be set.')
         elif args.operation == 'complete_openstack_install':
             utils.run_script_on_server('bootstrap_networking.sh', servers_public_ip)
-            bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
             bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
-                                storage_nodes_private_ip, compute_nodes, monitoring_nodes)
-            deploy_ceph(servers_public_ip, storage_nodes_data_ip)
+                                storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid)
+            if not raid:
+                bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
+                deploy_ceph(servers_public_ip, storage_nodes_data_ip)
             utils.run_script_on_server('pre_deploy_openstack.sh', servers_public_ip[0])
             utils.run_script_on_server('deploy_openstack.sh', servers_public_ip[0])
+            utils.run_script_on_server('post_deploy_openstack.sh', servers_public_ip[0])
             utils.run_script_on_server('test_setup.sh', servers_public_ip[0])
             utils.run_script_on_server('test_refstack.sh', servers_public_ip[0])
     elif args.operation == 'run_command':
@@ -190,7 +200,6 @@ def main():
                 'ERROR: command and target_node arguments not specified.\n' +
                 'If operation is specified as [run_command] then the ' +
                 'optional arguments [--command] and [--target_node] have to be set.')
-
 
 if __name__ == '__main__':
     main()

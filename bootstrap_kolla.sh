@@ -12,7 +12,7 @@ sudo chown "$USER":"$USER" /opt/kolla
 cd /opt/kolla
 python3 -m venv venv
 source venv/bin/activate
-pip install -U pip
+pip install -U pip wheel
 pip install -U 'ansible<2.9'
 pip install 'kolla-ansible<11'
 

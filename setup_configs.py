@@ -1,14 +1,48 @@
 #!/usr/bin/python3
 
+VIP_ADDRESS_SUFFIX = '250'
 
 def setup_kolla_configs(controller_nodes, network_nodes, storage_nodes,
-                        compute_nodes, monitoring_nodes, servers_public_ip):
+                        compute_nodes, monitoring_nodes, servers_public_ip, RAID):
     internal_subnet = '.'.join((controller_nodes[0].split('.')[:3]))
-    kolla_internal_vip_address = '.'.join((internal_subnet, '250'))
+    kolla_internal_vip_address = '.'.join((internal_subnet, VIP_ADDRESS_SUFFIX))
 
     external_subnet = '.'.join((servers_public_ip[0].split('.')[:3]))
-    kolla_external_vip_address = '.'.join((external_subnet, '250'))
+    kolla_external_vip_address = '.'.join((external_subnet, VIP_ADDRESS_SUFFIX))
 
+    if RAID:
+        print("glance_backend_ceph: no")
+        storage = '''
+glance_backend_ceph: "no"
+glance_backend_file: "yes"
+#glance_backend_swift: "no"
+
+enable_cinder: "no"
+#enable_cinder_backend_lvm: "no"
+
+#ceph_nova_user: "cinder"
+#cinder_backend_ceph: "no"
+#cinder_backup_driver: "ceph"
+
+nova_backend_ceph: "no"
+#gnocchi_backend_storage: "ceph"
+'''
+    else:
+        storage = '''
+glance_backend_ceph: "yes"
+glance_backend_file: "no"
+#glance_backend_swift: "no"
+
+enable_cinder: "yes"
+#enable_cinder_backend_lvm: "no"
+
+ceph_nova_user: "cinder"
+cinder_backend_ceph: "yes"
+cinder_backup_driver: "ceph"
+
+nova_backend_ceph: "yes"
+#gnocchi_backend_storage: "ceph"
+'''
     globals_file = '''
 # Globals file is completely commented out besides these variables.
 cat >>/etc/kolla/globals.yml <<__EOF__
@@ -27,14 +61,8 @@ kolla_copy_ca_into_containers: "yes"
 kolla_verify_tls_backend: "no"
 kolla_enable_tls_backend: "yes"
 openstack_cacert: /etc/pki/tls/certs/ca-bundle.crt
-enable_cinder: "yes"
-enable_cinder_backend_lvm: "no"
-ceph_nova_user: "cinder"
-glance_backend_ceph: "yes"
-glance_backend_swift: "no"
-cinder_backend_ceph: "yes"
-cinder_backup_driver: "ceph"
-nova_backend_ceph: "yes"
+{storage}
+
 
 # Recommended Global Options:
 enable_mariabackup: "yes"
@@ -53,7 +81,6 @@ glance_enable_rolling_upgrade: "yes"
 
 #enable_gnocchi: "yes
 #ceph_gnocchi_pool_name: "metrics"
-#gnocchi_backend_storage: "ceph"
 #gnocchi_incoming_storage: "{{{{ 'redis' if enable_redis | bool else '' }}}}"
 
 #enable_central_logging: "yes"
@@ -62,7 +89,8 @@ glance_enable_rolling_upgrade: "yes"
 #enable_skydive: "yes"
 __EOF__
 '''.format(kolla_internal_vip_address=kolla_internal_vip_address,
-           kolla_external_vip_address=kolla_external_vip_address)
+           kolla_external_vip_address=kolla_external_vip_address,
+           storage=storage)
 
     CONTROLLER_NODES = '\\n'.join(controller_nodes)
     NETWORK_NODES = '\\n'.join(network_nodes)

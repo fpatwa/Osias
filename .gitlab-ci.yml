@@ -101,6 +101,7 @@ ceph:deploy:
   extends:
     - .base_setup
   script:
+    # This stage will only run if RAID is NOT enabled.
     # Run bootstrap across the servers for installing the pre-reqs for CEPH
     - python3 -u deploy.py bootstrap_ceph --config "$MULTINODE"
     # Deploy ceph on target servers using cephadm
