@@ -17,8 +17,13 @@ class parser:
             ips.append(myips[ip_type])
         return ips
 
+    def get_variables(self, variable):
+        data = self.data.get('variables')
+        result = data['0'][variable]
+        return result
+
     def get_all_public_ips(self):
-        data = self.data.keys()
+        data = ['control', 'network', 'storage', 'compute', 'monitor']
         ALL_PUBLIC_IPS = []
         for my_node_type in data:
             ips = parser.get_server_ips(self, node_type=my_node_type, ip_type="public")
@@ -38,7 +43,7 @@ class parser:
                     # Remove duplicate servers from the list
         SERVERS = [i for n, i in enumerate(SERVERS) if i not in SERVERS[:n]]
         return SERVERS
-    
+
     def bool_check_ips_exist(self, node_type, ip_type):
         data = self.data.get(node_type)
         for key,value in data.items():
@@ -86,21 +91,18 @@ def run_cmd_on_server(cmd, servers):
         client = create_ssh_client(server)
         client.ssh(cmd)
 
-def run_cmd(command, output=True):
-    stdout = None
+def run_cmd(command, test=True, output=True):
     print("\nCommand Issued: \n\t{}\n".format(command))
+    stdout = None
     try:
-        stdout = subprocess.check_output(shlex.split(command), stderr=subprocess.STDOUT)
-        ret = 0
+        stdout = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, executable='/bin/bash')
     except subprocess.CalledProcessError as e:
-        ret = e.returncode
-        print(e)
-
-    assert ret == 0
-
+        if test:
+            raise Exception(e.output.decode()) from e
+        else:
+            print(e.output.decode())
     if output:
-        print(stdout.decode())
-
+        print(f"\nCommand Output: \n{stdout.decode()}\n")
     return stdout
 
 def create_new_ssh_key():
