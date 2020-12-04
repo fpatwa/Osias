@@ -34,7 +34,7 @@ class servers:
         )
         return attributes[0], attributes[1]
 
-    @timeout_decorator.timeout(2000, timeout_exception=StopIteration)
+    @timeout_decorator.timeout(2500, timeout_exception=StopIteration)
     def _waiting(self, server_list, desired_status):
         while len(server_list) > 0:
             machine_info_list = self.__run_maas_command(f"machines read")

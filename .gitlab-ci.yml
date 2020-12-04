@@ -87,14 +87,18 @@ reboot_servers:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
 
-
 bootstrap:openstack:
   stage: bootstrap_openstack
   extends:
     - .base_setup
   script:
     # Run bootstrap across the servers for installing the pre-reqs for openstack
-    - python3 -u deploy.py bootstrap_openstack --config "$MULTINODE"
+    - |
+       if [ -z "$DOCKER_REGISTRY_PASSWORD"  ]; then
+         python3 -u deploy.py bootstrap_openstack --config "$MULTINODE"
+       else
+         python3 -u deploy.py bootstrap_openstack --config "$MULTINODE" --DOCKER_REGISTRY_PASSWORD "$DOCKER_REGISTRY_PASSWORD"
+       fi
 
 ceph:deploy:
   stage: pre_deploy

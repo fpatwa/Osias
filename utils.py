@@ -18,9 +18,17 @@ class parser:
         return ips
 
     def get_variables(self, variable):
-        data = self.data.get('variables')
-        result = data['0'][variable]
-        return result
+        if 'variables' in self.data:
+            data = self.data.get('variables')
+            if variable in data['0']:
+                return data['0'][variable]
+        return None
+    
+    def get_raid_option(self):
+        data = parser.get_variables(self, variable='RAID')
+        if type(data) is bool:
+            return data
+        return False
 
     def get_all_public_ips(self):
         data = ['control', 'network', 'storage', 'compute', 'monitor']
