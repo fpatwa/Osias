@@ -8,7 +8,7 @@ import json
 import utils
 import setup_configs
 import maas
-from distutils.util import strtobool
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -57,6 +57,11 @@ def parse_args():
                  "in the web UI; they take the form of a long random-looking " +
                  "string composed of three parts, separated by colons.")
     parser.add_argument(
+        "--DOCKER_REGISTRY_PASSWORD",
+        type=str,
+        required=False,
+        help="The password for the docker registry.")
+    parser.add_argument(
         "operation",
         type=str,
         choices=['cleanup',
@@ -92,14 +97,19 @@ def cleanup(servers_public_ip, storage_nodes_public_ip):
     utils.run_cmd_on_server('sudo -s rm -fr /home/ubuntu/*', servers_public_ip)
 
 def bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
-                        storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid):
+                        storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid,
+                        docker_registry, docker_registry_username, docker_registry_password):
     utils.run_script_on_server('bootstrap_kolla.sh', servers_public_ip[0])
     setup_configs.setup_kolla_configs(controller_nodes, network_nodes,  storage_nodes_private_ip,
-                                      compute_nodes, monitoring_nodes, servers_public_ip, raid)
+                                      compute_nodes, monitoring_nodes, servers_public_ip, raid,
+                                      docker_registry, docker_registry_username)
     utils.run_script_on_server('configure_kolla.sh', servers_public_ip[0])
     ssh_priv_key, ssh_public_key = utils.create_new_ssh_key()
     utils.run_script_on_server('bootstrap_ssh_access.sh', servers_public_ip, args=[ssh_priv_key, ssh_public_key])
-    utils.run_script_on_server('bootstrap_openstack.sh', servers_public_ip[0])
+    if docker_registry_password:
+        utils.run_script_on_server('bootstrap_openstack.sh', servers_public_ip[0], args=[docker_registry_password])
+    else:
+        utils.run_script_on_server('bootstrap_openstack.sh', servers_public_ip[0])
     setup_configs.setup_nova_conf(compute_nodes)
     utils.run_script_on_server('setup_nova_conf.sh',servers_public_ip[0])
 
@@ -131,8 +141,10 @@ def main():
         compute_nodes = config.get_server_ips(node_type="compute", ip_type="private")
         monitoring_nodes = config.get_server_ips(node_type="monitor", ip_type="private")
         servers_public_ip = config.get_all_public_ips()
-        raid = bool(strtobool(config.get_variables(variable="RAID"))) #convert bool, err on invalid bool inputs.
-
+        raid = config.get_raid_option()
+        docker_registry = config.get_variables(variable="DOCKER_REGISTRY")
+        docker_registry_username = config.get_variables(variable="DOCKER_REGISTRY_USERNAME")
+        
         cmd = ''.join((args.operation, '.sh'))
 
         if args.operation == 'cleanup':
@@ -154,7 +166,8 @@ def main():
                 bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
         elif args.operation == 'bootstrap_openstack':
             bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
-                                storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid)
+                                storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid,
+                                docker_registry, docker_registry_username, args.DOCKER_REGISTRY_PASSWORD)
         elif args.operation == 'deploy_ceph':
             if raid:
                 print("'Deploy_Ceph' is skipped due to RAID being enabled.")
@@ -182,7 +195,8 @@ def main():
         elif args.operation == 'complete_openstack_install':
             utils.run_script_on_server('bootstrap_networking.sh', servers_public_ip)
             bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
-                                storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid)
+                                storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid,
+                                docker_registry, docker_registry_username, args.DOCKER_REGISTRY_PASSWORD)
             if not raid:
                 bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
                 deploy_ceph(servers_public_ip, storage_nodes_data_ip)

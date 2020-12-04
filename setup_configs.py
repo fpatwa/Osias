@@ -3,13 +3,24 @@
 VIP_ADDRESS_SUFFIX = '250'
 
 def setup_kolla_configs(controller_nodes, network_nodes, storage_nodes,
-                        compute_nodes, monitoring_nodes, servers_public_ip, RAID):
+                        compute_nodes, monitoring_nodes, servers_public_ip, RAID,
+                        docker_registry, docker_registry_username):
     internal_subnet = '.'.join((controller_nodes[0].split('.')[:3]))
     kolla_internal_vip_address = '.'.join((internal_subnet, VIP_ADDRESS_SUFFIX))
 
     external_subnet = '.'.join((servers_public_ip[0].split('.')[:3]))
     kolla_external_vip_address = '.'.join((external_subnet, VIP_ADDRESS_SUFFIX))
 
+    if docker_registry:
+        docker = '''
+# Docker Options
+docker_registry: "{docker_registry}"
+docker_registry_insecure: "yes"
+docker_registry_username: "{docker_registry_username}"
+'''.format(docker_registry=docker_registry,
+           docker_registry_username=docker_registry_username)
+    else:
+        docker = "# Docker Set To Docker Hub"
     if RAID:
         print("glance_backend_ceph: no")
         storage = '''
@@ -63,6 +74,8 @@ kolla_enable_tls_backend: "yes"
 openstack_cacert: /etc/pki/tls/certs/ca-bundle.crt
 {storage}
 
+{docker}
+
 
 # Recommended Global Options:
 enable_mariabackup: "yes"
@@ -90,7 +103,7 @@ glance_enable_rolling_upgrade: "yes"
 __EOF__
 '''.format(kolla_internal_vip_address=kolla_internal_vip_address,
            kolla_external_vip_address=kolla_external_vip_address,
-           storage=storage)
+           storage=storage, docker=docker)
 
     CONTROLLER_NODES = '\\n'.join(controller_nodes)
     NETWORK_NODES = '\\n'.join(network_nodes)
