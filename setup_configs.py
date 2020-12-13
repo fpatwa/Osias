@@ -177,14 +177,14 @@ def setup_nova_conf(compute_nodes):
 # - pdpe1gb to configure 1GB huge pages for CPU models that do not provide it.
     CPU_MODELS = ''
     for node in compute_nodes:
-        CPU_MODELS += ''.join(('models+="$(ssh -o StrictHostKeyChecking=no ', node, ' cat /sys/devices/cpu/caps/pmu_name) "', '\n'))
+        CPU_MODELS += ''.join(('models+="$(ssh -o StrictHostKeyChecking=no ', node, ' cat /sys/devices/cpu/caps/pmu_name || true) "', '\n'))
     MULTILINE_CMD='''
 
 # Remove duplicates and trailing spaces
 models="$(echo "$models" | xargs -n1 | sort -u | xargs)"
 COUNT=$(wc -w <<< "$models")
 echo "THERE ARE $COUNT CPU ARCHITECTURES"
-if [ "$COUNT" -eq 1 ]
+if [ "$COUNT" -le 1 ]
 then
    MODE="host-passthrough"
 elif [ "$COUNT" -ge 2 ]
