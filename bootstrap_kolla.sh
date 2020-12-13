@@ -12,8 +12,8 @@ sudo chown "$USER":"$USER" /opt/kolla
 cd /opt/kolla
 python3 -m venv venv
 source venv/bin/activate
-pip install -U pip wheel
-pip install -U 'ansible<2.9'
+pip3 install -U pip wheel
+pip3 install -U 'ansible<2.9'
 pip3 install -U https://tarballs.opendev.org/openstack/kolla-ansible/kolla-ansible-stable-ussuri.tar.gz
 
 # General Ansible config
