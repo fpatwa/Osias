@@ -1,12 +1,19 @@
-# deploy-openstack
+# Osias (OpenStack Infrastructure As a Service)
 
-Deploy OpenStack using MaaS, Kolla-OpenStack, and cephadm.
+## Mission Statement
 
-# Versions
-* MAAS version: 2.8.2 (8577-g.a3e674063)
+The name Osias is a name of Hebrew origin meaning "salvation".  (OpenStack Infrastructure As a Service)
+
+This projects inspiration came from the need to deploy and configure a clean operating system and openstack, repeatably, at any moment.
+
+Osias offers a from scratch deployment mechanism utilizing [MAAS](https://maas.io/) to provision nodes with an OS, then setup and configure to install [CEPH](https://docs.ceph.com/en/latest/cephadm/) (optional), deploy [OpenStack](https://docs.openstack.org/kolla-ansible/latest/) private cloud, and the finally perform OpenStack Certification Tests using [RefStack](https://refstack.openstack.org/#/) to validate the deployment.
+
+## Versions
+* MAAS version: 2.8.2 - 2.9.0
 * Kolla-Ansible: < 11 (Usurri)
 * Ansible: < 2.9
 * CephADM: octopus
+* Python 3.7
 
 ## MaaS
 
@@ -30,6 +37,7 @@ To bypass the use of MaaS, make sure you have
 * your br0 configured on your public nic with an IP, and
 * your gitlab SSH public key installed.
 * Also, set `REPROVISION_SERVERS=false` variable in GitLab, so it doesn't try to access the MaaS server.
+* To deploy this code, we conduct our testing using python3.7. You can also use a python:3.7-buster docker image and manually issue the codes from the .gitlab-ci.yml, please see the `Dev Work` section below.
 
 ## Stages
 ### (OPTIONAL) Reprovision servers
@@ -112,8 +120,17 @@ Tree structure of our config files:
 5 directories, 10 files
 ```
 
+## Variables
+The multinode file is configued silimiarly to kolla's multinode file, however, it's implimentation is different.  The main sections: control, network, storage, compute and monitor, all translate to kolla's multinode file where the private IP will be used.
 
-# multinode file
+In addition, the variables section in our multinode file can enable features:
+- `RAID-10 = true` (default is false) will enable RAID-10 across all of the hard drives in each of the nodes, 
+- `DOCKER_REGISTRY = "<IP ADDRESS OR FQDN>"` will enable a local docker registry in the kolla globals section
+- `DOCKER_REGISTRY_USERNAME = "kolla"` will allow you to change the docker registry username in the kolla globals section
+
+### Multinode File
+Our multinode file is formatted very similiar to that of Kolla, where all of these sections will be copied over to kolla's multinode file.  However, `storage` will ALSO be used for our ceph deployment and `variables` is our own.
+
 ```
 #public = "Internet facing IP's"
 #private = "Non-Internet facing IP's"
@@ -147,12 +164,19 @@ Tree structure of our config files:
     public = ""
     private = ""
     data = ""
+[variables]
+    [variables.0]
+    RAID = true
+    DOCKER_REGISTRY = "172.16.0.14"
+    DOCKER_REGISTRY_USERNAME = "kolla"
+
 ```
 
-# globals file
+### Globals file
+
+Our default options are as follows below. To modify these options and choose your own, they can be found in the setup_configs.py file in the setup_kolla_configs definition with the variables: docker, storage, or globals_file depending on the use-case. 
 
 ```
-Our default options are as follows:
 kolla_base_distro: "centos"
 kolla_install_type: "source"
 openstack_release: "ussuri"
@@ -179,3 +203,26 @@ enable_mariabackup: "yes"
 enable_neutron_agent_ha: "yes"
 glance_enable_rolling_upgrade: "yes"
 ```
+
+## Dev Work
+
+To do development work/bug fixes, first download/clone our repo and either run a docker container as follows or have python3 installed:
+
+`docker run -ti -v ~/deploy-openstack-master:/test python:3.7-buster bash`
+
+Next, `cd /test` and install the python dependandies for the project 
+
+`pip3 install toml timeout_decorator`
+
+Lastly, customize and source your variables as shown in the development_helper.sh file. Once sourced, you can manually issue the commands from our gitlab-ci.yml file, for example: `python3 -u deploy.py bootstrap_networking --config "$MULTINODE"`
+
+Also, it has been tested you can deploy our code inside of a [LXD VM configured from MaaS](https://maas.io/docs/snap/2.9/ui/vm-host-networking#heading--lxd-setup).
+
+### One Command, Complete Deployment
+
+To issue all of our deployment in one command, 
+`python3 -u deploy.py complete_openstack_install --config "$MULTINODE"`
+
+or if you have a local docker registry:
+
+`python3 -u deploy.py complete_openstack_install --config "$MULTINODE" --DOCKER_REGISTRY_PASSWORD "$DOCKER_REGISTRY_PASSWORD"`
