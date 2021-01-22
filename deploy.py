@@ -193,13 +193,23 @@ def main():
                     'If operation is specified as [copy_files] then the ' +
                     'optional arguments [--file_path] has to be set.')
         elif args.operation == 'complete_openstack_install':
-            utils.run_script_on_server('bootstrap_networking.sh', servers_public_ip)
+            if args.MAAS_URL and args.MAAS_API_KEY:
+                reprovision_servers(args.MAAS_URL, args.MAAS_API_KEY, servers_public_ip, raid)
+            else:
+                raise Exception(
+                    'ERROR: MAAS_API_KEY and/or MAAS_URL argument not specified.\n' +
+                    'If operation is specified as [reprovision_servers] then ' +
+                    'the optional arguments [--MAAS_URL] and [--MAAS_API_KEY] have to be set.')
+            bootstrap_networking(servers_public_ip)
             bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
                                 storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid,
                                 docker_registry, docker_registry_username, args.DOCKER_REGISTRY_PASSWORD)
-            if not raid:
-                bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
-                deploy_ceph(servers_public_ip, storage_nodes_data_ip)
+            if raid:
+                print("'Bootstrap_Ceph' is skipped due to RAID being enabled.")
+                print("'Deploy_Ceph' is skipped due to RAID being enabled.")
+            else:
+               bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
+               deploy_ceph(servers_public_ip, storage_nodes_data_ip)
             utils.run_script_on_server('pre_deploy_openstack.sh', servers_public_ip[0])
             utils.run_script_on_server('deploy_openstack.sh', servers_public_ip[0])
             utils.run_script_on_server('post_deploy_openstack.sh', servers_public_ip[0])
