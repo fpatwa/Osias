@@ -13,7 +13,7 @@ cd /opt/kolla
 python3 -m venv venv
 source venv/bin/activate
 pip3 install -U pip wheel
-pip3 install -U 'ansible<2.9'
+pip3 install -U 'ansible<2.10'
 pip3 install -U https://tarballs.opendev.org/openstack/kolla-ansible/kolla-ansible-stable-ussuri.tar.gz
 
 # General Ansible config
@@ -32,7 +32,7 @@ __EOF__
 # Pull this patch of mitogen to fix the ansible_python_interpreter issues.
 #wget https://networkgenomics.com/try/mitogen-0.2.9.tar.gz
 #tar -xvf mitogen-0.2.9.tar.gz -C /opt/kolla/
-pip3 install -U https://github.com/dw/mitogen/archive/a60c6c1.zip
+pip3 install -U https://github.com/dw/mitogen/archive/v0.2.10-rc.0.zip
 
 
 # Kolla specific Ansible configs

@@ -2,7 +2,7 @@
 
 ## Mission Statement
 
-The name Osias is a name of Hebrew origin meaning "salvation".  (OpenStack Infrastructure As a Service)
+The name Osias (pronounced: oh-sigh-us) is a name of Hebrew origin meaning "salvation".  (OpenStack Infrastructure As a Service)
 
 This projects inspiration came from the need to deploy and configure a clean operating system and openstack, repeatably, at any moment.
 
@@ -128,6 +128,16 @@ In addition, the variables section in our multinode file can enable features:
 - `DOCKER_REGISTRY = "<IP ADDRESS OR FQDN>"` will enable a local docker registry in the kolla globals section
 - `DOCKER_REGISTRY_USERNAME = "kolla"` will allow you to change the docker registry username in the kolla globals section
 
+### Variables Used In Dev Work:
+- `VM_CIDR = "{VM_CIDR_VARIABLE}"` is primarily for development use. In dev, a `/28` is used where:
+    - the first 3 to, at most 7, IP's are for the dev hosts, any unused IP's are assigned to floating IP's as well,
+    - the 8th to 15th IP are floating IP's,
+    - the 16th IP is used as your VIP address in the globals file and consequently, used for horizon, this network address is used for the keepalived_virtual_router_id.
+- `VIP_IP = "{VIP_IP}"` is the 16th IP address from the CIDR used above, default value is public IP subnet with IP of 250, i.e. 172.16.123.250.
+- `POOL_START = "{FLOATING_IP_POOL_START}"` floating pool start IP used in the post_deploy_openstack, the starting IP is dynamic based on how many VM's are deployed, when a VM_CIDR is provided, this value is automatically determined, the otherwise the default value is public IP subnet with IP of 49, i.e. 172.16.123.49.
+- `POOL_END = "{FLOATING_IP_POOL_END}"` floating pool end IP used in the post_deploy_openstack, the ending IP is fixed for dev work to the 15th IP in the pool, when a VM_CIDR is provided, this value is automatically determined, otherwise, the default value is public IP subnet with IP of 249, i.e. 172.16.123.249.
+- `DNS_IP = "{DNS_IP}"` a single DNS entry can be entered, default value is `8.8.8.8`.
+
 ### Multinode File
 Our multinode file is formatted very similiar to that of Kolla, where all of these sections will be copied over to kolla's multinode file.  However, `storage` will ALSO be used for our ceph deployment and `variables` is our own.
 
@@ -169,7 +179,11 @@ Our multinode file is formatted very similiar to that of Kolla, where all of the
     RAID = true
     DOCKER_REGISTRY = "172.16.0.14"
     DOCKER_REGISTRY_USERNAME = "kolla"
-
+    VM_CIDR = "{VM_CIDR_VARIABLE}"
+    VIP_IP = "{VIP_IP}"
+    POOL_START = "{FLOATING_IP_POOL_START}"
+    POOL_END = "{FLOATING_IP_POOL_END}"
+    DNS_IP = "{DNS_IP}"
 ```
 
 ### Globals file
@@ -180,8 +194,8 @@ Our default options are as follows below. To modify these options and choose you
 kolla_base_distro: "centos"
 kolla_install_type: "source"
 openstack_release: "ussuri"
-kolla_internal_vip_address: "ENO1 first three octets.250"
-kolla_external_vip_address: "BR0 first 3 octets.250"
+kolla_internal_vip_address: "ENO1 network address.250" # this address is dynamic and may change
+kolla_external_vip_address: "BR0 network address.250" # this address is dynamic and may change
 network_interface: "eno1"
 kolla_external_vip_interface: "br0"
 neutron_external_interface: "veno1"
@@ -202,6 +216,7 @@ nova_backend_ceph: "yes"
 enable_mariabackup: "yes"
 enable_neutron_agent_ha: "yes"
 glance_enable_rolling_upgrade: "yes"
+keepalived_virtual_router_id: "VIP host address i.e. 250 from above example"
 ```
 
 ## Dev Work

@@ -2,9 +2,8 @@
 
 import toml
 import subprocess
-import shlex
 from ssh_tool import ssh_tool
-
+from itertools import islice
 
 class parser:
     def __init__(self, config):
@@ -23,7 +22,7 @@ class parser:
             if variable in data['0']:
                 return data['0'][variable]
         return None
-    
+
     def get_raid_option(self):
         data = parser.get_variables(self, variable='RAID')
         if type(data) is bool:
@@ -66,6 +65,27 @@ def convert_to_list(parm):
         tmpList.append(parm)
         return tmpList
     return parm
+
+def merge_dictionaries(default_dictionary, user_input_dictionary, path=None):
+    """Merges user_input_dictionary into default dictionary;
+    default values will be overwritten by users input."""
+    return {**default_dictionary, **user_input_dictionary}
+
+def merge_nested_dictionaries(a, b, path=None):
+    """Merge nested dictionaries where the value is also a dictionary"""
+    if path is None: path = []
+    for key in b:
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                merge_nested_dictionaries(a[key], b[key], path + [str(key)])
+            elif a[key] == b[key]:
+                pass
+            else:
+                raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
+        else:
+            a[key] = b[key]
+    return a
+
 
 def create_ssh_client(target_node):
     client = ssh_tool('ubuntu', target_node)
@@ -113,6 +133,51 @@ def run_cmd(command, test=True, output=True):
         print(f"\nCommand Output: \n{stdout.decode()}\n")
     return stdout
 
+def create_multinode(input_dictionary, optional_variables):
+    control_items = list(islice(input_dictionary.items(),3))
+    monitor_item = list(islice(input_dictionary.items(),1))
+    control_labels = ['control', 'network']
+    secondary_labels = ['storage', 'compute']
+    monitor_label = ['monitor']
+    multinode = ""
+    for label in control_labels:
+        multinode += f"\n[{label}]"
+        for i,value in enumerate(control_items):
+            internal = value[1]['internal']
+            public = value[1]['public']
+            data = value[1]['data']
+            multinode += f"""
+    [{label}.{i}]
+        public = \"{public}\"
+        private = \"{internal}\"
+        data = \"{data}\""""
+    for label in secondary_labels:
+        multinode += f"\n[{label}]"
+        for i, (k,v) in enumerate(input_dictionary.items()):
+            internal = v['internal']
+            public = v['public']
+            data = v['data']
+            multinode += f"""
+    [{label}.{i}]
+        public = \"{public}\"
+        private = \"{internal}\"
+        data = \"{data}\""""
+    for label in monitor_label:
+        multinode += f"\n[{label}]"
+        for i, (k,v) in enumerate(monitor_item):
+            internal = v['internal']
+            public = v['public']
+            data = v['data']
+            multinode += f"""
+    [{label}.{i}]
+        public = \"{public}\"
+        private = \"{internal}\"
+        data = \"{data}\""""
+
+    multinode += f"\n[variables]\n\t[variables.0]\n"
+    multinode += f"\t\t{optional_variables}"
+    return multinode
+
 def create_new_ssh_key():
     cleanup_cmd = 'rm -f deploy_id_rsa'
     run_cmd(cleanup_cmd)
@@ -133,3 +198,15 @@ def create_new_ssh_key():
     run_cmd(cleanup_cmd)
 
     return ssh_priv_key, ssh_public_key
+
+def check_required_keys_not_null(required_keys, input_dictionary):
+    for key in required_keys:
+        if (key in input_dictionary) and (input_dictionary[key] is not ""):
+            return True
+        elif (key in input_dictionary) and (input_dictionary[key] is ""):
+            raise Value_Required_to_Proceed(key)
+        elif key not in input_dictionary:
+            raise Value_Required_to_Proceed(key)
+
+class Value_Required_to_Proceed(ValueError):
+    pass

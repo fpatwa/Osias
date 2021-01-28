@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 
 import argparse
-import os
-import sys
-import time
-import json
 import utils
 import setup_configs
-import maas
+import maas_virtual
+import maas_base
+from osias_variables import *
+from ipaddress import IPv4Network
 
 
 def parse_args():
@@ -34,7 +33,7 @@ def parse_args():
     parser.add_argument(
         "--config",
         type=str,
-        required=True,
+        required=False,
         help="The config file in toml format defining all servers and their IPs")
     parser.add_argument(
         "--file_path",
@@ -62,11 +61,30 @@ def parse_args():
         required=False,
         help="The password for the docker registry.")
     parser.add_argument(
+        "--VM_PUBLIC_CIDR",
+        type=str,
+        required=False,
+        help="The smaller test subnet of public IP's that are reserved for the VM's and openstack deployment.")
+
+    parser.add_argument(
+        "--VM_PROFILE",
+        type=str,
+        required=False,
+        help="Dictionary of values containing the following: Number_of_VM_Servers, vCPU, RAM_in_MB, HDD1, HDD2, Internal_CIDR, Public_CIDR, Data_CIDR, VM_Deployment_CIDR" +
+                "Number_of_VM_Servers - 3 to 7 VM's can be deployed in a test environment" +
+                "HDD1 is the primary disk; HDD2-4 is used for Ceph/RAID," +
+                "Internal_CIDR is the internal CIDR from MaaS to assign an interface to VM," +
+                "Public_CIDR is the public CIDR from MaaS to assign an interface to the VM," +
+                "Data_CIDR is the private high speed CIDR from MaaS to assign an interface to the VM," +
+                "VM_Deployment_CIDR is a small /28 CIDR used for assigning a public IP to the VM, allocating IP's as floating IPs for OpenStack, and a VIP address for horizon" + 
+                "{'vCPU': 8, 'RAM_in_MB': 16384, 'HDD1': 60, 'HDD2': 10, 'HDD3': 10, 'HDD4': 10, 'Internal_CIDR': '192.168.1.0/24', 'Number_of_VM_Servers': 3, 'Public_CIDR': '10.245.121.0/24', 'Data_CIDR': '10.100.0.0/16', 'DNS_IP': '10.250.53.202'}")
+    parser.add_argument(
         "operation",
         type=str,
         choices=['cleanup',
                  'reboot_servers',
                  'reprovision_servers',
+                 'create_virtual_servers',
                  'bootstrap_networking',
                  'bootstrap_openstack',
                  'bootstrap_ceph',
@@ -77,6 +95,7 @@ def parse_args():
                  'test_setup',
                  'test_refstack',
                  'test_stress',
+                 'delete_virtual_machines',
                  'complete_openstack_install',
                  'copy_files',
                  'run_command'],
@@ -98,11 +117,11 @@ def cleanup(servers_public_ip, storage_nodes_public_ip):
 
 def bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
                         storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid,
-                        docker_registry, docker_registry_username, docker_registry_password):
+                        docker_registry, docker_registry_username, docker_registry_password, vm_cidr):
     utils.run_script_on_server('bootstrap_kolla.sh', servers_public_ip[0])
     setup_configs.setup_kolla_configs(controller_nodes, network_nodes,  storage_nodes_private_ip,
                                       compute_nodes, monitoring_nodes, servers_public_ip, raid,
-                                      docker_registry, docker_registry_username)
+                                      docker_registry, docker_registry_username, vm_cidr)
     utils.run_script_on_server('configure_kolla.sh', servers_public_ip[0])
     ssh_priv_key, ssh_public_key = utils.create_new_ssh_key()
     utils.run_script_on_server('bootstrap_ssh_access.sh', servers_public_ip, args=[ssh_priv_key, ssh_public_key])
@@ -123,7 +142,75 @@ def deploy_ceph(servers_public_ip, storage_nodes_data_ip):
 
 def reprovision_servers(maas_url, maas_api_key, servers_public_ip, raid):
     utils.run_cmd('maas login admin {} {}'.format(maas_url, maas_api_key))
-    maas.servers(servers_public_ip, raid).deploy()
+    servers = maas_base.maas_base()
+    servers.set_raid(raid)
+    servers.set_public_ip(servers_public_ip)
+    if raid:
+        servers.set_raid(raid)
+    servers.deploy()
+
+def create_virtual_servers(maas_url, maas_api_key, vm_profile):
+    utils.run_cmd(f"maas login admin {maas_url} {maas_api_key}")
+    servers = maas_virtual.maas_virtual()
+    if "RAID" in vm_profile:
+        raid = vm_profile['RAID']
+        servers.set_raid(raid)
+    else:
+        raid = 'false'
+        servers.set_raid("")
+    server_list = []
+    servers_public_ip = []
+    public_IP_pool = [str(ip) for ip in IPv4Network(vm_profile['vm_deployment_cidr'])]
+    public_ips = {}
+    num_Servers = sorted([3, int(vm_profile['Number_of_VM_Servers']), 7])[1] # Keeps the limit of VM's created from 3-7 VM's.
+    for i in range(num_Servers):
+        public_VM_IP = public_IP_pool.pop(0)
+        servers_public_ip.append(public_VM_IP)
+        vm_profile['Public_VM_IP'] = public_VM_IP
+        server_id = servers.create_virtual_machine(vm_profile)
+        server_list.append(server_id)
+        public_ips[server_id] = {"public": public_VM_IP}
+    servers.set_public_ip(public_ips=servers_public_ip)
+    servers.deploy(server_list)
+    machines_info = servers.get_machines_info()
+    internal_ips = servers.get_machines_interface_ip(server_list, machines_info, "eno1", "internal")
+    data_ips = servers.get_machines_interface_ip(server_list, machines_info, "eno3", "data")
+    temp_dict = utils.merge_nested_dictionaries(public_ips, internal_ips)
+    final_dict = utils.merge_nested_dictionaries(temp_dict, data_ips)
+    VIP_IP = str(list(IPv4Network(vm_profile['vm_deployment_cidr']))[-1])
+    POOL_START = str(list(IPv4Network(vm_profile['vm_deployment_cidr']))[num_Servers])
+    POOL_END = list(IPv4Network(vm_profile['vm_deployment_cidr']))[-2]
+    optional_vars = f'''RAID = {raid}
+    DOCKER_REGISTRY = "{DOCKER_REGISTRY_IP}"
+    DOCKER_REGISTRY_USERNAME = "{DOCKER_REGISTRY_USERNAME}"
+    VM_CIDR = "{vm_profile['vm_deployment_cidr']}"
+    VIP_IP = "{VIP_IP}"
+    POOL_START = "{POOL_START}"
+    POOL_END = "{POOL_END}"
+    DNS_IP = "{vm_profile['DNS_IP']}"
+    '''
+    multinode = utils.create_multinode(final_dict, optional_vars)
+    print(f"Generated multinode is: {multinode}")
+    f = open( 'MULTINODE.env', 'w' )
+    f.write(f"{multinode}")
+    f.close()
+    return
+
+def delete_virtual_machines(servers_public_ip, maas_url, maas_api_key):
+    utils.run_cmd('maas login admin {} {}'.format(maas_url, maas_api_key))
+    servers = maas_virtual.maas_virtual()
+    servers.set_public_ip(servers_public_ip)
+    servers.delete_virtual_machines()
+    return
+
+def post_deploy_openstack(servers_public_ip, pool_start_ip, pool_end_ip, dns_ip):
+    if pool_start_ip:
+        utils.run_script_on_server('post_deploy_openstack.sh', servers_public_ip[0], args=[dns_ip, pool_start_ip, pool_end_ip])
+    elif dns_ip:
+        utils.run_script_on_server('post_deploy_openstack.sh', servers_public_ip[0], args=[dns_ip])
+    else:
+        utils.run_script_on_server('post_deploy_openstack.sh', servers_public_ip[0])
+    return
 
 def main():
     args = parse_args()
@@ -144,7 +231,11 @@ def main():
         raid = config.get_raid_option()
         docker_registry = config.get_variables(variable="DOCKER_REGISTRY")
         docker_registry_username = config.get_variables(variable="DOCKER_REGISTRY_USERNAME")
-        
+        VM_CIDR = config.get_variables(variable="VM_CIDR")
+        POOL_START_IP = config.get_variables(variable="POOL_START")
+        POOL_END_IP = config.get_variables(variable="POOL_END")
+        DNS_IP = config.get_variables(variable="DNS_IP")
+
         cmd = ''.join((args.operation, '.sh'))
 
         if args.operation == 'cleanup':
@@ -167,7 +258,7 @@ def main():
         elif args.operation == 'bootstrap_openstack':
             bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
                                 storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid,
-                                docker_registry, docker_registry_username, args.DOCKER_REGISTRY_PASSWORD)
+                                docker_registry, docker_registry_username, args.DOCKER_REGISTRY_PASSWORD, VM_CIDR)
         elif args.operation == 'deploy_ceph':
             if raid:
                 print("'Deploy_Ceph' is skipped due to RAID being enabled.")
@@ -176,13 +267,22 @@ def main():
         elif args.operation == 'reboot_servers':
             utils.run_cmd_on_server('sudo -s shutdown -r 1', servers_public_ip)
             utils.run_cmd_on_server('echo Server is UP!', servers_public_ip)
+        elif args.operation == 'post_deploy_openstack':
+            post_deploy_openstack(servers_public_ip, POOL_START_IP, POOL_END_IP, DNS_IP)
         elif args.operation in ['pre_deploy_openstack',
                                 'deploy_openstack',
-                                'post_deploy_openstack',
                                 'test_setup',
                                 'test_refstack',
                                 'test_stress']:
             utils.run_script_on_server(cmd, servers_public_ip[0])
+        elif args.operation == 'delete_virtual_machines':
+            if args.MAAS_URL and args.MAAS_API_KEY:
+                delete_virtual_machines(servers_public_ip, args.MAAS_URL, args.MAAS_API_KEY)
+            else:
+                raise Exception(
+                    'ERROR: MAAS_API_KEY and/or MAAS_URL argument not specified.\n' +
+                    'If operation is specified as [delete_virtual_machines] then ' +
+                    'the optional arguments [--MAAS_URL] and [--MAAS_API_KEY] have to be set.')
         elif args.operation == 'copy_files':
             if args.file_path:
                 client = utils.create_ssh_client(servers_public_ip[0])
@@ -196,15 +296,27 @@ def main():
             utils.run_script_on_server('bootstrap_networking.sh', servers_public_ip)
             bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
                                 storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid,
-                                docker_registry, docker_registry_username, args.DOCKER_REGISTRY_PASSWORD)
+                                docker_registry, docker_registry_username, args.DOCKER_REGISTRY_PASSWORD, VM_CIDR)
             if not raid:
                 bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
                 deploy_ceph(servers_public_ip, storage_nodes_data_ip)
             utils.run_script_on_server('pre_deploy_openstack.sh', servers_public_ip[0])
             utils.run_script_on_server('deploy_openstack.sh', servers_public_ip[0])
-            utils.run_script_on_server('post_deploy_openstack.sh', servers_public_ip[0])
+            utils.run_script_on_server('post_deploy_openstack.sh', servers_public_ip[0], args=[DNS_IP, POOL_START_IP, POOL_END_IP])
             utils.run_script_on_server('test_setup.sh', servers_public_ip[0])
             utils.run_script_on_server('test_refstack.sh', servers_public_ip[0])
+    elif args.operation == 'create_virtual_servers':
+            if args.MAAS_URL and args.MAAS_API_KEY:
+                VM_PROFILE = utils.merge_dictionaries(VM_Profile, eval(args.VM_PROFILE))
+                required_keys = ['vm_deployment_cidr']
+                utils.check_required_keys_not_null(required_keys, VM_PROFILE)
+                create_virtual_servers(args.MAAS_URL, args.MAAS_API_KEY, VM_PROFILE)
+            else:
+                raise Exception(
+                    'ERROR: MAAS_API_KEY and/or MAAS_URL argument not specified.\n' +
+                    'If operation is specified as [reprovision_servers] then ' +
+                    'the optional arguments [--MAAS_URL] and [--MAAS_API_KEY] have to be set.')
+
     elif args.operation == 'run_command':
         # If command is specified then only perform it
         if args.command and args.target_node:

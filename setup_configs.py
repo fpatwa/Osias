@@ -1,27 +1,34 @@
 #!/usr/bin/python3
 
-VIP_ADDRESS_SUFFIX = '250'
+from ipaddress import IPv4Network
+from osias_variables import *
+
 
 def setup_kolla_configs(controller_nodes, network_nodes, storage_nodes,
-                        compute_nodes, monitoring_nodes, servers_public_ip, RAID,
-                        docker_registry, docker_registry_username):
+                        compute_nodes, monitoring_nodes, servers_public_ip, raid,
+                        docker_registry, docker_registry_username, vm_cidr):
     internal_subnet = '.'.join((controller_nodes[0].split('.')[:3]))
-    kolla_internal_vip_address = '.'.join((internal_subnet, VIP_ADDRESS_SUFFIX))
-
-    external_subnet = '.'.join((servers_public_ip[0].split('.')[:3]))
-    kolla_external_vip_address = '.'.join((external_subnet, VIP_ADDRESS_SUFFIX))
+    if vm_cidr:
+        kolla_external_vip_address = str(list(IPv4Network(vm_cidr))[-1])
+        VIP_SUFFIX = kolla_external_vip_address.split('.')[-1]
+        kolla_internal_vip_address = '.'.join((internal_subnet, VIP_SUFFIX))
+        SUFFIX = VIP_SUFFIX
+    else:
+        external_subnet = '.'.join((servers_public_ip[0].split('.')[:3]))
+        kolla_external_vip_address = '.'.join((external_subnet, VIP_ADDRESS_SUFFIX))
+        kolla_internal_vip_address = '.'.join((internal_subnet, VIP_ADDRESS_SUFFIX))
+        SUFFIX = VIP_ADDRESS_SUFFIX
 
     if docker_registry:
-        docker = '''
+        docker = f'''
 # Docker Options
 docker_registry: "{docker_registry}"
 docker_registry_insecure: "yes"
 docker_registry_username: "{docker_registry_username}"
-'''.format(docker_registry=docker_registry,
-           docker_registry_username=docker_registry_username)
+'''
     else:
         docker = "# Docker Set To Docker Hub"
-    if RAID:
+    if raid:
         print("glance_backend_ceph: no")
         storage = '''
 glance_backend_ceph: "no"
@@ -54,7 +61,7 @@ cinder_backup_driver: "ceph"
 nova_backend_ceph: "yes"
 #gnocchi_backend_storage: "ceph"
 '''
-    globals_file = '''
+    globals_file = f'''
 # Globals file is completely commented out besides these variables.
 cat >>/etc/kolla/globals.yml <<__EOF__
 # Basic Options
@@ -72,10 +79,11 @@ kolla_copy_ca_into_containers: "yes"
 kolla_verify_tls_backend: "no"
 kolla_enable_tls_backend: "yes"
 openstack_cacert: /etc/pki/tls/certs/ca-bundle.crt
+keepalived_virtual_router_id: "{SUFFIX}"
+
 {storage}
 
 {docker}
-
 
 # Recommended Global Options:
 enable_mariabackup: "yes"
@@ -101,9 +109,7 @@ glance_enable_rolling_upgrade: "yes"
 
 #enable_skydive: "yes"
 __EOF__
-'''.format(kolla_internal_vip_address=kolla_internal_vip_address,
-           kolla_external_vip_address=kolla_external_vip_address,
-           storage=storage, docker=docker)
+'''
 
     CONTROLLER_NODES = '\\n'.join(controller_nodes)
     NETWORK_NODES = '\\n'.join(network_nodes)
@@ -111,7 +117,7 @@ __EOF__
     MONITORING_NODES = '\\n'.join(monitoring_nodes)
     STORAGE_NODES = '\\n'.join(storage_nodes)
 
-    multinode_file = '''
+    multinode_file = f'''
 cd /opt/kolla
 
 # Update multinode file
@@ -133,11 +139,7 @@ sed -i 's/^monitoring01/{MONITORING_NODES}/' multinode
 # Update storage nodes
 sed -i 's/^storage01/{STORAGE_NODES}/g' multinode
 
-'''.format(CONTROLLER_NODES=CONTROLLER_NODES,
-           NETWORK_NODES=NETWORK_NODES,
-           COMPUTE_NODES=COMPUTE_NODES,
-           MONITORING_NODES=MONITORING_NODES,
-           STORAGE_NODES=STORAGE_NODES)
+'''
 
     with open('configure_kolla.sh', 'w') as f:
         f.write('#!/bin/bash')
