@@ -21,7 +21,7 @@ URILINKV3="$(openstack endpoint list --service identity --interface public -c UR
 REGION="$(openstack region list -c Region -f value)"
 
 
-cat > $HOME/accounts.yaml <<__EOF__
+cat > "$HOME"/accounts.yaml <<__EOF__
 - username: 'swiftop'
   project_name: 'openstack'
   password: 'a_big_secret'
@@ -31,7 +31,7 @@ cat > $HOME/accounts.yaml <<__EOF__
 __EOF__
 
 
-cat > $HOME/tempest.conf <<__EOF__
+cat > "$HOME"/tempest.conf <<__EOF__
 [DEFAULT]
 debug = False
 use_stderr = False

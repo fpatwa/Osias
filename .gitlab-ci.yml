@@ -10,6 +10,7 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "web"'
 
 stages:
+  - generate_cidr
   - reprovision_servers
   - bootstrap_networking
   - cleanup
@@ -21,12 +22,13 @@ stages:
   - test_setup
   - test_refstack
   - test_stress
+  - release_cidr
 
 .base_setup:
   tags:
     - docker-runner
-
-before_script:
+  interruptible: true
+  before_script:
   # Setup and add SSH_PRIVATE_KEY to ssh agent
   - 'which ssh-agent || ( apt-get update -qqy && apt-get install openssh-client -qqy )'
   - eval $(ssh-agent -s)
@@ -34,6 +36,44 @@ before_script:
   - mkdir -p ~/.ssh
   - chmod 700 ~/.ssh
   - pip3 install toml timeout_decorator
+  - if [ -z "$MULTINODE" ] && [ -f MULTINODE.env ]; then export MULTINODE="$(cat MULTINODE.env)"; fi
+  - echo "$MULTINODE"
+
+generate_cidr_for_virtual_machines:
+  stage: generate_cidr
+  interruptible: true
+  tags:
+    - shell
+  script:
+    - cd test
+    - export VM_DEPLOYMENT_CIDR=$(./get_cidr.sh)
+    - echo "$VM_DEPLOYMENT_CIDR" > vm_deployment_cidr
+    - echo "Using CIDR [$VM_DEPLOYMENT_CIDR]"
+    - python3 -c "import json;import os;vm_profile=json.loads(os.getenv('VM_PROFILE'));vm_profile['vm_deployment_cidr']=os.getenv('VM_DEPLOYMENT_CIDR');vm_profile_file = open('vm_profile', 'w');vm_profile_file.write(json.dumps(vm_profile));vm_profile_file.close()"
+  artifacts:
+    paths:
+      - test/vm_deployment_cidr
+      - test/vm_profile
+  rules:
+    - if: '$MULTINODE == "" || $MULTINODE == null'
+
+create_virtual_machines:
+  stage: reprovision_servers
+  extends:
+   - .base_setup
+  image: utsaics/maas:2.8
+  dependencies:
+    - generate_cidr_for_virtual_machines
+  script:
+    - export VM_PROFILE=$(cat test/vm_profile)
+    - python3 -u deploy.py create_virtual_servers --VM_PROFILE "$VM_PROFILE" --MAAS_URL "$MAAS_URL" --MAAS_API_KEY "$MAAS_API_KEY"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($MULTINODE == "" || $MULTINODE == null)'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && ($MULTINODE == "" || $MULTINODE == null)'
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($MULTINODE == "" || $MULTINODE == null)'
+  artifacts:
+    paths:
+      - MULTINODE.env
 
 reprovision_servers:
   stage: reprovision_servers
@@ -43,11 +83,14 @@ reprovision_servers:
   script:
     - python3 -u deploy.py reprovision_servers --config "$MULTINODE" --MAAS_URL "$MAAS_URL" --MAAS_API_KEY "$MAAS_API_KEY"
   rules:
+    - if: '$MULTINODE == "" || $MULTINODE == null'
+      when: never
     - if: '$REPROVISION_SERVERS == "false"'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($MULTINODE != "" || $MULTINODE != null)'
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && ($MULTINODE != "" || $MULTINODE != null)'
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($MULTINODE != "" || $MULTINODE != null)'
+
 
 bootstrap_networking:
   stage: bootstrap_networking
@@ -94,7 +137,7 @@ bootstrap:openstack:
   script:
     # Run bootstrap across the servers for installing the pre-reqs for openstack
     - |
-       if [ -z "$DOCKER_REGISTRY_PASSWORD"  ]; then
+       if [ -z "$DOCKER_REGISTRY_PASSWORD" ]; then
          python3 -u deploy.py bootstrap_openstack --config "$MULTINODE"
        else
          python3 -u deploy.py bootstrap_openstack --config "$MULTINODE" --DOCKER_REGISTRY_PASSWORD "$DOCKER_REGISTRY_PASSWORD"
@@ -175,3 +218,29 @@ test:stress:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "master"'
       allow_failure: true
+
+delete_virtual_machines:
+  stage: release_cidr
+  image: utsaics/maas:2.8
+  extends:
+    - .base_setup
+  script:
+    - python3 -u deploy.py delete_virtual_machines --config "$MULTINODE" --MAAS_URL "$MAAS_URL" --MAAS_API_KEY "$MAAS_API_KEY"
+  rules:
+   - if: '($MULTINODE == "" || $MULTINODE == null) && $VM_PROFILE != null'
+     when: always
+
+release_cidr_for_virtual_machines:
+  stage: release_cidr
+  tags:
+    - shell
+  dependencies:
+    - generate_cidr_for_virtual_machines
+  script:
+    - VM_DEPLOYMENT_CIDR=$(cat test/vm_deployment_cidr)
+    - cd test
+    - ./release_cidr.sh $VM_DEPLOYMENT_CIDR
+    - echo "RELEASED $VM_DEPLOYMENT_CIDR"
+  rules:
+   - if: '($MULTINODE == "" || $MULTINODE == null)  && $VM_PROFILE != null'
+     when: always
