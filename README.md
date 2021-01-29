@@ -11,7 +11,8 @@ Osias offers a from scratch deployment mechanism utilizing [MAAS](https://maas.i
 ## Versions
 * MAAS version: 2.8.2 - 2.9.0
 * Kolla-Ansible: < 11 (Usurri)
-* Ansible: < 2.9
+* Ansible: < 2.10
+* Mitogen: 0.2.10
 * CephADM: octopus
 * Python 3.7
 

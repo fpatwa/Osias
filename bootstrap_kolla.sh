@@ -12,9 +12,7 @@ sudo chown "$USER":"$USER" /opt/kolla
 cd /opt/kolla
 python3 -m venv venv
 source venv/bin/activate
-pip3 install -U pip wheel
-pip3 install -U 'ansible<2.10'
-pip3 install -U https://tarballs.opendev.org/openstack/kolla-ansible/kolla-ansible-stable-ussuri.tar.gz
+pip3 install -Ur ~/requirements.txt
 
 # General Ansible config
 sudo mkdir -p /etc/ansible
@@ -27,14 +25,6 @@ forks=100
 interpreter_python=/usr/bin/python3
 __EOF__
 
-# Openstack Ansible config:
-# Mitogen 0.2.9 is compatible with ansible<2.9
-# Pull this patch of mitogen to fix the ansible_python_interpreter issues.
-#wget https://networkgenomics.com/try/mitogen-0.2.9.tar.gz
-#tar -xvf mitogen-0.2.9.tar.gz -C /opt/kolla/
-pip3 install -U https://github.com/dw/mitogen/archive/v0.2.10-rc.0.zip
-
-
 # Kolla specific Ansible configs
 cat > /opt/kolla/ansible.cfg <<__EOF__
 [defaults]
@@ -46,13 +36,6 @@ forks=100
 interpreter_python=/usr/bin/python3
 ansible_python_interpreter=/usr/bin/python3
 __EOF__
-
-# Fix: python_apt broken/old on pypi
-git clone https://salsa.debian.org/apt-team/python-apt/ -b 1.8.6
-cd python-apt
-sudo apt-get -y install libapt-pkg-dev
-python setup.py install
-cd ..
 
 # Configure kolla
 sudo mkdir -p /etc/kolla
