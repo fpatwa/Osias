@@ -97,6 +97,12 @@ def create_ssh_client(target_node):
                 target_node))
     return client
 
+def copy_file_on_server(script, servers):
+    servers = convert_to_list(servers)
+    for server in servers:
+        client = create_ssh_client(server)
+        client.scp_to(script)
+
 def run_script_on_server(script, servers, args=None):
     servers = convert_to_list(servers)
     for server in servers:

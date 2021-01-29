@@ -118,6 +118,7 @@ def cleanup(servers_public_ip, storage_nodes_public_ip):
 def bootstrap_openstack(servers_public_ip, controller_nodes, network_nodes,
                         storage_nodes_private_ip, compute_nodes, monitoring_nodes, raid,
                         docker_registry, docker_registry_username, docker_registry_password, vm_cidr):
+    utils.copy_file_on_server('requirements.txt', servers_public_ip[0])
     utils.run_script_on_server('bootstrap_kolla.sh', servers_public_ip[0])
     setup_configs.setup_kolla_configs(controller_nodes, network_nodes,  storage_nodes_private_ip,
                                       compute_nodes, monitoring_nodes, servers_public_ip, raid,
