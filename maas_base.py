@@ -5,6 +5,7 @@ import timeout_decorator
 import time
 import utils
 
+
 class maas_base:
     # machine_list is json blob from `maas machines read`
     def __init__(self):
@@ -23,18 +24,20 @@ class maas_base:
                 raid.append(server)
             else:
                 no_raid.append(server)
-        return no_raid,raid
+        return no_raid, raid
 
     def _create_boot_partitions(self, server):
         RAID_BOOT_IDS = []
         ALL_HDDS_IDS = []
         ALL_BLOCKDEVICES = self._run_maas_command(f"block-devices read {server}")
         for block in ALL_BLOCKDEVICES:
-            ALL_HDDS_IDS.append(block['id'])
+            ALL_HDDS_IDS.append(block["id"])
         for hdd in ALL_HDDS_IDS:
-            BOOT_PART_ID = self._run_maas_command(f"partitions create {server} {hdd} size=2G bootable=yes")
-            RAID_BOOT_IDS.append(BOOT_PART_ID['id'])
-        RAID_BOOT_IDS = ','.join([str(elem) for elem in RAID_BOOT_IDS])
+            BOOT_PART_ID = self._run_maas_command(
+                f"partitions create {server} {hdd} size=2G bootable=yes"
+            )
+            RAID_BOOT_IDS.append(BOOT_PART_ID["id"])
+        RAID_BOOT_IDS = ",".join([str(elem) for elem in RAID_BOOT_IDS])
         return RAID_BOOT_IDS
 
     def _create_root_partitions(self, server):
@@ -42,72 +45,104 @@ class maas_base:
         ALL_HDDS_IDS = []
         ALL_BLOCKDEVICES = self._run_maas_command(f"block-devices read {server}")
         for block in ALL_BLOCKDEVICES:
-            ALL_HDDS_IDS.append(block['id'])
+            ALL_HDDS_IDS.append(block["id"])
         for hdd in ALL_HDDS_IDS:
-            ROOT_PART_ID = self._run_maas_command(f"partitions create {server} {hdd} bootable=yes")
-            RAID_ROOT_IDS.append(ROOT_PART_ID['id'])
-        RAID_ROOT_IDS = ','.join([str(elem) for elem in RAID_ROOT_IDS])
+            ROOT_PART_ID = self._run_maas_command(
+                f"partitions create {server} {hdd} bootable=yes"
+            )
+            RAID_ROOT_IDS.append(ROOT_PART_ID["id"])
+        RAID_ROOT_IDS = ",".join([str(elem) for elem in RAID_ROOT_IDS])
         return RAID_ROOT_IDS
 
     def _create_single_bootable_partition(self, server_list):
         for server in server_list[:]:
             ALL_BLOCKDEVICES = self._run_maas_command(f"block-devices read {server}")
             for block in ALL_BLOCKDEVICES:
-                if "sda" in block['name']:
-                    device_id = block['id']
-            partition_id = self._run_maas_command(f"partitions create {server} {device_id} bootable=yes")
-            partition_id = partition_id['id']
-            self._run_maas_command(f"partition format {server} {device_id} {partition_id} fstype={self.fs_type} label='boot'")
-            self._run_maas_command(f"partition mount {server} {device_id} {partition_id} mount_point='/'")
+                if "sda" in block["name"]:
+                    device_id = block["id"]
+            partition_id = self._run_maas_command(
+                f"partitions create {server} {device_id} bootable=yes"
+            )
+            partition_id = partition_id["id"]
+            self._run_maas_command(
+                f"partition format {server} {device_id} {partition_id} fstype={self.fs_type} label='boot'"
+            )
+            self._run_maas_command(
+                f"partition mount {server} {device_id} {partition_id} mount_point='/'"
+            )
         return
 
     def _create_software_raid_for_boot(self, server_list):
         for server in server_list[:]:
-            RAID_BOOT_IDS = self._create_boot_partitions(server)
-            RAID_BOOT_IDS = "{"+RAID_BOOT_IDS+"}"
-            self._run_maas_command(f"raids create {server} name=md/boot level={self.raid_level} partitions={RAID_BOOT_IDS}")
+            RAID_BOOT_IDS = "{" + RAID_BOOT_IDS + "}"
+            self._run_maas_command(
+                f"raids create {server} name=md/boot level={self.raid_level} partitions={RAID_BOOT_IDS}"
+            )
+            self._run_maas_command(
+                f"raids create {server} name=md/boot level={self.raid_level} partitions={RAID_BOOT_IDS}"
+            )
             RAID_BOOT_ID = self._run_maas_command(f"block-devices read {server}")
             for section in RAID_BOOT_ID:
-                if "md/boot" in section['name']:
-                    RAID_BOOT_ID = section['id']
-            self._run_maas_command(f"block-device format {server} {RAID_BOOT_ID} fstype={self.fs_type} label='boot'")
-            self._run_maas_command(f"block-device mount {server} {RAID_BOOT_ID} mount_point='/boot'")
+                if "md/boot" in section["name"]:
+                    RAID_BOOT_ID = section["id"]
+            self._run_maas_command(
+                f"block-device format {server} {RAID_BOOT_ID} fstype={self.fs_type} label='boot'"
+            )
+            self._run_maas_command(
+                f"block-device mount {server} {RAID_BOOT_ID} mount_point='/boot'"
+            )
         return
 
     def _create_software_raid_for_root(self, server_list):
         for server in server_list[:]:
             print(f"INFO: Creating RAID on {server}")
             RAID_ROOT_IDS = self._create_root_partitions(server)
-            RAID_ROOT_IDS = "{"+RAID_ROOT_IDS+"}"
-            RAID_ROOT_ID = self._run_maas_command(f"raids create {server} name='md/root' level={self.raid_level} partitions={RAID_ROOT_IDS}")
+            RAID_ROOT_IDS = "{" + RAID_ROOT_IDS + "}"
+            RAID_ROOT_ID = self._run_maas_command(
+                f"raids create {server} name='md/root' level={self.raid_level} partitions={RAID_ROOT_IDS}"
+            )
             RAID_ROOT_ID = self._run_maas_command(f"block-devices read {server}")
             for section in RAID_ROOT_ID:
-                if "md/root" in section['name']:
-                    RAID_ROOT_ID = section['id']
-            self._run_maas_command(f"block-device format {server} {RAID_ROOT_ID} fstype={self.fs_type} label='root'")
-            self._run_maas_command(f"block-device mount {server} {RAID_ROOT_ID} mount_point='/'")
+                if "md/root" in section["name"]:
+                    RAID_ROOT_ID = section["id"]
+            self._run_maas_command(
+                f"block-device format {server} {RAID_ROOT_ID} fstype={self.fs_type} label='root'"
+            )
+            self._run_maas_command(
+                f"block-device mount {server} {RAID_ROOT_ID} mount_point='/'"
+            )
         return
 
     def _delete_all_bcache(self, server_list):
         for server in server_list[:]:
             BCACHE_DEVICE_IDS = self._run_maas_command(f"bcaches read {server}")
             for ID in BCACHE_DEVICE_IDS:
-                bcache_id = ID['id']
-                utils.run_cmd(f"maas admin bcache delete {server} {bcache_id}", output=False)
-            BCACHE_CACHE_SETS = self._run_maas_command(f"bcache-cache-sets read {server}")
+                bcache_id = ID["id"]
+                utils.run_cmd(
+                    f"maas admin bcache delete {server} {bcache_id}", output=False
+                )
+            BCACHE_CACHE_SETS = self._run_maas_command(
+                f"bcache-cache-sets read {server}"
+            )
             for ID in BCACHE_CACHE_SETS:
-                BCACHE_CACHE_SETS_ID = ID['id']
-                utils.run_cmd(f"maas admin bcache-cache-set delete {server} {BCACHE_CACHE_SETS_ID}", output=False)
+                BCACHE_CACHE_SETS_ID = ID["id"]
+                utils.run_cmd(
+                    f"maas admin bcache-cache-set delete {server} {BCACHE_CACHE_SETS_ID}",
+                    output=False,
+                )
         return
 
     def _delete_all_partitions(self, server_list):
         for server in server_list[:]:
             PARTITIONS = self._run_maas_command(f"block-devices read {server}")
             for block in PARTITIONS:
-                if block['partitions']:
-                    partition_id = block['partitions'][0]['id']
-                    device_id = block['partitions'][0]['device_id']
-                    utils.run_cmd(f"maas admin partition delete {server} {device_id} {partition_id}", output=False)
+                if block["partitions"]:
+                    partition_id = block["partitions"][0]["id"]
+                    device_id = block["partitions"][0]["device_id"]
+                    utils.run_cmd(
+                        f"maas admin partition delete {server} {device_id} {partition_id}",
+                        output=False,
+                    )
         return
 
     def _delete_all_raids(self, server_list=None):
@@ -119,7 +154,7 @@ class maas_base:
             machine_list = self._run_maas_command(f"raids read {server}")
             MD_DEVICES = []
             for raid in machine_list:
-                MD_DEVICES.append(raid['id'])
+                MD_DEVICES.append(raid["id"])
             for device in MD_DEVICES:
                 utils.run_cmd(f"maas admin raid delete {server} {device}", output=False)
         return
@@ -141,7 +176,7 @@ class maas_base:
         return
 
     def _wipe_drives_create_software_raid(self, server_list):
-        no_raid,raided_servers = self._check_for_raid(server_list)
+        no_raid, raided_servers = self._check_for_raid(server_list)
         if no_raid:
             print("INFO: Step 1/3 - Delete All Partitions")
             self._delete_all_partitions(no_raid)
@@ -152,7 +187,7 @@ class maas_base:
         return
 
     def _wipe_drives_create_osds(self, server_list):
-        no_raid,raided_servers = self._check_for_raid(server_list)
+        no_raid, raided_servers = self._check_for_raid(server_list)
         if raided_servers:
             print("INFO: Step 1/4 - Delete All RAIDs")
             self._delete_all_raids(raided_servers)
@@ -173,7 +208,9 @@ class maas_base:
                     if server in machine["system_id"]:
                         current_status = machine["status_name"]
                         status_message = machine["status_message"]
-                        print(f"SERVER: {server} - CURRENT STATUS: {current_status} - {status_message} - DESIRED STATUS: {desired_status}\n")
+                        print(
+                            f"SERVER: {server} - CURRENT STATUS: {current_status} - {status_message} - DESIRED STATUS: {desired_status}\n"
+                        )
                         if current_status == desired_status:
                             print("STATE: COMPLETE.")
                             server_list.remove(server)

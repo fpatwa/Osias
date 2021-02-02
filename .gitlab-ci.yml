@@ -48,8 +48,7 @@ shellcheck:
   script:
     - |
       find . -name .git -type d -prune -o -type f -name \*.sh -print0 |
-      xargs -0 -r -n1 shellcheck -e SC1090 -e SC1091 -e SC2024 -e SC2034 -e SC2164 --color
-  allow_failure: true
+      xargs -0 -r -n1 shellcheck -e SC1091 -e SC2024 --color
 
 python_black:
     stage: static_analysis
@@ -59,7 +58,6 @@ python_black:
       - pip3 install black
     script:
         - black --check --diff --color .
-    allow_failure: true
 
 generate_cidr_for_virtual_machines:
   stage: generate_cidr

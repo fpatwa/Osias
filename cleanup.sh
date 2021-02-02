@@ -6,7 +6,7 @@ function_name=$1
 
 function cleanup_master() {
     # Destroy openstack and delete images
-    cd /opt/kolla
+    cd /opt/kolla || exit
     python3 -m venv venv
     source venv/bin/activate
     kolla-ansible -i multinode destroy --yes-i-really-really-mean-it --include-images
@@ -14,13 +14,13 @@ function cleanup_master() {
     sudo pip3 uninstall -qy python-openstackclient
 
     # Cleanup refstack
-    cd ~
+    cd ~ || exit
     sudo rm -fr refstack-client
 
     # Cleanup kolla and ansible directories
     sudo rm -fr /etc/kolla /etc/ansible /opt/kolla
 
-    # disable automatic creation of OSD on available ddevices
+    # disable automatic creation of OSD on available devices
     sudo ceph orch apply osd --all-available-devices --unmanaged=true
     # Now remove all of the OSDs
     osds=$(sudo ceph osd ls)
