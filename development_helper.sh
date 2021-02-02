@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # docker run -ti -v ~/deploy-openstack-master:/test python:3.7-buster bash
 # pip3 install toml timeout_decorator
 
@@ -44,3 +46,5 @@ read -r -d '' MULTINODE << EOF
     DOCKER_REGISTRY = "172.16.0.14"
     DOCKER_REGISTRY_USERNAME = "kolla"
 EOF
+
+echo "$MULTINODE"

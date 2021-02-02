@@ -19,7 +19,7 @@ chmod +x cephadm
 # This key file will be overwritten by the commands below
 sudo ./cephadm add-repo --release $CEPH_RELEASE
 
-# Manualy download and install the ceph trusted key
+# Manually download and install the ceph trusted key
 wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
 # Now move this new trusted key file to overwrite the file written by cephadm
 # Incorrect format:

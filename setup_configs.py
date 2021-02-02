@@ -4,33 +4,42 @@ from ipaddress import IPv4Network
 from osias_variables import *
 
 
-def setup_kolla_configs(controller_nodes, network_nodes, storage_nodes,
-                        compute_nodes, monitoring_nodes, servers_public_ip, raid,
-                        docker_registry, docker_registry_username, vm_cidr):
-    internal_subnet = '.'.join((controller_nodes[0].split('.')[:3]))
+def setup_kolla_configs(
+    controller_nodes,
+    network_nodes,
+    storage_nodes,
+    compute_nodes,
+    monitoring_nodes,
+    servers_public_ip,
+    raid,
+    docker_registry,
+    docker_registry_username,
+    vm_cidr,
+):
+    internal_subnet = ".".join((controller_nodes[0].split(".")[:3]))
     if vm_cidr:
         kolla_external_vip_address = str(list(IPv4Network(vm_cidr))[-1])
-        VIP_SUFFIX = kolla_external_vip_address.split('.')[-1]
-        kolla_internal_vip_address = '.'.join((internal_subnet, VIP_SUFFIX))
+        VIP_SUFFIX = kolla_external_vip_address.split(".")[-1]
+        kolla_internal_vip_address = ".".join((internal_subnet, VIP_SUFFIX))
         SUFFIX = VIP_SUFFIX
     else:
-        external_subnet = '.'.join((servers_public_ip[0].split('.')[:3]))
-        kolla_external_vip_address = '.'.join((external_subnet, VIP_ADDRESS_SUFFIX))
-        kolla_internal_vip_address = '.'.join((internal_subnet, VIP_ADDRESS_SUFFIX))
+        external_subnet = ".".join((servers_public_ip[0].split(".")[:3]))
+        kolla_external_vip_address = ".".join((external_subnet, VIP_ADDRESS_SUFFIX))
+        kolla_internal_vip_address = ".".join((internal_subnet, VIP_ADDRESS_SUFFIX))
         SUFFIX = VIP_ADDRESS_SUFFIX
 
     if docker_registry:
-        docker = f'''
+        docker = f"""
 # Docker Options
 docker_registry: "{docker_registry}"
 docker_registry_insecure: "yes"
 docker_registry_username: "{docker_registry_username}"
-'''
+"""
     else:
         docker = "# Docker Set To Docker Hub"
     if raid:
         print("glance_backend_ceph: no")
-        storage = '''
+        storage = """
 glance_backend_ceph: "no"
 glance_backend_file: "yes"
 #glance_backend_swift: "no"
@@ -44,9 +53,9 @@ enable_cinder: "no"
 
 nova_backend_ceph: "no"
 #gnocchi_backend_storage: "ceph"
-'''
+"""
     else:
-        storage = '''
+        storage = """
 glance_backend_ceph: "yes"
 glance_backend_file: "no"
 #glance_backend_swift: "no"
@@ -60,8 +69,8 @@ cinder_backup_driver: "ceph"
 
 nova_backend_ceph: "yes"
 #gnocchi_backend_storage: "ceph"
-'''
-    globals_file = f'''
+"""
+    globals_file = f"""
 # Globals file is completely commented out besides these variables.
 cat >>/etc/kolla/globals.yml <<__EOF__
 # Basic Options
@@ -109,15 +118,15 @@ glance_enable_rolling_upgrade: "yes"
 
 #enable_skydive: "yes"
 __EOF__
-'''
+"""
 
-    CONTROLLER_NODES = '\\n'.join(controller_nodes)
-    NETWORK_NODES = '\\n'.join(network_nodes)
-    COMPUTE_NODES = '\\n'.join(compute_nodes)
-    MONITORING_NODES = '\\n'.join(monitoring_nodes)
-    STORAGE_NODES = '\\n'.join(storage_nodes)
+    CONTROLLER_NODES = "\\n".join(controller_nodes)
+    NETWORK_NODES = "\\n".join(network_nodes)
+    COMPUTE_NODES = "\\n".join(compute_nodes)
+    MONITORING_NODES = "\\n".join(monitoring_nodes)
+    STORAGE_NODES = "\\n".join(storage_nodes)
 
-    multinode_file = f'''
+    multinode_file = f"""
 cd /opt/kolla
 
 # Update multinode file
@@ -139,48 +148,79 @@ sed -i 's/^monitoring01/{MONITORING_NODES}/' multinode
 # Update storage nodes
 sed -i 's/^storage01/{STORAGE_NODES}/g' multinode
 
-'''
+"""
 
-    with open('configure_kolla.sh', 'w') as f:
-        f.write('#!/bin/bash')
-        f.write('\n\n')
-        f.write('set -euxo pipefail')
-        f.write('\n\n')
+    with open("configure_kolla.sh", "w") as f:
+        f.write("#!/bin/bash")
+        f.write("\n\n")
+        f.write("set -euxo pipefail")
+        f.write("\n\n")
         f.write(globals_file)
-        f.write('\n\n')
+        f.write("\n\n")
         f.write(multinode_file)
 
-def setup_ceph_node_permisions(storage_nodes):
-    copy_keys = ''
-    copy_ssh_id = ''
-    add_ceph_hosts = ''
-    for node in storage_nodes:
-        copy_keys += ''.join(('ssh -o StrictHostKeyChecking=no ', node, ' sudo cp /home/ubuntu/.ssh/authorized_keys /root/.ssh/authorized_keys', '\n'))
-        copy_ssh_id += ''.join(('ssh-copy-id -f -i /etc/ceph/ceph.pub -o StrictHostKeyChecking=no root@$(ssh -o StrictHostKeyChecking=no ', node, ' hostname)', '\n'))
-        add_ceph_hosts += ''.join(('sudo ceph orch host add $(ssh -o StrictHostKeyChecking=no ', node, ' hostname) ', node, '\n'))
 
-    with open('configure_ceph_node_permissions.sh', 'w') as f:
-        f.write('#!/bin/bash')
+def setup_ceph_node_permisions(storage_nodes):
+    copy_keys = ""
+    copy_ssh_id = ""
+    add_ceph_hosts = ""
+    for node in storage_nodes:
+        copy_keys += "".join(
+            (
+                "ssh -o StrictHostKeyChecking=no ",
+                node,
+                " sudo cp /home/ubuntu/.ssh/authorized_keys /root/.ssh/authorized_keys",
+                "\n",
+            )
+        )
+        copy_ssh_id += "".join(
+            (
+                "ssh-copy-id -f -i /etc/ceph/ceph.pub -o StrictHostKeyChecking=no root@$(ssh -o StrictHostKeyChecking=no ",
+                node,
+                " hostname)",
+                "\n",
+            )
+        )
+        add_ceph_hosts += "".join(
+            (
+                "sudo ceph orch host add $(ssh -o StrictHostKeyChecking=no ",
+                node,
+                " hostname) ",
+                node,
+                "\n",
+            )
+        )
+
+    with open("configure_ceph_node_permissions.sh", "w") as f:
+        f.write("#!/bin/bash")
         f.write("\n\n")
-        f.write('set -euxo pipefail')
-        f.write('\n\n')
+        f.write("set -euxo pipefail")
+        f.write("\n\n")
         f.write(copy_keys)
-        f.write('\n\n')
+        f.write("\n\n")
         f.write(copy_ssh_id)
-        f.write('\n\n')
+        f.write("\n\n")
         f.write(add_ceph_hosts)
 
+
 def setup_nova_conf(compute_nodes):
-# Ref: https://www.openstack.org/videos/summits/berlin-2018/effective-virtual-cpu-configuration-in-nova
-# Identical host CPU's: host-passthrough
-# Mixed host CPU's: host-model or custom
-# NOTE: - PCID Flag is only necessary on custom mode and required to address the guest performance degradation as a result of vuln patches
-# - Intel VMX to expose the virtualization extensions to the guest,
-# - pdpe1gb to configure 1GB huge pages for CPU models that do not provide it.
-    CPU_MODELS = ''
+    # Ref: https://www.openstack.org/videos/summits/berlin-2018/effective-virtual-cpu-configuration-in-nova
+    # Identical host CPU's: host-passthrough
+    # Mixed host CPU's: host-model or custom
+    # NOTE: - PCID Flag is only necessary on custom mode and required to address the guest performance degradation as a result of vuln patches
+    # - Intel VMX to expose the virtualization extensions to the guest,
+    # - pdpe1gb to configure 1GB huge pages for CPU models that do not provide it.
+    CPU_MODELS = ""
     for node in compute_nodes:
-        CPU_MODELS += ''.join(('models+="$(ssh -o StrictHostKeyChecking=no ', node, ' cat /sys/devices/cpu/caps/pmu_name || true) "', '\n'))
-    MULTILINE_CMD='''
+        CPU_MODELS += "".join(
+            (
+                'models+="$(ssh -o StrictHostKeyChecking=no ',
+                node,
+                ' cat /sys/devices/cpu/caps/pmu_name || true) "',
+                "\n",
+            )
+        )
+    MULTILINE_CMD = """
 
 # Remove duplicates and trailing spaces
 models="$(echo "$models" | xargs -n1 | sort -u | xargs)"
@@ -205,14 +245,14 @@ cpu_mode = $MODE
 # cpu_model_extra_flags = pcid, vmx, pdpe1gb
 __EOF__
 
-'''
-    with open('setup_nova_conf.sh', 'w') as f:
-        f.write('#!/bin/bash')
+"""
+    with open("setup_nova_conf.sh", "w") as f:
+        f.write("#!/bin/bash")
         f.write("\n\n")
-        f.write('set -euxo pipefail')
-        f.write('\n\n')
+        f.write("set -euxo pipefail")
+        f.write("\n\n")
         f.write("models=''")
-        f.write('\n\n')
+        f.write("\n\n")
         f.write(CPU_MODELS)
-        f.write('\n\n')
+        f.write("\n\n")
         f.write(MULTILINE_CMD)
