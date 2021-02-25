@@ -27,7 +27,7 @@ Each server in MaaS needs the following configuration:
 * At least 2 Nics with IP's configured,
     1. (REQUIRED) One completely internal network, used for management network.  This will be referenced as your private network in our multinode file.
     2. (REQUIRED) One network which is public facing and needs to be a bridge with an IP associated with it.  This will be referenced as your public network in our multinode file.
-    3. (OPTIONAL) If possible, a high speed network for use with storage/ceph, this should also be internal and seperate from public access. This will be referenced as your data network in our multinode file. This network is optional, but hightly recommended.
+    3. (OPTIONAL) If possible, a high speed network for use with storage/ceph, this should also be internal and separate from public access. This will be referenced as your data network in our multinode file. This network is optional, but highly recommended.
 * The public network needs to be configured with a bridge, br0.  We have STP enabled with a 15 ms forward delay.
 
 ### **Don't have MaaS?**
@@ -76,7 +76,7 @@ This stage will only happen if you are not using MaaS.
 
 ## Physical Architecture
 
-The conceptual layout of the hardware consists of the following 3 switches and N number of servers.  The public switch has internet access and you are able to SSH into.  The private switch and high speed switch is airgapped from the internet and is completely internal. These two switches could be condensed into one switch, preferrably a high speed one. Your actual layout may differ if you choose to use, for example, less switches and instead vlans or more switches for binding ports together, etc.
+The conceptual layout of the hardware consists of the following 3 switches and N number of servers.  The public switch has internet access and is capable of being able to SSH into servers from deployment node.  The private switch and high speed switch is airgapped from the internet and is completely internal. These two switches could be condensed into one switch, preferrably a high speed one. Your actual layout may differ if you choose to use, for example, less switches and instead vlans or more switches for binding ports together, etc.
 
 ```
 ┌──────────────────
@@ -122,7 +122,7 @@ Tree structure of our config files:
 ```
 
 ## Variables
-The multinode file is configued silimiarly to kolla's multinode file, however, it's implimentation is different.  The main sections: control, network, storage, compute and monitor, all translate to kolla's multinode file where the private IP will be used.
+The multinode file is configured similarly to kolla's multinode file, however, it's implementation is different.  The main sections: control, network, storage, compute and monitor, all translate to kolla's multinode file where the private IP will be used.
 
 In addition, the variables section in our multinode file can enable features:
 - `RAID-10 = true` (default is false) will enable RAID-10 across all of the hard drives in each of the nodes, 
@@ -131,7 +131,7 @@ In addition, the variables section in our multinode file can enable features:
 
 ### Variables Used In Dev Work:
 - `VM_CIDR = "{VM_CIDR_VARIABLE}"` is primarily for development use. In dev, a `/28` is used where:
-    - the first 3 to, at most 7, IP's are for the dev hosts, any unused IP's are assigned to floating IP's as well,
+    - the first 1 to, at most 7, IP's are for the dev hosts, any unused IP's are assigned to floating IP's as well,
     - the 8th to 15th IP are floating IP's,
     - the 16th IP is used as your VIP address in the globals file and consequently, used for horizon, this network address is used for the keepalived_virtual_router_id.
 - `VIP_IP = "{VIP_IP}"` is the 16th IP address from the CIDR used above, default value is public IP subnet with IP of 250, i.e. 172.16.123.250.
@@ -140,7 +140,7 @@ In addition, the variables section in our multinode file can enable features:
 - `DNS_IP = "{DNS_IP}"` a single DNS entry can be entered, default value is `8.8.8.8`.
 
 ### Multinode File
-Our multinode file is formatted very similiar to that of Kolla, where all of these sections will be copied over to kolla's multinode file.  However, `storage` will ALSO be used for our ceph deployment and `variables` is our own.
+Our multinode file is formatted very similar to that of Kolla, where all of these sections will be copied over to kolla's multinode file.  However, `storage` will ALSO be used for our ceph deployment and `variables` is our own.
 
 ```
 #public = "Internet facing IP's"
@@ -226,13 +226,13 @@ To do development work/bug fixes, first download/clone our repo and either run a
 
 `docker run -ti -v ~/deploy-openstack-master:/test python:3.7-buster bash`
 
-Next, `cd /test` and install the python dependandies for the project 
+Next, `cd /test` and install the python dependencies for the project 
 
 `pip3 install toml timeout_decorator`
 
 Lastly, customize and source your variables as shown in the development_helper.sh file. Once sourced, you can manually issue the commands from our gitlab-ci.yml file, for example: `python3 -u deploy.py bootstrap_networking --config "$MULTINODE"`
 
-Also, it has been tested you can deploy our code inside of a [LXD VM configured from MaaS](https://maas.io/docs/snap/2.9/ui/vm-host-networking#heading--lxd-setup).
+Also, it has been tested you can deploy our code inside a [LXD VM configured from MaaS](https://maas.io/docs/snap/2.9/ui/vm-host-networking#heading--lxd-setup).
 
 ### One Command, Complete Deployment
 

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -euxo pipefail
+# shellcheck source=/dev/null
+source "$HOME"/base_config.sh
 
 source /etc/kolla/admin-openrc.sh
 
@@ -20,8 +21,8 @@ openstack router create --enable --project "${TENANT}" myrouter
 openstack router add subnet myrouter mysubnet
 
 git clone https://opendev.org/osf/refstack-client.git
-cd refstack-client
-./setup_env -t 24.0.0
+cd refstack-client || exit
+./setup_env -t 26.0.0
 
 cp "$HOME"/accounts.yaml "$HOME"/refstack-client/etc/accounts.yaml
 cp "$HOME"/tempest.conf "$HOME"/refstack-client/etc/tempest.conf

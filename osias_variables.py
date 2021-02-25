@@ -28,6 +28,7 @@ example input:
 VIP_ADDRESS_SUFFIX = "250"
 DOCKER_REGISTRY_IP = "10.245.0.14"
 DOCKER_REGISTRY_USERNAME = "kolla"
+CEPH = False
 
 VM_Profile = {
     "Number_of_VM_Servers": 3,

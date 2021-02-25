@@ -210,8 +210,8 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile):
     servers_public_ip = []
     public_IP_pool = [str(ip) for ip in IPv4Network(vm_profile["vm_deployment_cidr"])]
     public_ips = {}
-    # Keeps the limit of VM's created from 3-7 VM's.
-    num_Servers = sorted([3, int(vm_profile["Number_of_VM_Servers"]), 7])[1]
+    # Keeps the limit of VM's created from 1-7 VM's.
+    num_Servers = sorted([1, int(vm_profile["Number_of_VM_Servers"]), 7])[1]
     for i in range(num_Servers):
         public_VM_IP = public_IP_pool.pop(0)
         servers_public_ip.append(public_VM_IP)
@@ -241,6 +241,7 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile):
     POOL_START = "{POOL_START}"
     POOL_END = "{POOL_END}"
     DNS_IP = "{vm_profile['DNS_IP']}"
+    CEPH = "{CEPH}"
     """
     multinode = utils.create_multinode(final_dict, optional_vars)
     print(f"Generated multinode is: {multinode}")
@@ -299,6 +300,7 @@ def main():
         monitoring_nodes = config.get_server_ips(node_type="monitor", ip_type="private")
         servers_public_ip = config.get_all_public_ips()
         raid = config.get_raid_option()
+        ceph_enabled = eval(config.get_variables(variable="CEPH"))
         docker_registry = config.get_variables(variable="DOCKER_REGISTRY")
         docker_registry_username = config.get_variables(
             variable="DOCKER_REGISTRY_USERNAME"
@@ -324,12 +326,15 @@ def main():
                     + "the optional arguments [--MAAS_URL] and [--MAAS_API_KEY] have to be set."
                 )
         elif args.operation == "bootstrap_networking":
+            utils.copy_file_on_server("base_config.sh", servers_public_ip)
             bootstrap_networking(servers_public_ip)
         elif args.operation == "bootstrap_ceph":
             if raid:
-                print("'Bootstrap_Ceph' is skipped due to RAID being enabled.")
-            else:
+                print("'Bootstrap_Ceph' is skipped due to RAID being ENABLED.")
+            elif ceph_enabled:
                 bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
+            else:
+                print("'Bootstrap_Ceph' is skipped due to CEPH being DISABLED.")
         elif args.operation == "bootstrap_openstack":
             bootstrap_openstack(
                 servers_public_ip,
@@ -346,9 +351,11 @@ def main():
             )
         elif args.operation == "deploy_ceph":
             if raid:
-                print("'Deploy_Ceph' is skipped due to RAID being enabled.")
-            else:
+                print("'Deploy_Ceph' is skipped due to RAID being ENABLED.")
+            elif ceph_enabled:
                 deploy_ceph(servers_public_ip, storage_nodes_data_ip)
+            else:
+                print("'Deploy_Ceph' is skipped due to CEPH being DISABLED.")
         elif args.operation == "reboot_servers":
             utils.run_cmd_on_server("sudo -s shutdown -r 1", servers_public_ip)
             utils.run_cmd_on_server("echo Server is UP!", servers_public_ip)
@@ -398,7 +405,7 @@ def main():
                 args.DOCKER_REGISTRY_PASSWORD,
                 VM_CIDR,
             )
-            if not raid:
+            if not raid and ceph_enabled:
                 bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
                 deploy_ceph(servers_public_ip, storage_nodes_data_ip)
             utils.run_script_on_server("pre_deploy_openstack.sh", servers_public_ip[0])
