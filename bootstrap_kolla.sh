@@ -12,7 +12,8 @@ sudo chown "$USER":"$USER" /opt/kolla
 cd /opt/kolla
 python3 -m venv venv
 source venv/bin/activate
-pip3 install -Ur ~/requirements.txt
+python3 -m pip install -U pip wheel
+python3 -m pip install -r "$HOME"/requirements.txt
 
 # General Ansible config
 sudo mkdir -p /etc/ansible

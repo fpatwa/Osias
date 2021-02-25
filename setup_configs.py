@@ -28,6 +28,15 @@ def setup_kolla_configs(
         kolla_internal_vip_address = ".".join((internal_subnet, VIP_ADDRESS_SUFFIX))
         SUFFIX = VIP_ADDRESS_SUFFIX
 
+    if len(controller_nodes) == 1:
+        # HA not available
+        ha_options = """
+enable_neutron_agent_ha: "no"
+"""
+    else:
+        ha_options = """
+enable_neutron_agent_ha: "yes"
+"""
     if docker_registry:
         docker = f"""
 # Docker Options
@@ -37,8 +46,8 @@ docker_registry_username: "{docker_registry_username}"
 """
     else:
         docker = "# Docker Set To Docker Hub"
-    if raid:
-        print("glance_backend_ceph: no")
+    if raid or not CEPH:
+        print("Implementing STORAGE without CEPH")
         storage = """
 glance_backend_ceph: "no"
 glance_backend_file: "yes"
@@ -96,7 +105,7 @@ keepalived_virtual_router_id: "{SUFFIX}"
 
 # Recommended Global Options:
 enable_mariabackup: "yes"
-enable_neutron_agent_ha: "yes"
+{ha_options}
 glance_enable_rolling_upgrade: "yes"
 
 # Desired Global Options:

@@ -1,16 +1,17 @@
 #!/bin/bash
 
-set -euxo pipefail
+# shellcheck source=/dev/null
+source "$HOME"/base_config.sh
 
 source /etc/kolla/admin-openrc.sh
 
-cd "$HOME"
+cd "$HOME" || exit
 git clone https://github.com/openstack/tempest-stress
-cd  tempest-stress
+cd tempest-stress || exit
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
-pip install -r test-requirements.txt
+python3 -m pip install -r requirements.txt
+python3 -m pip install -r test-requirements.txt
 python setup.py install
 
 mkdir -p  "$HOME"/tempest-stress/etc

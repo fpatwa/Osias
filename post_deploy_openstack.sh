@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -euxo pipefail
+# shellcheck source=/dev/null
+source "$HOME"/base_config.sh
 
 CIRROS_URL="http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
 PUBLICIP=$(/sbin/ifconfig br0 | grep 'inet ' | awk '{print $2}')
@@ -22,7 +23,6 @@ fi
 
 POOL_GATEWAY="${PUBLICIP%.*}.253"
 
-sudo pip3 install python-openstackclient
 sudo chown "$USER":"$USER" /etc/kolla/admin-openrc.sh
 echo "export OS_CACERT=/etc/kolla/certificates/ca/root.crt" >> /etc/kolla/admin-openrc.sh
 source /etc/kolla/admin-openrc.sh

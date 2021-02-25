@@ -217,6 +217,7 @@ test:refstack:
     # Run refstack tests to ensure that the openstack deploy on target servers is functional
     - python3 -u deploy.py test_refstack --config "$MULTINODE"
   after_script:
+    - if [ -z "$MULTINODE" ] && [ -f MULTINODE.env ]; then export MULTINODE="$(cat MULTINODE.env)"; fi
     # Setup and add SSH_PRIVATE_KEY to ssh agent
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -euxo pipefail
+# shellcheck source=/dev/null
+source "$HOME"/base_config.sh
 
 # Copy files necessary for both:
 sudo cp /etc/kolla/certificates/ca/root.crt "$HOME"/root.crt
@@ -20,6 +21,7 @@ URILINKV2="$(openstack endpoint list --service identity --interface public -c UR
 URILINKV3="$(openstack endpoint list --service identity --interface public -c URL -f value)/v3"
 REGION="$(openstack region list -c Region -f value)"
 
+SERVICE_LIST="$(openstack service list)"
 
 cat > "$HOME"/accounts.yaml <<__EOF__
 - username: 'swiftop'
@@ -36,6 +38,11 @@ cat > "$HOME"/tempest.conf <<__EOF__
 debug = False
 use_stderr = False
 log_file = $HOME/Tempest.log
+
+[dashboard]
+# Set to True if using self-signed SSL certificates. (boolean value)
+disable_ssl_certificate_validation = True
+
 
 [identity]
 catalog_type = identity
@@ -82,7 +89,7 @@ lock_path = /tmp
 [compute]
 min_compute_nodes = 3
 min_microversion = 2.1
-max_microversion = 2.79
+max_microversion = 2.87
 flavor_ref = 100
 flavor_ref_alt = 101
 image_ref = $CIRROSID
@@ -122,29 +129,6 @@ http_image = https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.im
 #api_v3 = True
 #api_extensions = OS-SCH-HNT,os-vol-image-meta,os-volume-type-access,os-quota-sets,os-vol-mig-status-attr,os-quota-class-sets,os-volume-unmanage,scheduler-stats,os-extended-snapshot-attributes,os-volume-transfer,os-snapshot-manage,os-snapshot-unmanage,os-volume-manage,backups,consistencygroups,encryption,os-types-extra-specs,os-snapshot-actions,os-vol-host-attr,os-extended-services,cgsnapshots,os-hosts,os-vol-tenant-attr,os-volume-encryption-metadata,os-admin-actions,os-volume-actions,os-used-limits,os-services,os-types-manage,os-availability-zone,qos-specs,capabilities,OS-SCH-HNT,os-vol-image-meta,os-volume-type-access,os-quota-sets,os-vol-mig-status-attr,os-quota-class-sets,os-volume-unmanage,scheduler-stats,os-extended-snapshot-attributes,os-volume-transfer,os-snapshot-manage,os-snapshot-unmanage,os-volume-manage,backups,consistencygroups,encryption,os-types-extra-specs,os-snapshot-actions,os-vol-host-attr,os-extended-services,cgsnapshots,os-hosts,os-vol-tenant-attr,os-volume-encryption-metadata,os-admin-actions,os-volume-actions,os-used-limits,os-services,os-types-manage,os-availability-zone,qos-specs,capabilities
 
-[service_available]
-aodh = False
-barbican = False
-ceilometer = False
-cinder = True
-designate = False
-glance = True
-gnocchi = False
-heat = True
-horizon = False
-ironic = False
-manila = False
-mistral = False
-neutron = True
-nova = True
-octavia = False
-panko = False
-sahara = False
-swift = False
-#swift = True
-trove = False
-zaqar = False
-
 [validation]
 image_ssh_user = cirros
 run_validation = True
@@ -171,4 +155,24 @@ minimal_instance_type = 100
 instance_type = 101
 minimal_image_ref = $CIRROSID
 image_ref = $CIRROSID
+
+[service_available]
+horizon = True
 __EOF__
+
+services_to_check=("cinder" "glance" "heat" "keystone" "neutron" "nova" "octavia" "placement" "sahara" "swift" "trove")
+
+check_service() {
+    service="$1"
+    shift
+    string="$*"
+    if [ -z "${string##*$service*}" ] ;then
+        echo "$service = True" >> tempest.conf
+    else
+        echo "$service = False" >> tempest.conf
+    fi
+}
+
+for service in "${services_to_check[@]}"; do
+    check_service "$service" "$SERVICE_LIST"
+done
