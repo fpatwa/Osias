@@ -1,0 +1,9 @@
+language: python
+python:
+    - "3.6"
+    - "pypy3"
+install:
+    - pip install transient
+
+script:
+    - transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
