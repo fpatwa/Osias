@@ -6,6 +6,7 @@ before_install:
     - sudo apt-get install -y ssh qemu-system-x86 qemu-utils
     - whoami
     - sudo usermod -aG kvm $(whoami)
+    - sudo modprobe kvm_intel
 language: python
 python:
     - "3.6"
