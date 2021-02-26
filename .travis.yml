@@ -14,7 +14,7 @@ install:
     - pip install transient
 script:
     - id
-    - newgrp kvm <<< "id;lsmod |grep kvm;transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< uname -a"
+    - newgrp kvm <<< "id;lsmod |grep kvm;transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< \"uname -a\""
     - id
     - lsmod |grep kvm
     #- transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
