@@ -6,10 +6,15 @@ before_install:
     - sudo apt-get install -y ssh qemu-system-x86 qemu-utils
     - sudo usermod -aG kvm $(whoami)
     - sudo modprobe kvm_intel
+    - id
 language: python
 python:
     - "3.6"
 install:
     - pip install transient
 script:
-    - sudo transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
+    - id
+    - newgrp kvm
+    - id
+    - lsmod |grep kvm
+    - transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
