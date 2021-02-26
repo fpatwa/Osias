@@ -4,7 +4,6 @@ arch: amd64
 before_install:
     - sudo apt-get update
     - sudo apt-get install -y ssh qemu-system-x86 qemu-utils
-    - whoami
     - sudo usermod -aG kvm $(whoami)
     - sudo modprobe kvm_intel
 language: python
@@ -13,5 +12,4 @@ python:
 install:
     - pip install transient
 script:
-    - whoami
-    - transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
+    - sudo transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
