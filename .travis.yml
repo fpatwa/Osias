@@ -12,6 +12,12 @@ python:
 install:
     - pip install transient
 script:
+    - sudo ifconfig -a
+    - sudo ip addr
+    - cat /etc/issue
+    - uname -a
+    - hostname
+    - hostname -i
     - sg kvm -c transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<EOS
         "uname -a"
       EOS
