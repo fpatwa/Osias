@@ -12,7 +12,6 @@ python:
 install:
     - pip install transient
 script:
-    - sg kvm -c "transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<EOS
-        \"uname -a\"
+    - sg kvm -c transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<EOS
+        "uname -a"
       EOS
-      "
