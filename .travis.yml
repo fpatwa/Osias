@@ -6,12 +6,15 @@ before_install:
     - sudo apt-get install -y ssh qemu-system-x86 qemu-utils
     - sudo usermod -aG kvm $(whoami)
     - sudo modprobe kvm_intel
+    - sudo reboot
 language: python
 python:
     - "3.6"
 install:
     - pip install transient
 script:
+    - lsmod |grep kvm
+    - pip list |grep trans
     - sudo ifconfig -a
     - sudo ip addr
     - cat /etc/issue
