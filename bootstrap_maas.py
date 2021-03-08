@@ -16,6 +16,7 @@ def parse_args():
         choices=[
             "deploy_maas",
             "deploy_virsh",
+            "deploy_networking",
             "full_deployment",
             "remove_maas",
             "deploy_virsh_vm",
@@ -73,52 +74,56 @@ def deploy_virsh():
     run_cmd(
         "sudo apt-get -y install qemu-kvm libvirt-bin bridge-utils virt-manager virtinst libvirt-clients libvirt-daemon-system qemu-system-x86 qemu-utils"
     )
-    run_cmd("virsh net-destroy default")
-    run_cmd("virsh net-dumpxml default > virsh.default.net.xml")
+    run_cmd("sudo virsh net-destroy default")
+    run_cmd("sudo virsh net-dumpxml default > virsh.default.net.xml")
     run_cmd("sed -i '/<dhcp>/,/<\/dhcp>/d' virsh.default.net.xml")
-    run_cmd("virsh net-create virsh.default.net.xml")
+    run_cmd("sudo virsh net-create virsh.default.net.xml")
 
 
 def deploy_virsh_vm():
     run_cmd(
-        "sudo virt-install --name=testVM --description 'Test MaaS VM'"
+        "sudo virt-install --name=testVM --description 'Test MaaS VM' "
         "--os-type=Linux --os-variant=ubuntu18.04 --ram=2048 --vcpus=2 "
         "--disk path=/var/lib/libvirt/images/ubuntu-testVM.qcow2,size=20,bus=virtio "
-        "--noautoconsole --graphics=vnc --hvm --boot network "
+        "--noautoconsole --graphics=none --hvm --boot network "
         "--pxe --network network=default,model=virtio"
     )
-
-    uuid = run_cmd("virsh domuuid testVM")
-    uuid = str(uuid.strip(), "utf-8")
-    mac_addr = run_cmd(
-        "virsh dumpxml testVM | grep 'mac address' | awk -F\\' '{print $2}'"
-    )
-    mac_addr = str(mac_addr.strip(), "utf-8")
+    uuid = str(run_cmd("sudo virsh domuuid testVM"), "utf-8").rstrip()
+    mac_addr = str(
+        run_cmd(
+            "sudo virsh dumpxml testVM | grep 'mac address' | awk -F\\' '{print $2}'"
+        ),
+        "utf-8",
+    ).rstrip()
     run_cmd(
-        "maas admin machines create architecture=amd64 "
+        "sudo maas admin machines create architecture=amd64 "
         f"mac_addresses={mac_addr} power_type=virsh "
         "power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system "
-        ""
-        f"power_parameters_power_id={uuid} # power_parameters_power_pass="
+        f"power_parameters_power_id={uuid}"
+    ) # power_parameters_power_pass="
+
+
+# class maas_virtual(maas_base):
+def configure_maas_networking():
+    run_cmd(
+        "sudo maas admin ipranges create type=dynamic start_ip=192.168.122.100 end_ip=192.168.122.120"
     )
-
-
-class maas_virtual(maas_base):
-    def configure_maas_networking(self):
-        run_cmd(
-            "sudo maas admin ipranges create type=dynamic start_ip=192.168.122.100 end_ip=192.168.122.120"
-        )
-        vlan_info = run_maas_command("subnets read")
-        for vlan in vlan_info:
+    primary_rack = maas_base._run_maas_command(
+        self="", command="rack-controllers read"
+    )[0]["system_id"]
+    print(f"PRIMARY RACK: {primary_rack}")
+    vlan_info = maas_base._run_maas_command(self="", command="subnets read")
+    for vlan in vlan_info:
+        if "192.168.122" in str(vlan):
             if "192.168.122" in str(vlan):
-                if "192.168.122" in str(vlan):
-                    primary_rack = vlan["vlan"]["primary_rack"]
-                    vid = vlan["vlan"]["vid"]
-                    fabric_id = vlan["vlan"]["fabric_id"]
-                    self._run_maas_command(
-                        f"vlan update {fabric_id} {vid} dhcp_on=True primary_rack={primary_rack}"
-                    )
-        run_maas_command("subnet update 192.168.122.0/24 gateway_ip=192.168.122.1")
+                # primary_rack = vlan["vlan"]["primary_rack"]
+                vid = vlan["vlan"]["vid"]
+                fabric_id = vlan["vlan"]["fabric_id"]
+                maas_base._run_maas_command(
+                    self="",
+                    command=f"vlan update {fabric_id} {vid} dhcp_on=True primary_rack={primary_rack}"
+                )
+    maas_base._run_maas_command("subnet update 192.168.122.0/24 gateway_ip=192.168.122.1")
 
 
 def full_deployment():
@@ -142,6 +147,8 @@ def main():
         deploy_maas()
     elif args.operation == "deploy_virsh":
         deploy_virsh()
+    elif args.operation == "deploy_networking":
+        configure_maas_networking()
     elif args.operation == "full_deployment":
         full_deployment()
     elif args.operation == "deploy_virsh_vm":
