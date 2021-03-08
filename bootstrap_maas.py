@@ -81,20 +81,19 @@ def deploy_virsh():
 
 
 def deploy_virsh_vm():
+    vm_name="testVM"
     run_cmd(
-        "sudo virt-install --name=testVM --description 'Test MaaS VM' "
+        f"sudo virt-install --name={vm_name} --description 'Test MaaS VM' "
         "--os-type=Linux --os-variant=ubuntu18.04 --ram=2048 --vcpus=2 "
-        "--disk path=/var/lib/libvirt/images/ubuntu-testVM.qcow2,size=20,bus=virtio "
+        f"--disk path=/var/lib/libvirt/images/{vm_name}.qcow2,size=20,bus=virtio,format=qcow2 "
         "--noautoconsole --graphics=none --hvm --boot network "
         "--pxe --network network=default,model=virtio"
     )
-    uuid = str(run_cmd("sudo virsh domuuid testVM"), "utf-8").rstrip()
-    mac_addr = str(
-        run_cmd(
-            "sudo virsh dumpxml testVM | grep 'mac address' | awk -F\\' '{print $2}'"
-        ),
-        "utf-8",
-    ).rstrip()
+    uuid = str(run_cmd(f"sudo virsh domuuid {vm_name}"), "utf-8").rstrip()
+    mac_addr = str(run_cmd(
+        f"sudo virsh dumpxml {vm_name} | grep 'mac address' | awk -F\\\' '{{print $2}}'"
+    ), "utf-8").rstrip()
+
     run_cmd(
         "sudo maas admin machines create architecture=amd64 "
         f"mac_addresses={mac_addr} power_type=virsh "
@@ -103,7 +102,6 @@ def deploy_virsh_vm():
     ) # power_parameters_power_pass="
 
 
-# class maas_virtual(maas_base):
 def configure_maas_networking():
     run_cmd(
         "sudo maas admin ipranges create type=dynamic start_ip=192.168.122.100 end_ip=192.168.122.120"
@@ -111,7 +109,6 @@ def configure_maas_networking():
     primary_rack = maas_base._run_maas_command(
         self="", command="rack-controllers read"
     )[0]["system_id"]
-    print(f"PRIMARY RACK: {primary_rack}")
     vlan_info = maas_base._run_maas_command(self="", command="subnets read")
     for vlan in vlan_info:
         if "192.168.122" in str(vlan):
