@@ -72,8 +72,11 @@ def deploy_maas():
 
 def deploy_virsh():
     run_cmd(
-        "sudo apt-get -y install qemu-kvm libvirt-bin bridge-utils virt-manager virtinst libvirt-clients libvirt-daemon-system qemu-system-x86 qemu-utils"
+        "sudo apt-get -y install bridge-utils libvirt-bin libvirt-daemon-system  virtinst virt-manager qemu-efi qemu-kvm"
     )
+    run_cmd("sudo systemctl is-active libvirtd")
+    run_cmd("sudo usermod -aG libvirt $USER")
+    run_cmd("sudo usermod -aG kvm $USER")
     run_cmd("sudo virsh net-destroy default")
     run_cmd("sudo virsh net-dumpxml default > virsh.default.net.xml")
     run_cmd("sed -i '/<dhcp>/,/<\/dhcp>/d' virsh.default.net.xml")
@@ -81,7 +84,7 @@ def deploy_virsh():
 
 
 def deploy_virsh_vm():
-    vm_name="testVM"
+    vm_name = "testVM"
     run_cmd(
         f"sudo virt-install --name={vm_name} --description 'Test MaaS VM' "
         "--os-type=Linux --os-variant=ubuntu18.04 --ram=2048 --vcpus=2 "
@@ -90,16 +93,19 @@ def deploy_virsh_vm():
         "--pxe --network network=default,model=virtio"
     )
     uuid = str(run_cmd(f"sudo virsh domuuid {vm_name}"), "utf-8").rstrip()
-    mac_addr = str(run_cmd(
-        f"sudo virsh dumpxml {vm_name} | grep 'mac address' | awk -F\\\' '{{print $2}}'"
-    ), "utf-8").rstrip()
+    mac_addr = str(
+        run_cmd(
+            f"sudo virsh dumpxml {vm_name} | grep 'mac address' | awk -F\\' '{{print $2}}'"
+        ),
+        "utf-8",
+    ).rstrip()
 
     run_cmd(
         "sudo maas admin machines create architecture=amd64 "
         f"mac_addresses={mac_addr} power_type=virsh "
         "power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system "
         f"power_parameters_power_id={uuid}"
-    ) # power_parameters_power_pass="
+    )  # power_parameters_power_pass="
 
 
 def configure_maas_networking():
@@ -118,15 +124,17 @@ def configure_maas_networking():
                 fabric_id = vlan["vlan"]["fabric_id"]
                 maas_base._run_maas_command(
                     self="",
-                    command=f"vlan update {fabric_id} {vid} dhcp_on=True primary_rack={primary_rack}"
+                    command=f"vlan update {fabric_id} {vid} dhcp_on=True primary_rack={primary_rack}",
                 )
-    maas_base._run_maas_command("subnet update 192.168.122.0/24 gateway_ip=192.168.122.1")
+    maas_base._run_maas_command(
+        self="", command="subnet update 192.168.122.0/24 gateway_ip=192.168.122.1"
+    )
 
 
 def full_deployment():
     deploy_maas()
     deploy_virsh()
-    maas_virtual.configure_maas_networking()
+    configure_maas_networking()
     deploy_virsh_vm()
 
 
