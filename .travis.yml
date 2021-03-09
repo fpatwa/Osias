@@ -12,15 +12,28 @@ python:
     - "3.6"
 install:
     - pip install transient
-script:
-    - lsmod |grep kvm
-    - pip list |grep trans
-    - sudo ifconfig -a
-    - sudo ip addr
-    - cat /etc/issue
-    - uname -a
-    - hostname
-    - hostname -i
-    - sg kvm -c transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<EOS
-        "uname -a"
-      EOS
+
+stages:
+    - pre-deploy
+    - deploy
+    - post-deploy
+
+jobs:
+    include:
+        - stage: pre-deploy
+          script:
+              - lsmod |grep kvm
+              - pip list |grep trans
+              - sudo ifconfig -a
+              - sudo ip addr
+              - cat /etc/issue
+              - uname -a
+              - hostname
+              - hostname -i
+              - sg kvm -c transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<EOS
+            "uname -a"
+            EOS
+    - stage: deploy
+      script:
+              - lsmod |grep kvm
+              - pip list |grep trans
