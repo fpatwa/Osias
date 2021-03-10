@@ -36,3 +36,4 @@ jobs:
           script:
               - lsmod |grep kvm
               - pip list |grep trans
+              - transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
