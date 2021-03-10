@@ -32,7 +32,9 @@ jobs:
               - lsmod |grep kvm
               - ls -l /dev/kvm
               - pip list |grep trans
-              - transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
+              - kvm-ok
+              - sudo kvm-ok
+              - sudo transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
               #- sg kvm -c transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<EOS
               #  "uname -a"
               # EOS
