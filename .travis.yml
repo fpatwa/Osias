@@ -29,11 +29,16 @@ jobs:
               - uname -a
               - hostname
               - hostname -i
+              - lsmod |grep kvm
+              - ls -l /dev/kvm
+              - pip list |grep trans
+              - transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
               #- sg kvm -c transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<EOS
               #  "uname -a"
               # EOS
-        - stage: deploy
-          script:
-              - lsmod |grep kvm
-              - pip list |grep trans
-              - transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
+#        - stage: deploy
+#          script:
+#              - lsmod |grep kvm
+#              - ls -l /dev/kvm
+#              - pip list |grep trans
+#              - transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
