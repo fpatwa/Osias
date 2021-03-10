@@ -3,8 +3,9 @@ dist: bionic
 arch: amd64
 before_install:
     - sudo apt-get update
-    - sudo apt-get install -y ssh qemu-system-x86 qemu-utils
-    - sudo usermod -aG kvm $(whoami)
+    - sudo apt-get install -y ssh qemu-system-x86 qemu-utils cpu-checker
+    #- sudo usermod -aG kvm $(whoami)
+    - gpasswd -a $(whoami) kvm
     - sudo modprobe kvm_intel
 language: python
 python:
@@ -34,6 +35,8 @@ jobs:
               - pip list |grep trans
               - kvm-ok
               - sudo kvm-ok
+              - id
+              - groups
               - sudo transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
               #- sg kvm -c transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<EOS
               #  "uname -a"
