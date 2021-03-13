@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # shellcheck source=/dev/null
-source "$HOME"/base_config.sh
+source "$(pwd)"/base_config.sh
 
 sudo apt update
 sudo apt install -y snap snapd
