@@ -3,7 +3,7 @@ dist: bionic
 arch: amd64
 before_install:
     - sudo apt-get update
-    - sudo apt-get install -y ssh qemu-system-x86 qemu-utils
+    - sudo apt-get install -y ssh qemu-system-x86 qemu-utils bridge-utils libvirt-bin libvirt-daemon-system  virtinst virt-manager qemu-efi qemu-kvm
     - sudo usermod -aG kvm $(whoami)
     - sudo usermod -aG libvirt $(whoami)
     #- sudo gpasswd -a $(whoami) kvm
