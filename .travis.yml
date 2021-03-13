@@ -3,9 +3,10 @@ dist: bionic
 arch: amd64
 before_install:
     - sudo apt-get update
-    - sudo apt-get install -y ssh qemu-system-x86 qemu-utils cpu-checker
-    #- sudo usermod -aG kvm $(whoami)
-    - sudo gpasswd -a $(whoami) kvm
+    - sudo apt-get install -y ssh qemu-system-x86 qemu-utils
+    - sudo usermod -aG kvm $(whoami)
+    - sudo usermod -aG libvirt $(whoami)
+    #- sudo gpasswd -a $(whoami) kvm
     - sudo modprobe kvm_intel
 language: python
 python:
@@ -23,21 +24,12 @@ jobs:
         - stage: pre-deploy
           script:
               - lsmod |grep kvm
-              - pip list |grep trans
               - sudo ifconfig -a
               - sudo ip addr
-              - cat /etc/issue
-              - uname -a
-              - hostname
-              - hostname -i
               - lsmod |grep kvm
-              - ls -l /dev/kvm
-              - pip list |grep trans
-              - kvm-ok
-              - sudo kvm-ok
-              - id
-              - groups
-              - transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
+              - chmod 755 deploy_maas.sh
+              - ./deploy_maas.sh
+              #- transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
               #- sg kvm -c transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<EOS
               #  "uname -a"
               # EOS
