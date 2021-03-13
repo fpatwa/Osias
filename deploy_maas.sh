@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# shellcheck source=/dev/null
-source "$(pwd)"/base_config.sh
+set -euxo pipefail
 
 sudo apt update
 sudo apt install -y snap snapd
