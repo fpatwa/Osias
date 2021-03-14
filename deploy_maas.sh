@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -euxo pipefail
+#set -euxo pipefail
+set -x pipefail
 
 #sudo apt update
 #sudo apt install -y snap snapd
