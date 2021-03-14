@@ -17,7 +17,7 @@ sleep 2
 maas_url=$(sudo maas config --show | grep maas_url |cut -d'=' -f 2)
 echo $maas_url
 
-sudo maas login admin "$maas_url" /tmp/API_KEY_FILE
+sudo maas login admin "$maas_url" "$(cat /tmp/API_KEY_FILE)"
 ssh-keygen -b 2048 -t rsa -f /tmp/sshkey -q -N ''
 sudo maas admin sshkeys create "key=$(cat /tmp/sshkey.pub)"
 sudo maas admin maas set-config name=upstream_dns value=10.250.53.202
