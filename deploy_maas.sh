@@ -2,8 +2,8 @@
 
 set -euxo pipefail
 
-sudo apt update
-sudo apt install -y snap snapd
+#sudo apt update
+#sudo apt install -y snap snapd
 sudo snap install --channel=2.9/stable maas
 sudo snap install maas-test-db
 yes '' | sudo maas init region+rack --database-uri maas-test-db:/// --force
