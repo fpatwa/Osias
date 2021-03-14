@@ -6,7 +6,7 @@ python:
     - "3.6"
 before_install:
     - sudo apt-get update
-    - sudo apt-get install -y qemu-system-x86 qemu-utils bridge-utils libvirt-bin libvirt-daemon-system  virtinst virt-manager qemu-efi qemu-kvm
+    - sudo apt-get install -y qemu-system-x86 qemu-utils bridge-utils libvirt-bin libvirt-daemon-system  virtinst virt-manager qemu-efi qemu-kvm kvm-pxe
 install:
     - pip install transient
     - sudo systemctl is-active libvirtd
