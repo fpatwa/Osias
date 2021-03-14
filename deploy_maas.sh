@@ -42,21 +42,19 @@ create_vm () {
     vm_name="testVM"
     sudo virt-install --name=$vm_name --description 'Test MaaS VM' --os-type=Linux --os-variant=ubuntu18.04 --ram=2048 --vcpus=2 --disk path=/var/lib/libvirt/images/$vm_name.qcow2,size=20,bus=virtio,format=qcow2 --noautoconsole --graphics=none --hvm --boot network --pxe --network network=default,model=virtio
     uuid="$(sudo virsh domuuid $vm_name)"
-    mac_addr="$(sudo virsh dumpxml $vm_name | grep 'mac address' | cut -d"'" -f 6)"
+    mac_addr=$(sudo virsh dumpxml $vm_name | grep 'mac address' | cut -d"'" -f 4)
     echo $uuid
     echo $mac_addr
 }
 
 ############################################
-# Deploy MaaS
+# Add VM to MaaS
 ############################################
-
-#    run_cmd(
-#        "sudo maas admin machines create architecture=amd64 "
-#        f"mac_addresses={mac_addr} power_type=virsh "
-#        "power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system "
-#        f"power_parameters_power_id={uuid}"
-#    )  # power_parameters_power_pass="
+add_vm_to_maas () {
+    uuid=$1
+    mac_addr=$2
+    sudo maas admin machines create architecture=amd64 mac_addresses="$mac_addr" power_type=virsh power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system power_parameters_power_id="$uuid"
+}
 
 
 #def configure_maas_networking():
@@ -81,6 +79,13 @@ create_vm () {
 #        self="", command="subnet update 192.168.122.0/24 gateway_ip=192.168.122.1"
 #    )
 
+########
 # Main
+########
 configure_virsh
-create_vm
+
+uuid_mac=$(create_vm)
+# convert to an array
+uuid_mac=($uuid_mac)
+
+add_vm_to_maas ${uuid_mac[0]} ${uuid_mac[1]}
