@@ -22,12 +22,12 @@ jobs:
     include:
         - stage: pre-deploy
           script:
+              - chmod 755 deploy_maas.sh
               - ./deploy_maas.sh
               #- lsmod |grep kvm
               #- sudo ifconfig -a
               #- sudo ip addr
               #- lsmod |grep kvm
-              #- chmod 755 deploy_maas.sh
               #- sudo snap list
               #- transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
               #- sg kvm -c transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<EOS
