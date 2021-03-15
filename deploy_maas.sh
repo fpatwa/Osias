@@ -38,22 +38,18 @@ configure_virsh () {
 ############################################
 # Create Virsh VM
 ############################################
-uuid=""
-mac_addr=""
 create_vm () {
     local vm_name="testVM"
     sudo virt-install --name=$vm_name --description 'Test MaaS VM' --os-type=Linux --os-variant=ubuntu18.04 --ram=2048 --vcpus=2 --disk path=/var/lib/libvirt/images/$vm_name.qcow2,size=20,bus=virtio,format=qcow2 --noautoconsole --graphics=none --hvm --boot network --pxe --network network=default,model=virtio
-    uuid="$(sudo virsh domuuid $vm_name)"
-    mac_addr=$(sudo virsh dumpxml $vm_name | grep 'mac address' | awk -F\' '{print $2}')
+    export UUID="$(sudo virsh domuuid $vm_name)"
+    export MAC_ADDRESS=$(sudo virsh dumpxml $vm_name | grep 'mac address' | awk -F\' '{print $2}')
 }
 
 ############################################
 # Add VM to MaaS
 ############################################
 add_vm_to_maas () {
-    uuid=$1
-    mac_addr=$2
-    sudo maas admin machines create architecture=amd64 mac_addresses="$mac_addr" power_type=virsh power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system power_parameters_power_id="$uuid"
+    sudo maas admin machines create architecture=amd64 mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system power_parameters_power_id="$UUID"
 }
 
 
@@ -84,9 +80,5 @@ add_vm_to_maas () {
 ########
 deploy_maas
 configure_virsh
-
-uuid_mac=$(create_vm)
-# convert to an array
-uuid_mac=($uuid_mac)
-
-add_vm_to_maas $uuid $mac_addr
+create_vm
+add_vm_to_maas
