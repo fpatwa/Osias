@@ -39,12 +39,12 @@ configure_virsh () {
 # Create Virsh VM
 ############################################
 create_vm () {
-    vm_name="testVM"
+    local vm_name="testVM"
     sudo virt-install --name=$vm_name --description 'Test MaaS VM' --os-type=Linux --os-variant=ubuntu18.04 --ram=2048 --vcpus=2 --disk path=/var/lib/libvirt/images/$vm_name.qcow2,size=20,bus=virtio,format=qcow2 --noautoconsole --graphics=none --hvm --boot network --pxe --network network=default,model=virtio
     uuid="$(sudo virsh domuuid $vm_name)"
     mac=$(sudo virsh dumpxml $vm_name | grep "mac address")
     echo "$mac"
-    mac_addr=$(sudo virsh dumpxml $vm_name | grep 'mac address' | cut -d"'" -f 4)
+    mac_addr=$(sudo virsh dumpxml $vm_name | grep 'mac address' | cut -d"'" -f 2)
     echo "$uuid"
     echo "$mac_addr"
 }
@@ -91,4 +91,4 @@ uuid_mac=$(create_vm)
 # convert to an array
 uuid_mac=($uuid_mac)
 
-add_vm_to_maas ${uuid_mac[0]} ${uuid_mac[1]}
+add_vm_to_maas $uuid $mac_addr
