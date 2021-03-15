@@ -38,15 +38,13 @@ configure_virsh () {
 ############################################
 # Create Virsh VM
 ############################################
+uuid=""
+mac_addr=""
 create_vm () {
     local vm_name="testVM"
     sudo virt-install --name=$vm_name --description 'Test MaaS VM' --os-type=Linux --os-variant=ubuntu18.04 --ram=2048 --vcpus=2 --disk path=/var/lib/libvirt/images/$vm_name.qcow2,size=20,bus=virtio,format=qcow2 --noautoconsole --graphics=none --hvm --boot network --pxe --network network=default,model=virtio
     uuid="$(sudo virsh domuuid $vm_name)"
-    mac=$(sudo virsh dumpxml $vm_name | grep "mac address")
-    echo "$mac"
-    mac_addr=$(sudo virsh dumpxml $vm_name | grep 'mac address' | cut -d"'" -f 2)
-    echo "$uuid"
-    echo "$mac_addr"
+    mac_addr=$(sudo virsh dumpxml $vm_name | grep 'mac address' | awk -F\' '{print $2}')
 }
 
 ############################################
