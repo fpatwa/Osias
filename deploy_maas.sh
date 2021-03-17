@@ -15,7 +15,7 @@ deploy_maas () {
     sudo maas apikey --username=admin > /tmp/API_KEY_FILE
     sleep 2
     maas_url=$(sudo maas config --show | grep maas_url |cut -d'=' -f 2)
-    echo $maas_url
+    echo "$maas_url"
     sudo maas login admin "$maas_url" "$(cat /tmp/API_KEY_FILE)"
     ssh-keygen -b 2048 -t rsa -f /tmp/sshkey -q -N ''
     sudo maas admin sshkeys create "key=$(cat /tmp/sshkey.pub)"
@@ -41,8 +41,11 @@ configure_virsh () {
 create_vm () {
     local vm_name="testVM"
     sudo virt-install --name=$vm_name --description 'Test MaaS VM' --os-type=Linux --os-variant=ubuntu18.04 --ram=2048 --vcpus=2 --disk path=/var/lib/libvirt/images/$vm_name.qcow2,size=20,bus=virtio,format=qcow2 --noautoconsole --graphics=none --hvm --boot network --pxe --network network=default,model=virtio
-    export UUID="$(sudo virsh domuuid $vm_name)"
-    export MAC_ADDRESS=$(sudo virsh dumpxml $vm_name | grep 'mac address' | awk -F\' '{print $2}')
+    UUID="$(sudo virsh domuuid $vm_name)"
+    MAC_ADDRESS="$(sudo virsh dumpxml $vm_name | grep 'mac address' | awk -F\' '{print $2}')"
+    export "$UUID"
+    export "$MAC_ADDRESS"
+    printf "UUID: $UUID\nMAC_ADDRESS: $MAC_ADDRESS"
 }
 
 ############################################
