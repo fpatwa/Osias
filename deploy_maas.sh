@@ -7,7 +7,7 @@ set -x pipefail
 # Deploy MaaS
 ############################################
 deploy_maas () {
-    sudo snap install --channel=2.9/stable maas
+    sudo snap install --channel=2.8/stable maas
     sudo snap install maas-test-db
     yes '' | sudo maas init region+rack --database-uri maas-test-db:/// --force
     sudo maas config --show
