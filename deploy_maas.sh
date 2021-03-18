@@ -40,8 +40,6 @@ create_vm () {
     sudo virt-install --name=$vm_name --description 'Test MaaS VM' --os-type=Linux --os-variant=ubuntu18.04 --ram=2048 --vcpus=2 --disk path=/var/lib/libvirt/images/$vm_name.qcow2,size=20,bus=virtio,format=qcow2 --noautoconsole --graphics=none --hvm --boot network --pxe --network network=default,model=virtio
     UUID="$(sudo virsh domuuid $vm_name)"
     MAC_ADDRESS="$(sudo virsh dumpxml $vm_name | grep 'mac address' | awk -F\' '{print $2}')"
-    export "$UUID"
-    export "$MAC_ADDRESS"
     printf "UUID: $UUID\nMAC_ADDRESS: $MAC_ADDRESS"
 }
 
