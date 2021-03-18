@@ -13,8 +13,8 @@ install_system_packages () {
             bridge-utils libvirt-bin libvirt-daemon-system \
             virtinst virt-manager qemu-efi qemu-kvm
     sudo systemctl is-active libvirtd
-    sudo usermod -aG kvm $(whoami)
-    sudo usermod -aG libvirt $(whoami)
+    sudo usermod -aG kvm "$(whoami)"
+    sudo usermod -aG libvirt "$(whoami)"
     sudo modprobe kvm_intel
 }
 ############################################
@@ -63,7 +63,7 @@ create_vm () {
 check_boot_images_import_status() {
     rack_id=$(sudo maas admin rack-controllers read |grep system_id |awk -F\" '{print $4}' |uniq)
 
-    while [ $(sudo maas admin boot-resources is-importing) == "true" ]
+    while [ "$(sudo maas admin boot-resources is-importing)" == "true" ]
     do
         echo "Images are still being imported...wait 30 seconds to re-check"
         sleep 30
@@ -71,7 +71,7 @@ check_boot_images_import_status() {
 
     sudo maas admin boot-resources read
     # Now import the boot images into the rack controller
-    sudo maas admin rack-controller import-boot-images $rack_id
+    sudo maas admin rack-controller import-boot-images "$rack_id"
 
     while [ $(sudo maas admin rack-controller list-boot-images $rack_id |grep status |awk -F\" '{print $4}') != "synced" ]
     do
@@ -79,7 +79,7 @@ check_boot_images_import_status() {
         sleep 10
     done
     
-    sudo maas admin rack-controller list-boot-images $rack_id
+    sudo maas admin rack-controller list-boot-images "$rack_id"
 }
 
 ############################################
@@ -94,29 +94,11 @@ add_vm_to_maas () {
 ############################
 configure_maas_networking () {
     sudo maas admin ipranges create type=dynamic start_ip=192.168.122.100 end_ip=192.168.122.120
-    
+    primary_rack=$(sudo maas admin rack-controllers read |grep system_id |awk -F\" '{print $4}' |uniq)
+    fabric_id=$(sudo maas admin subnets read | jq '.[] | select(.name == "192.168.122.0/24") | .vlan.fabric_id')
+    sudo maas admin vlan update "$fabric_id" 0 dhcp_on=True primary_rack="$primary_rack"
+    sudo maas admin subnet update 192.168.122.0/24 gateway_ip=192.168.122.1
 }
-#def configure_maas_networking():
-#    run_cmd(
-#        "sudo maas admin ipranges create type=dynamic start_ip=192.168.122.100 end_ip=192.168.122.120"
-#    )
-#    primary_rack = maas_base._run_maas_command(
-#        self="", command="rack-controllers read"
-#    )[0]["system_id"]
-#    vlan_info = maas_base._run_maas_command(self="", command="subnets read")
-#    for vlan in vlan_info:
-#        if "192.168.122" in str(vlan):
-#            if "192.168.122" in str(vlan):
-#                # primary_rack = vlan["vlan"]["primary_rack"]
-#                vid = vlan["vlan"]["vid"]
-#                fabric_id = vlan["vlan"]["fabric_id"]
-#                maas_base._run_maas_command(
-#                    self="",
-#                   command=f"vlan update {fabric_id} {vid} dhcp_on=True primary_rack={primary_rack}",
-#                )
-#    maas_base._run_maas_command(
-#        self="", command="subnet update 192.168.122.0/24 gateway_ip=192.168.122.1"
-#    )
 
 ########
 # Main
