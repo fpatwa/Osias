@@ -23,8 +23,6 @@ deploy_maas () {
     sudo maas admin boot-source-selections create 1 os='ubuntu' release='bionic' arches='amd64' subarches='*' labels='*'
     sudo maas admin boot-resources import
     sudo maas admin boot-resources is-importing
-    #        print("Images are still importing...")
-    #        print("Import is complete")
 }
 ############################################
 # Configure Virsh
@@ -55,11 +53,12 @@ add_vm_to_maas () {
     sudo maas admin boot-resources read
     while [ $(sudo maas admin boot-resources is-importing) == "true" ]
     do
-        echo "Images are still being imported..."
-        sleep 5
+        echo "Images are still being imported...wait 30 seconds"
+        sleep 30
     done
     sudo maas admin boot-resources read
-    sudo maas admin machines create architecture=amd64/generic mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system power_parameters_power_id="$UUID"
+    sleep 5
+    sudo maas admin machines create architecture=amd64 mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system power_parameters_power_id="$UUID"
 }
 
 
