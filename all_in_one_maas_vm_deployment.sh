@@ -4,6 +4,20 @@
 set -x pipefail
 
 ############################################
+# Install System Packages
+############################################
+install_system_packages () {
+    sudo apt-get update
+    sudo apt-get install -y \
+            qemu-system-x86 qemu-utils \
+            bridge-utils libvirt-bin libvirt-daemon-system \
+            virtinst virt-manager qemu-efi qemu-kvm
+    sudo systemctl is-active libvirtd
+    sudo usermod -aG kvm $(whoami)
+    sudo usermod -aG libvirt $(whoami)
+    sudo modprobe kvm_intel
+}
+############################################
 # Deploy MaaS
 ############################################
 deploy_maas () {
@@ -75,7 +89,13 @@ add_vm_to_maas () {
     sudo maas admin machines create architecture=amd64 mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system power_parameters_power_id="$UUID"
 }
 
-
+############################
+# Configure MAAS networking
+############################
+configure_maas_networking () {
+    sudo maas admin ipranges create type=dynamic start_ip=192.168.122.100 end_ip=192.168.122.120
+    
+}
 #def configure_maas_networking():
 #    run_cmd(
 #        "sudo maas admin ipranges create type=dynamic start_ip=192.168.122.100 end_ip=192.168.122.120"
@@ -101,9 +121,11 @@ add_vm_to_maas () {
 ########
 # Main
 ########
+install_system_packages
 deploy_maas
 configure_virsh
 create_vm
 # Check to ensure that boot images are imported
 check_boot_images_import_status
 add_vm_to_maas
+configure_maas_networking

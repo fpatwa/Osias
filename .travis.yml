@@ -6,36 +6,8 @@ python:
     - "3.6"
 before_install:
     - sudo apt-get update
-    - sudo apt-get install -y qemu-system-x86 qemu-utils bridge-utils libvirt-bin libvirt-daemon-system  virtinst virt-manager qemu-efi qemu-kvm
 install:
-    - pip install transient
-    - sudo systemctl is-active libvirtd
-    - sudo usermod -aG kvm $(whoami)
-    - sudo usermod -aG libvirt $(whoami)
-    #- sudo gpasswd -a $(whoami) kvm
-    - sudo modprobe kvm_intel
-stages:
-    - pre-deploy
-    - deploy
-    - post-deploy
-jobs:
-    include:
-        - stage: pre-deploy
-          script:
-              - chmod 755 deploy_maas.sh
-              - ./deploy_maas.sh
-              #- lsmod |grep kvm
-              #- sudo ifconfig -a
-              #- sudo ip addr
-              #- lsmod |grep kvm
-              #- sudo snap list
-              #- transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
-              #- sg kvm -c transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<EOS
-              #  "uname -a"
-              # EOS
-#        - stage: deploy
-#          script:
-#              - lsmod |grep kvm
-#              - ls -l /dev/kvm
-#              - pip list |grep trans
-#              - transient run -ssh-console -image centos/7:2004.01 -- -enable-kvm -m 1G <<< "uname -a"
+    - id
+    - groups
+script:
+    - source all_in_one_maas_vm_deployment.sh
