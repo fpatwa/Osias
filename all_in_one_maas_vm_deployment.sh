@@ -86,7 +86,7 @@ check_boot_images_import_status() {
 # Add VM to MaaS
 ############################################
 add_vm_to_maas () {
-    sudo maas admin machines create architecture=amd64 mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system power_parameters_power_id="$UUID"
+    sudo maas admin machines create architecture=amd64 mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://"$(whoami)"@127.0.0.1/system power_parameters_power_id="$UUID"
 }
 
 ############################
