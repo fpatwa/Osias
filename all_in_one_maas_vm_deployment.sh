@@ -11,7 +11,7 @@ install_system_packages () {
     sudo apt-get install -y \
             qemu-system-x86 qemu-utils \
             bridge-utils libvirt-bin libvirt-daemon-system \
-            virtinst virt-manager qemu-efi qemu-kvm jq
+            virtinst virt-manager qemu-efi qemu-kvm
     sudo systemctl is-active libvirtd
     sudo usermod -aG kvm "$(whoami)"
     sudo usermod -aG libvirt "$(whoami)"
@@ -94,10 +94,20 @@ add_vm_to_maas () {
 ############################
 configure_maas_networking () {
     sudo maas admin ipranges create type=dynamic start_ip=192.168.122.100 end_ip=192.168.122.120
-    primary_rack=$(sudo maas admin rack-controllers read |grep system_id |awk -F\" '{print $4}' |uniq)
+    rack_id=$(sudo maas admin rack-controllers read | grep system_id | awk -F\" '{print $4}' | uniq)
     fabric_id=$(sudo maas admin subnets read | jq '.[] | select(.name == "192.168.122.0/24") | .vlan.fabric_id')
-    sudo maas admin vlan update "$fabric_id" 0 dhcp_on=True primary_rack="$primary_rack"
+    sudo maas admin vlan update "$fabric_id" 0 dhcp_on=True primary_rack="$rack_id"
     sudo maas admin subnet update 192.168.122.0/24 gateway_ip=192.168.122.1
+}
+
+############################
+# Deploy VM
+############################
+deploy_vm () {
+    system_id=$(sudo maas admin machines read | grep system_id | awk -F\" '{print $4}' | uniq)
+    fabric_id=$(sudo maas admin subnets read | jq '.[] | select(.name == "192.168.122.0/24") | .vlan.fabric_id')
+    sudo maas admin machines read | jq '.[] | .system_id, .commissioning_status_name, .status_name'
+    sudo maas admin machines deploy $system_id
 }
 
 ########
@@ -111,5 +121,4 @@ create_vm
 check_boot_images_import_status
 add_vm_to_maas
 configure_maas_networking
-
-sleep(600)
+deploy_vm
