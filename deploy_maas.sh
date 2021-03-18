@@ -22,7 +22,6 @@ deploy_maas () {
     sudo maas admin maas set-config name=upstream_dns value=10.250.53.202
     sudo maas admin boot-source-selections create 1 os='ubuntu' release='bionic' arches='amd64' subarches='*' labels='*'
     sudo maas admin boot-resources import
-    sudo maas admin boot-resources is-importing
 }
 ############################################
 # Configure Virsh
@@ -47,23 +46,34 @@ create_vm () {
 }
 
 ############################################
+# Check status of importing the boot images
+############################################
+check_boot_images_import_status() {
+    rack_id=$(sudo maas admin rack-controllers read |grep system_id |awk -F\" '{print $4}' |uniq)
+
+    while [ $(sudo maas admin boot-resources is-importing) == "true" ]
+    do
+        echo "Images are still being imported...wait 30 seconds to re-check"
+        sleep 30
+    done
+
+    sudo maas admin boot-resources read
+    # Now import the boot images into the rack controller
+    sudo maas admin rack-controller import-boot-images $rack_id
+
+    while [ $(sudo maas admin rack-controller list-boot-images $rack_id |grep status |awk -F\" '{print $4}') != "synced" ]
+    do
+        echo "Images are still being imported into the rack controller...wait 10 seconds to re-check"
+        sleep 10
+    done
+    
+    sudo maas admin rack-controller list-boot-images $rack_id
+}
+
+############################################
 # Add VM to MaaS
 ############################################
 add_vm_to_maas () {
-    sudo maas admin boot-resources read
-    while [ $(sudo maas admin boot-resources is-importing) == "true" ]
-    do
-        echo "Images are still being imported...wait 30 seconds"
-        sleep 30
-    done
-    sudo maas admin boot-resources read
-    rack_id=$(sudo maas admin rack-controllers read |grep system_id |awk -F\" '{print $4}' |uniq)
-    
-    sudo maas admin rack-controller list-boot-images $rack_id
-    sudo maas admin rack-controller import-boot-images $rack_id
-    sleep 60
-    sudo maas admin rack-controller list-boot-images $rack_id
-    
     sudo maas admin machines create architecture=amd64 mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system power_parameters_power_id="$UUID"
 }
 
@@ -96,4 +106,6 @@ add_vm_to_maas () {
 deploy_maas
 configure_virsh
 create_vm
+# Check to ensure that boot images are imported
+check_boot_images_import_status
 add_vm_to_maas
