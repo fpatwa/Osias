@@ -33,7 +33,7 @@ deploy_maas () {
     sudo maas login admin "$maas_url" "$(cat /tmp/API_KEY_FILE)"
     ssh-keygen -b 2048 -t rsa -f /tmp/sshkey -q -N ''
     sudo maas admin sshkeys create "key=$(cat /tmp/sshkey.pub)"
-    sudo maas admin maas set-config name=upstream_dns value=10.250.53.202
+    sudo maas admin maas set-config name=upstream_dns value=8.8.8.8
     sudo maas admin boot-source-selections create 1 os='ubuntu' release='bionic' arches='amd64' subarches='*' labels='*'
     sudo maas admin boot-resources import
 }
@@ -111,3 +111,5 @@ create_vm
 check_boot_images_import_status
 add_vm_to_maas
 configure_maas_networking
+
+sleep(600)
