@@ -7,7 +7,7 @@ set -x pipefail
 # Deploy MaaS
 ############################################
 deploy_maas () {
-    sudo snap install --channel=2.8/stable maas
+    sudo snap install --channel=2.9/stable maas
     sudo snap install maas-test-db
     yes '' | sudo maas init region+rack --database-uri maas-test-db:/// --force
     sudo maas config --show
@@ -53,7 +53,12 @@ create_vm () {
 ############################################
 add_vm_to_maas () {
     sudo maas admin boot-resources read
-    
+    while [ $(sudo maas admin boot-resources is-importing) == "true" ]
+    do
+        echo "Images are still being imported..."
+        sleep 5
+    done
+    sudo maas admin boot-resources read
     sudo maas admin machines create architecture=amd64/generic mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system power_parameters_power_id="$UUID"
 }
 
