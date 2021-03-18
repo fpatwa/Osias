@@ -57,7 +57,13 @@ add_vm_to_maas () {
         sleep 30
     done
     sudo maas admin boot-resources read
-    sleep 5
+    rack_id=$(sudo maas admin rack-controllers read |grep system_id |awk -F\" '{print $4}' |uniq)
+    
+    sudo maas admin rack-controller list-boot-images $rack_id
+    sudo maas admin rack-controller import-boot-images $rack_id
+    sleep 60
+    sudo maas admin rack-controller list-boot-images $rack_id
+    
     sudo maas admin machines create architecture=amd64 mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://ubuntu@127.0.0.1/system power_parameters_power_id="$UUID"
 }
 
