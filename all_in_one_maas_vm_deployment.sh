@@ -11,7 +11,7 @@ install_system_packages () {
     sudo apt-get install -y \
             qemu-system-x86 qemu-utils \
             bridge-utils libvirt-bin libvirt-daemon-system \
-            virtinst virt-manager qemu-efi qemu-kvm
+            virtinst virt-manager qemu-efi qemu-kvm jq
     sudo systemctl is-active libvirtd
     sudo usermod -aG kvm "$(whoami)"
     sudo usermod -aG libvirt "$(whoami)"

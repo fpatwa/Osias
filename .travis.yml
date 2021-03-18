@@ -9,6 +9,5 @@ before_install:
 install:
     - id
     - groups
-    - jq
 script:
     - source all_in_one_maas_vm_deployment.sh
