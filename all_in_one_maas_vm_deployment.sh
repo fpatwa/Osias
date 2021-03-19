@@ -48,6 +48,7 @@ configure_virsh () {
     sudo virsh net-dumpxml default > virsh.default.net.xml
     sudo sed -i '/<dhcp>/,/<\/dhcp>/d' virsh.default.net.xml
     sudo virsh net-create virsh.default.net.xml
+    cat /etc/netplan/50-cloud-init.yaml
 }
 ############################################
 # Create Virsh VM
@@ -117,8 +118,8 @@ deploy_vm () {
 # Main
 ########
 install_system_packages
-deploy_maas
 configure_virsh
+deploy_maas
 create_vm
 # Check to ensure that boot images are imported
 check_boot_images_import_status
