@@ -48,7 +48,8 @@ configure_virsh () {
     sudo virsh net-dumpxml default > virsh.default.net.xml
     sudo sed -i '/<dhcp>/,/<\/dhcp>/d' virsh.default.net.xml
     sudo virsh net-create virsh.default.net.xml
-    cat /etc/netplan/50-cloud-init.yaml
+    cat /etc/netplan/*
+    cat /etc/network/interfaces
 }
 ############################################
 # Create Virsh VM
