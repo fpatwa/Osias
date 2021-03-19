@@ -48,8 +48,18 @@ configure_virsh () {
     sudo virsh net-dumpxml default > virsh.default.net.xml
     sudo sed -i '/<dhcp>/,/<\/dhcp>/d' virsh.default.net.xml
     sudo virsh net-create virsh.default.net.xml
-    cat /etc/netplan/*
-    cat /etc/network/interfaces
+    grep -v '^#' /etc/netplan/50-cloud-init.yaml > /tmp/50-cloud-init.yaml
+    grep -v '^#' /etc/netplan/50-cloud-init.yaml >> /tmp/50-cloud-init.yaml
+    cat /tmp/50-cloud-init.yaml
+    sed -i '1!{/^network/d;}' /tmp/50-cloud-init.yaml
+    cat /tmp/50-cloud-init.yaml
+    sed -i '0,/ethernets/{s/ethernets/bridges/}' /tmp/50-cloud-init.yaml
+    cat /tmp/50-cloud-init.yaml
+    sed -i '0,/ens4/{s/ens4/br-eth0/}' /tmp/50-cloud-init.yaml
+    cat /tmp/50-cloud-init.yaml
+    sed '/br-eth0/a interfaces:\n            - ens4' /tmp/50-cloud-init.yaml
+    cat /tmp/50-cloud-init.yaml
+    
 }
 ############################################
 # Create Virsh VM
