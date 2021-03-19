@@ -3,6 +3,9 @@
 #set -euxo pipefail
 set -x pipefail
 
+myip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
+echo "My WAN/Public IP address: ${myip}"
+
 ############################################
 # Install System Packages
 ############################################
@@ -53,8 +56,8 @@ configure_virsh () {
     sed -i '1!{/^network/d;}' /tmp/50-cloud-init.yaml
     sed -i '0,/ethernets/{s/ethernets/bridges/}' /tmp/50-cloud-init.yaml
     sed -i '0,/ens4/{s/ens4/br-eth0/}' /tmp/50-cloud-init.yaml
-    sed -i '/br-eth0/a \t\t\tinterfaces:\n            - ens4' /tmp/50-cloud-init.yaml
-    sed -i '1!{/^dhcp4: true/d;}' /tmp/50-cloud-init.yaml
+    sed -i '/br-eth0/a \t\t interfaces:\n            - ens4' /tmp/50-cloud-init.yaml
+    sed -i '1!{/^dhcp4/d;}' /tmp/50-cloud-init.yaml
     cat /tmp/50-cloud-init.yaml
     sudo cp /tmp/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml
     sudo netplan apply
