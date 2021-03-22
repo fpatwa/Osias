@@ -53,7 +53,7 @@ configure_virsh () {
     echo "NEW NETPLAN: \n"
     cat /tmp/50-cloud-init.yaml
     sed -i '1!{/^network/d;}' /tmp/50-cloud-init.yaml
-    sed -i '0,/ethernets/! s/ethernets/bridge/' /tmp/50-cloud-init.yaml
+    sed -i '0,/ethernets/! s/ethernets/bridges/' /tmp/50-cloud-init.yaml
     sed -i '3,/ens4/! {3,/ens4/ s/ens4/br-eth0/}' /tmp/50-cloud-init.yaml
     sed -i '3,/ens4/! {3,/ens4/ s/ens4/br-eth0/}' /tmp/50-cloud-init.yaml
     sed -i '/br-eth0/a\            interfaces:\n            - ens4' /tmp/50-cloud-init.yaml
