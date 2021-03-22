@@ -61,8 +61,8 @@ configure_virsh () {
     sed -i '13,15d' /tmp/50-cloud-init.yaml  # delete match lines.
     echo "MODIFIED NETPLAN: \n"
     cat /tmp/50-cloud-init.yaml
-    sudo cp /tmp/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml
-    sudo netplan apply
+    # sudo cp /tmp/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml
+    # sudo netplan apply
 }
 ############################################
 # Create Virsh VM
@@ -116,6 +116,7 @@ configure_maas_networking () {
     fabric_id=$(sudo maas admin subnets read | jq '.[] | select(.name == "192.168.122.0/24") | .vlan.fabric_id')
     sudo maas admin vlan update "$fabric_id" 0 dhcp_on=True primary_rack="$rack_id"
     sudo maas admin subnet update 192.168.122.0/24 gateway_ip=192.168.122.1
+    sudo maas admin subnets read
 }
 
 ############################
@@ -126,7 +127,6 @@ deploy_vm () {
     # fabric_id=$(sudo maas admin subnets read | jq '.[] | select(.name == "192.168.122.0/24"/) | .vlan.fabric_id')
     printf "SYSTEM_ID: $system_id" # \nFABRIC_ID: $fabric_id"
    # sudo maas admin machine read "$system_id" | jq '.[] | .system_id, .commissioning_status_name, .status_name'
-
     while [ $(sudo maas admin machines read | jq '.[] | .status_name' ) != \"Ready\" ]
     do
         echo "Machine is still commissioning...wait 30 seconds to re-check"
