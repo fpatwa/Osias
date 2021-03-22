@@ -118,10 +118,11 @@ configure_maas_networking () {
 ############################
 deploy_vm () {
     system_id=$(sudo maas admin machines read | grep system_id | awk -F\" '{print $4}' | uniq)
-    fabric_id=$(sudo maas admin subnets read | jq '.[] | select(.name == "192.168.122.0/24") | .vlan.fabric_id')
-    sudo maas admin machine read "$system_id" | jq '.[] | .system_id, .commissioning_status_name, .status_name'
+    # fabric_id=$(sudo maas admin subnets read | jq '.[] | select(.name == "192.168.122.0/24"/) | .vlan.fabric_id')
+    printf "SYSTEM_ID: $system_id" # \nFABRIC_ID: $fabric_id"
+   # sudo maas admin machine read "$system_id" | jq '.[] | .system_id, .commissioning_status_name, .status_name'
 
-    while [ $(sudo maas admin machines read  '$system_id' | grep \"status_name\" | awk -F\" '{print $4}' | uniq) == 'Ready' ]
+    while [ $(sudo maas admin machines read | jq '.[] | .status_name' ) != \"Ready\" ]
     do
         echo "Machine is still commissioning...wait 30 seconds to re-check"
         sleep 30
@@ -129,6 +130,7 @@ deploy_vm () {
 
     sudo maas admin machine deploy "$system_id"
 }
+
 
 ########
 # Main
