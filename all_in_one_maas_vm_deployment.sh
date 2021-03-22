@@ -86,7 +86,7 @@ check_boot_images_import_status() {
     # Now import the boot images into the rack controller
     sudo maas admin rack-controller import-boot-images "$rack_id"
 
-    while [ $(sudo maas admin rack-controller list-boot-images $rack_id |grep status |awk -F\" '{print $4}') != "synced" ]
+    while [ "$(sudo maas admin rack-controller list-boot-images '$rack_id' |grep status |awk -F\" '{print $4}')" != "synced" ]
     do
         echo "Images are still being imported into the rack controller...wait 10 seconds to re-check"
         sleep 10
@@ -119,15 +119,15 @@ configure_maas_networking () {
 deploy_vm () {
     system_id=$(sudo maas admin machines read | grep system_id | awk -F\" '{print $4}' | uniq)
     fabric_id=$(sudo maas admin subnets read | jq '.[] | select(.name == "192.168.122.0/24") | .vlan.fabric_id')
-    sudo maas admin machine read $system_id | jq '.[] | .system_id, .commissioning_status_name, .status_name'
+    sudo maas admin machine read "$system_id" | jq '.[] | .system_id, .commissioning_status_name, .status_name'
 
-    while [ "$(sudo maas admin machine read $system_id | grep \"status_name\" | awk -F\" '{print $4}' | uniq" == "Ready" ]
+    while [ "$(sudo maas admin machine read '$system_id' | grep \"status_name\" | awk -F\" '{print $4}' | uniq)" == 'Ready' ]
     do
         echo "Machine is still commissioning...wait 30 seconds to re-check"
         sleep 30
     done
 
-    sudo maas admin machine deploy $system_id
+    sudo maas admin machine deploy "$system_id"
 }
 
 ########
