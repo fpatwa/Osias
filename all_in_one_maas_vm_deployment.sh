@@ -55,6 +55,7 @@ configure_virsh () {
     sed -i '0,/ens4/{s/ens4/br-eth0/}' /tmp/50-cloud-init.yaml
     sed -i '/br-eth0/a\            interfaces:\n            - ens4' /tmp/50-cloud-init.yaml
     sed -i '13d' /tmp/50-cloud-init.yaml  # delete 2nd dhcp line.
+    sed -i '9d' /tmp/50-cloud-init.yaml  # delete set-name in bridge line.
     cat /tmp/50-cloud-init.yaml
     sudo cp /tmp/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml
     sudo netplan apply
