@@ -53,7 +53,7 @@ configure_virsh () {
     sed -i '1!{/^network/d;}' /tmp/50-cloud-init.yaml
     sed -i '0,/ethernets/{s/ethernets/bridges/}' /tmp/50-cloud-init.yaml
     sed -i '0,/ens4/{s/ens4/br-eth0/}' /tmp/50-cloud-init.yaml
-    sed -i '/br-eth0/a \\t  interfaces:\n            - ens4' /tmp/50-cloud-init.yaml
+    sed -i '/br-eth0/a\            interfaces:\n            - ens4' /tmp/50-cloud-init.yaml
     sed -i '1!{/^ *dhcp4/d;}' /tmp/50-cloud-init.yaml
     cat /tmp/50-cloud-init.yaml
     sudo cp /tmp/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml
@@ -120,6 +120,13 @@ deploy_vm () {
     system_id=$(sudo maas admin machines read | grep system_id | awk -F\" '{print $4}' | uniq)
     fabric_id=$(sudo maas admin subnets read | jq '.[] | select(.name == "192.168.122.0/24") | .vlan.fabric_id')
     sudo maas admin machines read | jq '.[] | .system_id, .commissioning_status_name, .status_name'
+
+    while [ "$(sudo maas admin machines read  | jq '.[] | .status_name' )" == "Commissioning" ]
+    do
+        echo "Machine is still commissioning...wait 30 seconds to re-check"
+        sleep 30
+    done
+
     sudo maas admin machines deploy $system_id
 }
 
