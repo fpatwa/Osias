@@ -38,6 +38,9 @@ deploy_maas () {
     cat /tmp/id_rsa.pub >> ~/.ssh/authorized_keys
     sudo maas admin sshkeys create "key=$(cat /tmp/id_rsa.pub)"
     sudo maas admin maas set-config name=upstream_dns value=8.8.8.8
+    sudo maas admin maas set-config name=commissioning_distro_series value=bionic
+    sudo maas admin maas set-config name=default_distro_series value=bionic
+    sudo maas admin maas set-config name=boot_images_auto_import value=false
     sudo maas admin boot-source-selections create 1 os='ubuntu' release='bionic' arches='amd64' subarches='*' labels='*'
     sudo maas admin boot-resources import
 }
@@ -49,21 +52,6 @@ configure_virsh () {
     sudo virsh net-dumpxml default > virsh.default.net.xml
     sudo sed -i '/<dhcp>/,/<\/dhcp>/d' virsh.default.net.xml
     sudo virsh net-create virsh.default.net.xml
-    grep -v '^#' /etc/netplan/50-cloud-init.yaml > /tmp/50-cloud-init.yaml
-    grep -v '^#' /etc/netplan/50-cloud-init.yaml >> /tmp/50-cloud-init.yaml
-    echo "NEW NETPLAN: \n"
-    cat /tmp/50-cloud-init.yaml
-    sed -i '1!{/^network/d;}' /tmp/50-cloud-init.yaml
-    sed -i '0,/ethernets/! s/ethernets/bridges/' /tmp/50-cloud-init.yaml
-    sed -i '3,/ens4/! {3,/ens4/ s/ens4/br-eth0/}' /tmp/50-cloud-init.yaml
-    sed -i '3,/ens4/! {3,/ens4/ s/ens4/br-eth0/}' /tmp/50-cloud-init.yaml
-    sed -i '/br-eth0/a\            interfaces:\n            - ens4' /tmp/50-cloud-init.yaml
-    sed -i '4d' /tmp/50-cloud-init.yaml  # delete dhcp in eth network.
-    sed -i '13,15d' /tmp/50-cloud-init.yaml  # delete match lines.
-    echo "MODIFIED NETPLAN: \n"
-    cat /tmp/50-cloud-init.yaml
-    # sudo cp /tmp/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml
-    # sudo netplan apply
 }
 ############################################
 # Create Virsh VM
@@ -98,22 +86,12 @@ check_boot_images_import_status() {
         sleep 10
     done
     
+    image_ids=$(sudo maas admin boot-resources read | jq '.[] | select(.name == "ubuntu/focal") | .id')
+    for i in $image_ids; do sudo maas admin boot-resource delete $i; done
+
     sudo maas admin rack-controller list-boot-images "$rack_id"
 }
 
-############################################
-# Add VM to MaaS
-############################################
-add_vm_to_maas () {
-    sudo maas admin machines create architecture=amd64 mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://"$(whoami)"@127.0.0.1/system power_parameters_power_id="$UUID"
-    system_id=$(sudo maas admin machines read | grep system_id | awk -F\" '{print $4}' | uniq)
-    sudo maas admin machine mark-broken $system_id
-    sudo maas admin interface link-subnet $system_id  eth0 subnet=192.168.122.0/24 mode=dhcp
-    interface_id=$(sudo maas admin machines read | jq '.[] | .boot_interface.id')
-    sudo maas admin interface update $system_id $interface_id interface_speed=1000 link_speed=1000
-    sudo maas admin machine commission $system_id skip_networking=1 testing_scripts=none
-}
- 
 ############################
 # Configure MAAS networking
 ############################
@@ -126,14 +104,26 @@ configure_maas_networking () {
     sudo maas admin subnets read
 }
 
+############################################
+# Add VM to MaaS
+############################################
+add_vm_to_maas () {
+    sudo maas admin machines create architecture=amd64 mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://"$(whoami)"@127.0.0.1/system power_parameters_power_id="$UUID"
+    system_id=$(sudo maas admin machines read | grep system_id | awk -F\" '{print $4}' | uniq)
+    # Mark broken to apply network settings pre-commissioning.
+    sudo maas admin machine mark-broken $system_id
+    sudo maas admin interface link-subnet $system_id eth0 subnet=192.168.122.0/24 mode=dhcp
+    interface_id=$(sudo maas admin machines read | jq '.[] | .boot_interface.id')
+    sudo maas admin interface update $system_id $interface_id interface_speed=1000 link_speed=1000
+    sudo maas admin machine commission $system_id skip_networking=1 testing_scripts=none
+}
+
 ############################
 # Deploy VM
 ############################
 deploy_vm () {
     system_id=$(sudo maas admin machines read | grep system_id | awk -F\" '{print $4}' | uniq)
-    # fabric_id=$(sudo maas admin subnets read | jq '.[] | select(.name == "192.168.122.0/24"/) | .vlan.fabric_id')
-    printf "SYSTEM_ID: $system_id" # \nFABRIC_ID: $fabric_id"
-   # sudo maas admin machine read "$system_id" | jq '.[] | .system_id, .commissioning_status_name, .status_name'
+
     while [ $(sudo maas admin machines read | jq '.[] | .status_name' ) != \"Ready\" ]
     do
         echo "Machine is still commissioning...wait 30 seconds to re-check"
@@ -141,18 +131,27 @@ deploy_vm () {
     done
 
     sudo maas admin machine deploy "$system_id"
+
+    while [ $(sudo maas admin machines read | jq '.[] | .status_name' ) != \"Deployed\" ]
+    do
+        echo "Machine is still deploying...wait 30 seconds to re-check"
+        sleep 30
+    done
 }
 
 
 ########
 # Main
 ########
+df -h
 install_system_packages
 configure_virsh
 deploy_maas
+df -h
 create_vm
 # Check to ensure that boot images are imported
 check_boot_images_import_status
 configure_maas_networking
 add_vm_to_maas
 deploy_vm
+df -h
