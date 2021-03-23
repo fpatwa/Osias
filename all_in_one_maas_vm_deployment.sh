@@ -130,7 +130,7 @@ deploy_vm () {
         sleep 30
     done
 
-    sudo maas admin machine deploy "$system_id"
+    sudo maas admin machine deploy "$system_id" distro_series=ubuntu/bionic
 
     while [ $(sudo maas admin machines read | jq '.[] | .status_name' ) != \"Deployed\" ]
     do
