@@ -11,7 +11,8 @@ install_system_packages () {
     sudo apt-get install -y \
             qemu-system-x86 qemu-utils \
             bridge-utils libvirt-bin libvirt-daemon-system \
-            virtinst virt-manager qemu-efi qemu-kvm
+            virtinst virt-manager qemu-efi qemu-kvm \
+            jq
     sudo systemctl is-active libvirtd
     sudo usermod -aG kvm "$(whoami)"
     sudo usermod -aG libvirt "$(whoami)"
@@ -35,7 +36,7 @@ deploy_maas () {
     sudo mkdir -p /var/snap/maas/current/root/.ssh
     sudo cp /tmp/id_rsa* /var/snap/maas/current/root/.ssh/
     cat /tmp/id_rsa.pub >> ~/.ssh/authorized_keys
-    sudo maas admin sshkeys create "key=$(cat /tmp/sshkey.pub)"
+    sudo maas admin sshkeys create "key=$(cat /tmp/id_rsa.pub)"
     sudo maas admin maas set-config name=upstream_dns value=8.8.8.8
     sudo maas admin boot-source-selections create 1 os='ubuntu' release='bionic' arches='amd64' subarches='*' labels='*'
     sudo maas admin boot-resources import
@@ -105,8 +106,14 @@ check_boot_images_import_status() {
 ############################################
 add_vm_to_maas () {
     sudo maas admin machines create architecture=amd64 mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://"$(whoami)"@127.0.0.1/system power_parameters_power_id="$UUID"
+    system_id=$(sudo maas admin machines read | grep system_id | awk -F\" '{print $4}' | uniq)
+    sudo maas admin machine mark-broken $system_id
+    sudo maas admin interface link-subnet $system_id  eth0 subnet=192.168.122.0/24 mode=dhcp
+    interface_id=$(sudo maas admin machines read | jq '.[] | .boot_interface.id')
+    sudo maas admin interface update $system_id $interface_id interface_speed=1000 link_speed=1000
+    sudo maas admin machine commission $system_id skip_networking=1 testing_scripts=none
 }
-
+ 
 ############################
 # Configure MAAS networking
 ############################
@@ -146,6 +153,6 @@ deploy_maas
 create_vm
 # Check to ensure that boot images are imported
 check_boot_images_import_status
-add_vm_to_maas
 configure_maas_networking
+add_vm_to_maas
 deploy_vm
