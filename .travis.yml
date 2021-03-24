@@ -17,5 +17,5 @@ jobs:
     - stage: "Deploy OpenStack"
       script:
       - ip r | grep src | awk '{print $NF}'
-      - export VM_PROFILE == {"vm_ip": $(ip r | grep src | awk '{print $NF}')}
-      - python3 -u deploy.py create_travisci_multinode --VM_PROFILE 
+      # - export VM_PROFILE == {"vm_ip": $(ip r | grep src | awk '{print $NF}')}
+      # - python3 -u deploy.py create_travisci_multinode --VM_PROFILE 
