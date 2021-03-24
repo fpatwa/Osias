@@ -16,6 +16,14 @@ jobs:
       - source all_in_one_maas_vm_deployment.sh
     - stage: "Deploy OpenStack"
       script:
-      - ip r | grep src | awk '{print $NF}'
-      # - export VM_PROFILE == {"vm_ip": $(ip r | grep src | awk '{print $NF}')}
+      - ip r # | grep src | awk '{print $NF}'
+      - ip a
+      - ip a | grep "inet " | awk '{print $2}'
+      - cat /etc/netplan/50-cloud-init.yaml
+      - IP = "1.2.3.4"
+      - echo $IP
+      - IP2=$(ip a | grep "inet " | awk '{print $2}')
+      - echo $IP
+      - export VM_PROFILE="{\"vm_ip\": \"$(echo $IP)\"}"
+      - echo $VM_PROFILE
       # - python3 -u deploy.py create_travisci_multinode --VM_PROFILE 
