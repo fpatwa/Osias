@@ -95,39 +95,49 @@ check_boot_images_import_status() {
 # Configure MAAS networking
 ############################
 configure_maas_networking () {
-    sudo maas admin ipranges create type=dynamic start_ip=192.168.122.100 end_ip=192.168.122.120
+    # Check variables are set.
+    if [ -z ${system_id} ]; then system_id=$(sudo maas admin machines read | grep system_id | awk -F\" '{print $4}' | uniq); fi
+
+    sudo maas admin ipranges create type=dynamic start_ip=192.168.122.20 end_ip=192.168.122.30
     rack_id=$(sudo maas admin rack-controllers read | grep system_id | awk -F\" '{print $4}' | uniq)
     fabric_id=$(sudo maas admin subnets read | jq '.[] | select(.name == "192.168.122.0/24") | .vlan.fabric_id')
     sudo maas admin vlan update "$fabric_id" 0 dhcp_on=True primary_rack="$rack_id"
     sudo maas admin subnet update 192.168.122.0/24 gateway_ip=192.168.122.1
-    sudo maas admin subnets read
 }
 
 ############################################
 # Add VM to MaaS
 ############################################
 add_vm_to_maas () {
+    # Check variables are set.
+    if [ -z ${vm_name} ]; then vm_name="testVM"; fi
+    if [ -z ${MAC_ADDRESS} ]; then MAC_ADDRESS="$(sudo virsh dumpxml $vm_name | grep 'mac address' | awk -F\' '{print $2}')"; fi
+    if [ -z ${UUID} ]; then UUID="$(sudo virsh domuuid $vm_name)"; fi
+
     sudo maas admin machines create architecture=amd64 mac_addresses="$MAC_ADDRESS" power_type=virsh power_parameters_power_address=qemu+ssh://"$(whoami)"@127.0.0.1/system power_parameters_power_id="$UUID"
     system_id=$(sudo maas admin machines read | grep system_id | awk -F\" '{print $4}' | uniq)
     # Mark broken to apply network settings pre-commissioning.
     sudo maas admin machine mark-broken "$system_id"
     sudo maas admin interface link-subnet "$system_id" eth0 subnet=192.168.122.0/24 mode=dhcp
     interface_id=$(sudo maas admin machines read | jq '.[] | .boot_interface.id')
-    sudo maas admin interface update "$system_id" "$interface_id" interface_speed=1000 link_speed=1000
+    sudo maas admin interface update "$system_id" "$interface_id" interface_speed=1000 link_speed=1000 name=eno1
+    sudo maas admin interfaces create-bridge "$system_id" name=br0 parent="$interface_id" bridge_stp=True
+    sudo maas admin interface link-subnet "$system_id" br0 subnet=192.168.122.0/24 mode=dhcp
     sudo maas admin machine commission "$system_id" skip_networking=1 testing_scripts=none
+    while [ "$(sudo maas admin machines read | jq '.[] | .status_name' )" != \"Ready\" ]
+    do
+        echo "Machine is still commissioning...wait 30 seconds to re-check"
+        sleep 30
+    done
+
 }
 
 ############################
 # Deploy VM
 ############################
 deploy_vm () {
-    system_id=$(sudo maas admin machines read | grep system_id | awk -F\" '{print $4}' | uniq)
-
-    while [ "$(sudo maas admin machines read | jq '.[] | .status_name' )" != \"Ready\" ]
-    do
-        echo "Machine is still commissioning...wait 30 seconds to re-check"
-        sleep 30
-    done
+    # Check variables are set.
+    if [ -z ${system_id} ]; then system_id=$(sudo maas admin machines read | grep system_id | awk -F\" '{print $4}' | uniq); fi
 
     sudo maas admin machine deploy "$system_id" distro_series=ubuntu/bionic
 
@@ -136,6 +146,8 @@ deploy_vm () {
         echo "Machine is still deploying...wait 30 seconds to re-check"
         sleep 30
     done
+
+    
 }
 
 

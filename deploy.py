@@ -6,7 +6,7 @@ import setup_configs
 import maas_virtual
 import maas_base
 from osias_variables import *
-from ipaddress import IPv4Network
+from ipaddress import IPv4Interface, IPv4Network
 
 
 def parse_args():
@@ -88,6 +88,7 @@ def parse_args():
             "reboot_servers",
             "reprovision_servers",
             "create_virtual_servers",
+            "create_travisci_multinode",
             "bootstrap_networking",
             "bootstrap_openstack",
             "bootstrap_ceph",
@@ -241,6 +242,27 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile):
     POOL_START = "{POOL_START}"
     POOL_END = "{POOL_END}"
     DNS_IP = "{vm_profile['DNS_IP']}"
+    CEPH = "{CEPH}"
+    """
+    multinode = utils.create_multinode(final_dict, optional_vars)
+    print(f"Generated multinode is: {multinode}")
+    f = open("MULTINODE.env", "w")
+    f.write(f"{multinode}")
+    f.close()
+    return
+
+
+def create_travisci_multinode(ip):
+    public_ips["vm1"] = ip
+    internal_ips["vm1"] = ip
+    final_dict = utils.merge_nested_dictionaries(public_ips, internal_ips)
+    travis_ci_cidr = f"{ip}/24"
+    public_IP_pool = IPv4Interface(travis_ci_cidr).network
+    optional_vars = f"""RAID = false
+    VM_CIDR = "{str(IPv4Interface(travis_ci_cidr).network)}"
+    VIP_IP = "{str(IPv4Interface(travis_ci_cidr).network[-1])}"
+    POOL_START = "{IPv4Interface(travis_ci_cidr).network[-50]}"
+    POOL_END = "{IPv4Interface(travis_ci_cidr).network[-10]}"
     CEPH = "{CEPH}"
     """
     multinode = utils.create_multinode(final_dict, optional_vars)
@@ -426,8 +448,19 @@ def main():
         else:
             raise Exception(
                 "ERROR: MAAS_API_KEY and/or MAAS_URL argument not specified.\n"
-                + "If operation is specified as [reprovision_servers] then "
+                + "If operation is specified as [create_virtual_servers] then "
                 + "the optional arguments [--MAAS_URL] and [--MAAS_API_KEY] have to be set."
+            )
+    elif args.operation == "create_travisci_multinode":
+            VM_PROFILE = utils.merge_dictionaries(VM_Profile, eval(args.VM_PROFILE))
+            required_keys = ["vm_ip"]
+            utils.check_required_keys_not_null(required_keys, VM_PROFILE)
+            create_travisci_multinode(VM_PROFILE[vm_ip])
+        else:
+            raise Exception(
+                "ERROR: vm_ip argument not specified.\n"
+                + "If operation is specified as [create_travisci_multinode] then "
+                + "the optional argument [vm_ip] has to be set."
             )
     elif args.operation == "run_command":
         # If command is specified then only perform it

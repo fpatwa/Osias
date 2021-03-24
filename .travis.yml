@@ -9,5 +9,13 @@ before_install:
 install:
     - id
     - groups
-script:
-    - source all_in_one_maas_vm_deployment.sh
+jobs:
+  include:
+    - stage: "Deploy MaaS"
+      script:
+      - source all_in_one_maas_vm_deployment.sh
+    - stage: "Deploy OpenStack"
+      script:
+      - ip r | grep src | awk '{print $NF}'
+      - export VM_PROFILE == {"vm_ip": $(ip r | grep src | awk '{print $NF}')}
+      - python3 -u deploy.py create_travisci_multinode --VM_PROFILE 
