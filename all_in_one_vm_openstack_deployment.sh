@@ -7,6 +7,8 @@ set -x pipefail
 # Setup Bridge
 ############################################
 setup_bridge () {
+    ip addr
+
     # Get existing MAC address
     mac_address=$(grep macaddress /etc/netplan/50-cloud-init.yaml |awk '{print $2}')
     # Get the interface name (remove the ":" from the name)
@@ -29,7 +31,10 @@ setup_bridge () {
 
     # Activate the updated netplan configuration
     sudo netplan generate
+    sleep 2
     sudo netplan apply
+    sleep 5
+
     # Check
     ip addr
     cat /etc/netplan/50-cloud-init.yaml
