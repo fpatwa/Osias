@@ -5,22 +5,12 @@ language: python
 python:
     - "3.6"
 before_install:
-    - sudo apt-get update
+    - uname -a
 install:
-    - id
-    - groups
+    - uname -a
 jobs:
   include:
     - script: source all_in_one_maas_vm_deployment.sh
     #name: "Deploy MaaS"
     - script: source all_in_one_vm_openstack_deployment.sh
     #name: "Deploy OpenStack"
-    - script:  my_ip=$(ip -o -4 addr list br0 | awk '{print $4}' | cut -d/ -f1)
-    #name: "Test commands"
-#      - source all_in_one_vm_openstack_deployment.sh
-#      - ip a
-#      - ip a | grep "inet " | awk '{print $2}'
-##      - cat /etc/netplan/50-cloud-init.yaml
-#      - my_ip=$(ip -o -4 addr list br0 | awk '{print $4}' | cut -d/ -f1)
-#      - echo $my_ip
-#      # - python3 -u deploy.py create_travisci_multinode --VM_PROFILE 

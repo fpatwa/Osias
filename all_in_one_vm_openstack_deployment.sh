@@ -30,7 +30,22 @@ setup_bridge () {
     # Activate the updated netplan configuration
     sudo netplan generate
     sudo netplan apply
+    # Check
+    ip addr
+    cat /etc/netplan/50-cloud-init.yaml
 }
 
-setup_bridge
+############################################
+# Get VM Profile
+############################################
+get_vm_profile () {
+    my_ip=$(ip -o -4 addr list br0 | awk '{print $4}' | cut -d/ -f1)
+    echo $my_ip
+}
 
+############
+# Main
+############
+setup_bridge
+get_vm_profile
+# - python3 -u deploy.py create_travisci_multinode --VM_PROFILE 
