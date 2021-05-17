@@ -452,6 +452,7 @@ def main():
                 + "the optional arguments [--MAAS_URL] and [--MAAS_API_KEY] have to be set."
             )
     elif args.operation == "create_travisci_multinode":
+        if args.VM_PROFILE:
             VM_PROFILE = utils.merge_dictionaries(VM_Profile, eval(args.VM_PROFILE))
             required_keys = ["vm_ip"]
             utils.check_required_keys_not_null(required_keys, VM_PROFILE)
