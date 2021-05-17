@@ -55,7 +55,7 @@ setup_bridge
 get_vm_profile
 #
 echo $(systemd-resolve --status |grep "DNS Servers")
-
+#
 VM_PROFILE='{"Data_CIDR": "10.100.0.0/16", "DNS_IP": "10.250.53.202"}'
 VM_DEPLOYMENT_CIDR='10.30.0.90/32'
 python3 -c "import json;import os;vm_profile=json.loads(os.getenv('c'));vm_profile['vm_deployment_cidr']=os.getenv('VM_DEPLOYMENT_CIDR');vm_profile_file = open('vm_profile', 'w');vm_profile_file.write(json.dumps(vm_profile));vm_profile_file.close()"
