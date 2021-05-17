@@ -3,6 +3,8 @@
 #set -euxo pipefail
 set -x pipefail
 
+pip3 install toml timeout_decorator
+
 ############################################
 # Setup Bridge
 ############################################
