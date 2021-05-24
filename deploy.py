@@ -253,6 +253,8 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile):
 
 
 def create_travisci_multinode(ip):
+    public_ips = {}
+    internal_ips = {}
     public_ips["vm1"] = ip
     internal_ips["vm1"] = ip
     final_dict = utils.merge_nested_dictionaries(public_ips, internal_ips)
