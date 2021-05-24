@@ -54,9 +54,9 @@ get_vm_profile () {
 # Main
 ############
 setup_bridge
-my_ip=get_vm_profile
+my_ip=$(get_vm_profile)
 #
-my_dns=$(systemd-resolve --status |grep "DNS Servers")
+my_dns=$(systemd-resolve --status |grep "DNS Servers"|awk '{print $3}')
 #
 VM_PROFILE="{\"Data_CIDR\": \"10.100.0.0/16\", \"DNS_IP\": \"$my_dns\"}"
 VM_DEPLOYMENT_CIDR="${my_ip}/32"
