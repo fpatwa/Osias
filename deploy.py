@@ -456,7 +456,7 @@ def main():
             VM_PROFILE = utils.merge_dictionaries(VM_Profile, eval(args.VM_PROFILE))
             required_keys = ["vm_ip"]
             utils.check_required_keys_not_null(required_keys, VM_PROFILE)
-            create_travisci_multinode(VM_PROFILE[vm_ip])
+            create_travisci_multinode(VM_PROFILE["vm_ip"])
         else:
             raise Exception(
                 "ERROR: vm_ip argument not specified.\n"
