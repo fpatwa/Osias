@@ -54,13 +54,13 @@ get_vm_profile () {
 # Main
 ############
 setup_bridge
-get_vm_profile
+my_ip=get_vm_profile
 #
-echo $(systemd-resolve --status |grep "DNS Servers")
+my_dns=$(systemd-resolve --status |grep "DNS Servers")
 #
-VM_PROFILE='{"Data_CIDR": "10.100.0.0/16", "DNS_IP": "10.250.53.202"}'
-VM_DEPLOYMENT_CIDR='10.30.0.90/32'
-python3 -c "import json;import os;vm_profile=json.loads(os.getenv('c'));vm_profile['vm_deployment_cidr']=os.getenv('VM_DEPLOYMENT_CIDR');vm_profile_file = open('vm_profile', 'w');vm_profile_file.write(json.dumps(vm_profile));vm_profile_file.close()"
+VM_PROFILE="{\"Data_CIDR\": \"10.100.0.0/16\", \"DNS_IP\": \"$my_dns\"}"
+VM_DEPLOYMENT_CIDR="${my_ip}/32"
+python3 -c "import json;import os;vm_profile=json.loads(os.getenv('VM_PROFILE'));vm_profile['vm_deployment_cidr']=os.getenv('VM_DEPLOYMENT_CIDR');vm_profile_file = open('vm_profile', 'w');vm_profile_file.write(json.dumps(vm_profile));vm_profile_file.close()"
 #
 export VM_PROFILE=$(cat test/vm_profile)
 python3 -u deploy.py create_travisci_multinode --VM_PROFILE "$VM_PROFILE"
