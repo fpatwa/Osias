@@ -262,9 +262,9 @@ def create_travisci_multinode(ip):
     public_IP_pool = IPv4Interface(travis_ci_cidr).network
     optional_vars = f"""RAID = false
     VM_CIDR = "{str(IPv4Interface(travis_ci_cidr).network)}"
-    VIP_IP = "{str(IPv4Interface(travis_ci_cidr).network[-1])}"
-    POOL_START = "{IPv4Interface(travis_ci_cidr).network[-50]}"
-    POOL_END = "{IPv4Interface(travis_ci_cidr).network[-10]}"
+    VIP_IP = "{str(IPv4Interface(travis_ci_cidr))}"
+    POOL_START = "{IPv4Interface(travis_ci_cidr)}"
+    POOL_END = "{IPv4Interface(travis_ci_cidr)}"
     CEPH = "{CEPH}"
     """
     multinode = utils.create_multinode(final_dict, optional_vars)
