@@ -32,6 +32,7 @@ def setup_kolla_configs(
         # HA not available
         ha_options = """
 enable_neutron_agent_ha: "no"
+enable_haproxy: "no"
 """
     else:
         ha_options = """

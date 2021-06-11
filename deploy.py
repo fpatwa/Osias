@@ -258,7 +258,7 @@ def create_travisci_multinode(ip):
     public_ips["vm1"] = ip
     internal_ips["vm1"] = ip
     final_dict = utils.merge_nested_dictionaries(public_ips, internal_ips)
-    travis_ci_cidr = f"{ip}/24"
+    travis_ci_cidr = f"{ip}/32"
     public_IP_pool = IPv4Interface(travis_ci_cidr).network
     optional_vars = f"""RAID = false
     VM_CIDR = "{str(IPv4Interface(travis_ci_cidr).network)}"
