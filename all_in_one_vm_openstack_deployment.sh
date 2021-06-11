@@ -64,4 +64,10 @@ export VM_IP="${my_ip}"
 python3 -c "import json;import os;vm_profile=json.loads(os.getenv('VM_PROFILE'));vm_profile['vm_deployment_cidr']=os.getenv('VM_DEPLOYMENT_CIDR');vm_profile['vm_ip']=os.getenv('VM_IP');vm_profile_file = open('vm_profile', 'w');vm_profile_file.write(json.dumps(vm_profile));vm_profile_file.close()"
 #
 export VM_PROFILE=$(cat vm_profile)
-python3 -u deploy.py create_travisci_multinode --VM_PROFILE "$VM_PROFILE"
+bootstrap_kolla.sh
+
+kolla-genpwd
+kolla-ansible -i all-in-one certificates
+kolla-ansible -i all-in-one bootstrap-servers
+
+#python3 -u deploy.py create_travisci_multinode --VM_PROFILE "$VM_PROFILE"
