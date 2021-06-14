@@ -84,5 +84,10 @@ __EOF__
 kolla-ansible -i ./multinode prechecks
 kolla-ansible -i all-in-one certificates
 kolla-ansible -i all-in-one bootstrap-servers
+kolla-ansible -i all-in-one deploy
+
+echo $my_ip
+sleep 300
+
 
 #python3 -u deploy.py create_travisci_multinode --VM_PROFILE "$VM_PROFILE"
