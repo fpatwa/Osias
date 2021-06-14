@@ -67,7 +67,7 @@ my_ip=$(get_vm_profile)
 pwd
 ls -la
 chmod +x bootstrap_kolla.sh
-cp * "$HOME"
+cp -r * "$HOME"
 "$HOME"/bootstrap_kolla.sh
 
 cp /home/travis/virtualenv/python3.6.10/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
