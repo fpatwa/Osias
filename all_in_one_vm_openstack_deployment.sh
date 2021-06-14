@@ -70,8 +70,18 @@ chmod +x bootstrap_kolla.sh
 cp * "$HOME"
 "$HOME"/bootstrap_kolla.sh
 
-
+cp /home/travis/virtualenv/python3.6.10/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
+cp /home/travis/virtualenv/python3.6.10/share/kolla-ansible/ansible/inventory/all-in-one .
 kolla-genpwd
+
+cat > /etc/kolla/globals.yml <<__EOF__
+kolla_install_type: "source"
+enable_haproxy: "no"
+enable_neutron_agent_ha: "no"
+network_interface: "br0"
+__EOF__
+
+kolla-ansible -i ./multinode prechecks
 kolla-ansible -i all-in-one certificates
 kolla-ansible -i all-in-one bootstrap-servers
 
