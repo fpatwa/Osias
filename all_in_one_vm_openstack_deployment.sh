@@ -79,6 +79,7 @@ kolla_install_type: "source"
 enable_haproxy: "no"
 enable_neutron_agent_ha: "no"
 network_interface: "br0"
+kolla_internal_vip_address: "{{ api_interface }}"
 __EOF__
 
 kolla-ansible -i ./multinode prechecks
