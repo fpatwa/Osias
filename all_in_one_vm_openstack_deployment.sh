@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#set -euxo pipefail
-set -x pipefail
+set -euxo pipefail
+#set -x pipefail
 
 pip3 install toml timeout_decorator
 
@@ -88,10 +88,9 @@ cat /etc/kolla/globals.yml
 kolla-ansible -i ./multinode prechecks
 kolla-ansible -i all-in-one certificates
 kolla-ansible -i all-in-one bootstrap-servers
+kolla-ansible -i all-in-one pull
 kolla-ansible -i all-in-one deploy
 
-echo "$my_ip"
 #sleep 300
-
 
 #python3 -u deploy.py create_travisci_multinode --VM_PROFILE "$VM_PROFILE"
