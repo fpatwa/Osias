@@ -71,7 +71,7 @@ cp -r * "$HOME"
 "$HOME"/bootstrap_kolla.sh
 
 #ls /opt/kolla/venv/share/kolla-ansible/etc_examples/kolla/
-cp /home/travis/virtualenv/python3.6.10/share/kolla-ansible/etc_examples/kolla/ /etc/kolla
+cp /home/travis/virtualenv/python3.6.10/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
 cp /home/travis/virtualenv/python3.6.10/share/kolla-ansible/ansible/inventory/all-in-one .
 kolla-genpwd
 
