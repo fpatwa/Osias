@@ -46,15 +46,15 @@ setup_bridge () {
 # Get VM Profile
 ############################################
 get_vm_profile () {
-    my_ip=$(ip -o -4 addr list br0 | awk '{print $4}' | cut -d/ -f1)
-    echo $my_ip
+    my_ip=$(ip -o -4 addr list ens4 | awk '{print $4}' | cut -d/ -f1)
+    echo "$my_ip"
 }
 
 ############
 # Main
 ############
 # setup_bridge
-#my_ip=$(get_vm_profile)
+my_ip=$(get_vm_profile)
 #
 #my_dns=$(systemd-resolve --status |grep "DNS Servers"|awk '{print $3}')
 #
@@ -79,7 +79,7 @@ kolla_install_type: "source"
 enable_haproxy: "no"
 enable_neutron_agent_ha: "no"
 network_interface: "ens4"
-kolla_internal_vip_address: "{{ api_interface }}"
+kolla_internal_vip_address: "${my_ip}"
 __EOF__
 
 ip a
@@ -90,7 +90,7 @@ kolla-ansible -i all-in-one certificates
 kolla-ansible -i all-in-one bootstrap-servers
 kolla-ansible -i all-in-one deploy
 
-echo $my_ip
+echo "$my_ip"
 #sleep 300
 
 
