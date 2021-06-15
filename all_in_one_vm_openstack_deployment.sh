@@ -94,9 +94,8 @@ kolla-ansible -i all-in-one prechecks
 
 cat /etc/hosts
 getent hosts $(hostname)
-getent hosts $(hostname -s)
-getent hosts $(getent hosts $(hostname))
-getent hosts $(getent hosts $(hostname -s))
+sudo sed -i '/127.0.1.1/d' /etc/hosts
+cat /etc/hosts
 
 kolla-ansible -i all-in-one pull
 kolla-ansible -i all-in-one deploy
