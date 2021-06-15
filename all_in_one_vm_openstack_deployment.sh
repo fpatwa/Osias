@@ -53,7 +53,7 @@ get_vm_profile () {
 ############
 # Main
 ############
-# setup_bridge
+setup_bridge
 my_ip=$(get_vm_profile)
 #
 #my_dns=$(systemd-resolve --status |grep "DNS Servers"|awk '{print $3}')
@@ -74,12 +74,18 @@ cp -r * "$HOME"
 cp /home/travis/virtualenv/python3.6.10/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
 cp /home/travis/virtualenv/python3.6.10/share/kolla-ansible/ansible/inventory/all-in-one .
 
+ip a | grep -Eq ': veno1.*state UP' || sudo ip link add veno0 type veth peer name veno1
+ip link set veno0 up
+ip link set veno1 up
+ip link set veno0 master br0
+
 cat > /etc/kolla/globals.yml <<__EOF__
 kolla_install_type: "source"
 openstack_release: "ussuri"
 enable_haproxy: "no"
 enable_neutron_agent_ha: "no"
-network_interface: "ens4"
+network_interface: "br0"  #ens4
+network_interface: "veno0"  #
 kolla_internal_vip_address: "${my_ip}"
 __EOF__
 
