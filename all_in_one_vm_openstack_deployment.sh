@@ -85,8 +85,8 @@ openstack_release: "ussuri"
 enable_haproxy: "no"
 enable_neutron_agent_ha: "no"
 network_interface: "br0"  #ens4
-network_interface: "veno0"  #
 kolla_internal_vip_address: "${my_ip}"
+neutron_external_interface: "veno1"
 __EOF__
 
 ip a
