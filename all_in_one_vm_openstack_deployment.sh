@@ -99,7 +99,7 @@ cat /etc/hosts
 
 # echo net.ipv4.ip_nonlocal_bind=1 >> /etc/sysctl.conf
 sudo /bin/su -c "echo 'net.ipv4.ip_nonlocal_bind = 1' >> /etc/sysctl.conf"
-sysctl -p
+sudo sysctl -p
 
 kolla-ansible -i all-in-one pull
 kolla-ansible -i all-in-one deploy
