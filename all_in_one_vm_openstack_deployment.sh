@@ -97,7 +97,8 @@ getent hosts $(hostname)
 sudo sed -i '/127.0.1.1/d' /etc/hosts
 cat /etc/hosts
 
-echo net.ipv4.ip_nonlocal_bind=1 >> /etc/sysctl.conf
+# echo net.ipv4.ip_nonlocal_bind=1 >> /etc/sysctl.conf
+sudo /bin/su -c "echo 'net.ipv4.ip_nonlocal_bind = 1' >> /etc/sysctl.conf"
 sysctl -p
 
 kolla-ansible -i all-in-one pull
