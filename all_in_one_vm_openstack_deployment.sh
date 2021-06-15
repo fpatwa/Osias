@@ -80,12 +80,18 @@ sudo ip link set veno1 up
 sudo ip link set veno0 master br0
 
 cat > /etc/kolla/globals.yml <<__EOF__
+kolla_base_distro: "centos"
 kolla_install_type: "source"
 openstack_release: "ussuri"
 enable_haproxy: "no"
 enable_neutron_agent_ha: "no"
 network_interface: "br0"  #ens4
 kolla_internal_vip_address: "${my_ip}"
+
+#kolla_internal_vip_address: "{kolla_internal_vip_address}"
+kolla_external_vip_address: "{kolla_internal_vip_address}"
+#network_interface: "eno1"
+kolla_external_vip_interface: "br0"
 neutron_external_interface: "veno1"
 __EOF__
 
