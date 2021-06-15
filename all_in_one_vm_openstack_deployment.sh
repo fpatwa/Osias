@@ -73,10 +73,10 @@ cp -r * "$HOME"
 #ls /opt/kolla/venv/share/kolla-ansible/etc_examples/kolla/
 cp /home/travis/virtualenv/python3.6.10/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
 cp /home/travis/virtualenv/python3.6.10/share/kolla-ansible/ansible/inventory/all-in-one .
-kolla-genpwd
 
 cat > /etc/kolla/globals.yml <<__EOF__
 kolla_install_type: "source"
+openstack_release: "ussuri"
 enable_haproxy: "no"
 enable_neutron_agent_ha: "no"
 network_interface: "ens4"
@@ -86,9 +86,18 @@ __EOF__
 ip a
 cat /etc/kolla/globals.yml
 
-kolla-ansible -i ./multinode prechecks
+#kolla-ansible -i ./multinode prechecks
+kolla-genpwd
 kolla-ansible -i all-in-one certificates
 kolla-ansible -i all-in-one bootstrap-servers
+kolla-ansible -i all-in-one prechecks
+
+cat /etc/hosts
+getent hosts $(hostname)
+getent hosts $(hostname -s)
+getent hosts $(getent hosts $(hostname))
+getent hosts $(getent hosts $(hostname -s))
+
 kolla-ansible -i all-in-one pull
 kolla-ansible -i all-in-one deploy
 
