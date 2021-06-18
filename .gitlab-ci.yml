@@ -3,6 +3,9 @@ default:
   # https://hub.docker.com/r/library/python/tags/
   image: python:3.7-buster
 
+include:
+    - template: Security/SAST.gitlab-ci.yml
+
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -24,6 +27,7 @@ stages:
   - test_refstack
   - test_stress
   - release_cidr
+  - test
 
 .base_setup:
   tags:
