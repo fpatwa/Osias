@@ -6,11 +6,15 @@ python:
     - "3.6"
 before_install:
     - uname -a
+    - git clone https://github.com/TravisToolbox/bandit
 install:
     - uname -a
+    - ./bandit/install.sh
 jobs:
   include:
     #- script: source all_in_one_maas_vm_deployment.sh
     #name: "Deploy MaaS"
     - script: source all_in_one_vm_openstack_deployment.sh
     #name: "Deploy OpenStack"
+    # Security scan
+    - ./bandit/scan.sh
