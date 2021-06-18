@@ -17,4 +17,4 @@ jobs:
     - script: source all_in_one_vm_openstack_deployment.sh
     #name: "Deploy OpenStack"
     # Security scan
-    - ./bandit/scan.sh
+    - script: ./bandit/scan.sh
