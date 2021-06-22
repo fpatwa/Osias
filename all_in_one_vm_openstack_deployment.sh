@@ -103,6 +103,9 @@ __EOF__
 ip a
 cat /etc/kolla/globals.yml
 
+truncate -s0 /etc/hostname
+hostnamectl set-hostname localhost
+
 #kolla-ansible -i ./multinode prechecks
 kolla-genpwd
 kolla-ansible -i all-in-one certificates
