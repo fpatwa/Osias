@@ -47,6 +47,7 @@ setup_bridge () {
 # Get VM Profile
 ############################################
 public_interface=$(route -n | awk '$1 == "0.0.0.0" {print $8}')
+
 get_vm_profile () {
     my_ip=$(ip -o -4 addr list ${public_interface} | awk '{print $4}' | cut -d/ -f1)
     echo "$my_ip"
@@ -55,8 +56,8 @@ get_vm_profile () {
 ############
 # Main
 ############
-setup_bridge
 my_ip=$(get_vm_profile)
+setup_bridge
 #
 #my_dns=$(systemd-resolve --status |grep "DNS Servers"|awk '{print $3}')
 #
