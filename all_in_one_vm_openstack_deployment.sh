@@ -51,7 +51,7 @@ setup_bridge () {
 public_interface=$(route -n | awk '$1 == "0.0.0.0" {print $8}')
 
 get_vm_profile () {
-    my_ip=$(ip -o -4 addr list ${public_interface} | awk '{print $4}' | cut -d/ -f1)
+    my_ip=$(ip -o -4 addr list "${public_interface}" | awk '{print $4}' | cut -d/ -f1)
     echo "$my_ip"
 }
 
@@ -110,12 +110,15 @@ sudo hostnamectl set-hostname localhost
 kolla-genpwd
 kolla-ansible -i all-in-one certificates
 kolla-ansible -i all-in-one bootstrap-servers
+
+sed -i "s/.*127.*/127.0.0.1 localhost $hostname/g" /etc/hosts
+cat /etc/hosts
+
 kolla-ansible -i all-in-one prechecks
 
 # cat /etc/hosts
 # getent hosts $(hostname)
 # sudo sed -i '/127.0.1.1/d' /etc/hosts
-# cat /etc/hosts
 
 # echo net.ipv4.ip_nonlocal_bind=1 >> /etc/sysctl.conf
 # sudo /bin/su -c "echo 'net.ipv4.ip_nonlocal_bind = 1' >> /etc/sysctl.conf"
