@@ -17,7 +17,9 @@ setup_bridge () {
     # Get the interface name (remove the ":" from the name)
     interface_name=$(grep -A 1 ethernets /etc/netplan/${netplan_file} |grep -v ethernets |awk '{print $1}')
     interface_name=${interface_name%:}
-
+    cat /etc/netplan/${netplan_file} 
+    cat /etc/hosts
+    cat /etc/resolv.conf
     # Copy to work with a temp file
     cp /etc/netplan/${netplan_file} /tmp/${netplan_file}
     # Now modify the temp file to add the bridge information
