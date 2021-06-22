@@ -11,14 +11,15 @@ pip3 install toml timeout_decorator
 setup_bridge () {
     ip addr
 
+    netplan_file="50-cloud-init.yaml" # "00-installer-config.yaml"
     # Get existing MAC address
-    mac_address=$(grep macaddress /etc/netplan/50-cloud-init.yaml |awk '{print $2}')
+    mac_address=$(grep macaddress /etc/netplan/${netplan_file} |awk '{print $2}')
     # Get the interface name (remove the ":" from the name)
-    interface_name=$(grep -A 1 ethernets /etc/netplan/50-cloud-init.yaml |grep -v ethernets |awk '{print $1}')
+    interface_name=$(grep -A 1 ethernets /etc/netplan/${netplan_file} |grep -v ethernets |awk '{print $1}')
     interface_name=${interface_name%:}
 
     # Copy to work with a temp file
-    cp /etc/netplan/50-cloud-init.yaml /tmp/50-cloud-init.yaml
+    cp /etc/netplan/${netplan_file} /tmp/${netplan_file}
     # Now modify the temp file to add the bridge information
     echo -ne "    bridges:
         br0:
@@ -26,10 +27,10 @@ setup_bridge () {
             interfaces:
                 - $interface_name
             macaddress: $mac_address
-" >> /tmp/50-cloud-init.yaml
+" >> /tmp/${netplan_file}
 
     # Now copy over the modified file in the netplan directory
-    sudo mv /tmp/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml
+    sudo mv /tmp/${netplan_file} /etc/netplan/${netplan_file}
 
     # Activate the updated netplan configuration
     sudo netplan generate
@@ -39,21 +40,22 @@ setup_bridge () {
 
     # Check
     ip addr
-    cat /etc/netplan/50-cloud-init.yaml
+    cat /etc/netplan/${netplan_file}
 }
 
 ############################################
 # Get VM Profile
 ############################################
+public_interface=$(route -n | awk '$1 == "0.0.0.0" {print $8}')
 get_vm_profile () {
-    my_ip=$(ip -o -4 addr list ens4 | awk '{print $4}' | cut -d/ -f1)
+    my_ip=$(ip -o -4 addr list ${public_interface} | awk '{print $4}' | cut -d/ -f1)
     echo "$my_ip"
 }
 
 ############
 # Main
 ############
-#setup_bridge
+setup_bridge
 my_ip=$(get_vm_profile)
 #
 #my_dns=$(systemd-resolve --status |grep "DNS Servers"|awk '{print $3}')
@@ -71,15 +73,15 @@ cp -r * "$HOME"
 "$HOME"/bootstrap_kolla.sh
 
 #ls /opt/kolla/venv/share/kolla-ansible/etc_examples/kolla/
-cp /home/travis/virtualenv/python3.6.10/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
-cp /home/travis/virtualenv/python3.6.10/share/kolla-ansible/ansible/inventory/all-in-one .
+cp "$HOME"/virtualenv/python3.6.10/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
+cp "$HOME"/virtualenv/python3.6.10/share/kolla-ansible/ansible/inventory/all-in-one .
 
-#ip a | grep -Eq ': veno1.*state UP' || sudo ip link add veno0 type veth peer name veno1
-#sudo ip link set veno0 up
-#sudo ip link set veno1 up
-#sudo ip link set veno0 master br0
+ip a | grep -Eq ': veno1.*state UP' || sudo ip link add veno0 type veth peer name veno1
+sudo ip link set veno0 up
+sudo ip link set veno1 up
+sudo ip link set veno0 master br0
 
-cat > /etc/kolla/globals.yml <<__EOF__
+cat >> /etc/kolla/globals.yml <<__EOF__
 kolla_base_distro: "centos"
 kolla_install_type: "source"
 openstack_release: "ussuri"
@@ -87,14 +89,12 @@ openstack_release: "ussuri"
 enable_haproxy: "no"
 enable_neutron_agent_ha: "no"
 
-network_interface: "ens4"  #br0?
 kolla_internal_vip_address: "${my_ip}"
+kolla_external_vip_address: "${my_ip}"
 
-#kolla_internal_vip_address: "{kolla_internal_vip_address}"
-#kolla_external_vip_address: "{kolla_internal_vip_address}"
-#network_interface: "eno1"
-#kolla_external_vip_interface: "br0"
-#neutron_external_interface: "veno1"
+network_interface: "br0"
+kolla_external_vip_interface: "br0"
+neutron_external_interface: "veno1"
 __EOF__
 
 ip a
