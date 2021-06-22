@@ -109,14 +109,14 @@ kolla-ansible -i all-in-one certificates
 kolla-ansible -i all-in-one bootstrap-servers
 kolla-ansible -i all-in-one prechecks
 
-cat /etc/hosts
-getent hosts $(hostname)
-sudo sed -i '/127.0.1.1/d' /etc/hosts
-cat /etc/hosts
+# cat /etc/hosts
+# getent hosts $(hostname)
+# sudo sed -i '/127.0.1.1/d' /etc/hosts
+# cat /etc/hosts
 
 # echo net.ipv4.ip_nonlocal_bind=1 >> /etc/sysctl.conf
-sudo /bin/su -c "echo 'net.ipv4.ip_nonlocal_bind = 1' >> /etc/sysctl.conf"
-sudo sysctl -p
+# sudo /bin/su -c "echo 'net.ipv4.ip_nonlocal_bind = 1' >> /etc/sysctl.conf"
+# sudo sysctl -p
 
 kolla-ansible -i all-in-one pull
 kolla-ansible -i all-in-one deploy
