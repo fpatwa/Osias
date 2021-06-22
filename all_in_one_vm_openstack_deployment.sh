@@ -103,16 +103,13 @@ __EOF__
 ip a
 cat /etc/kolla/globals.yml
 
-sudo truncate -s0 /etc/hostname
-sudo hostnamectl set-hostname localhost
-
 #kolla-ansible -i ./multinode prechecks
 kolla-genpwd
 kolla-ansible -i all-in-one certificates
 kolla-ansible -i all-in-one bootstrap-servers
 
 hostname=$(cat /etc/hostname)
-sed -i "s/.*127.*/127.0.0.1 localhost $hostname/g" /etc/hosts
+sudo sed -i "s/.*127.*/127.0.0.1 localhost $hostname/g" /etc/hosts
 cat /etc/hosts
 
 kolla-ansible -i all-in-one prechecks
