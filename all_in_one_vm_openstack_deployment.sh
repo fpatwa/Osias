@@ -103,20 +103,19 @@ __EOF__
 ip a
 cat /etc/kolla/globals.yml
 
-#kolla-ansible -i ./multinode prechecks
 kolla-genpwd
 kolla-ansible -i all-in-one certificates
 kolla-ansible -i all-in-one bootstrap-servers
 
-hostname=$(cat /etc/hostname)
-sudo sed -i "s/.*127.*/127.0.0.1 localhost $hostname/g" /etc/hosts
+#hostname=$(cat /etc/hostname)
+#sudo sed -i "s/.*127.*/127.0.0.1 localhost $hostname/g" /etc/hosts
+sudo sed -i '/127.0.1.1/d' /etc/hosts
 cat /etc/hosts
 
 kolla-ansible -i all-in-one prechecks
 
 # cat /etc/hosts
 # getent hosts $(hostname)
-# sudo sed -i '/127.0.1.1/d' /etc/hosts
 
 # echo net.ipv4.ip_nonlocal_bind=1 >> /etc/sysctl.conf
 # sudo /bin/su -c "echo 'net.ipv4.ip_nonlocal_bind = 1' >> /etc/sysctl.conf"
