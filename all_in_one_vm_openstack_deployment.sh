@@ -103,8 +103,8 @@ __EOF__
 ip a
 cat /etc/kolla/globals.yml
 
-truncate -s0 /etc/hostname
-hostnamectl set-hostname localhost
+sudo truncate -s0 /etc/hostname
+sudo hostnamectl set-hostname localhost
 
 #kolla-ansible -i ./multinode prechecks
 kolla-genpwd
