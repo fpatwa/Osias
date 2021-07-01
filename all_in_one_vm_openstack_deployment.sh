@@ -76,8 +76,11 @@ cp -r * "$HOME"
 "$HOME"/bootstrap_kolla.sh
 
 #ls /opt/kolla/venv/share/kolla-ansible/etc_examples/kolla/
-cp "$HOME"/virtualenv/python3.6.10/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
-cp "$HOME"/virtualenv/python3.6.10/share/kolla-ansible/ansible/inventory/all-in-one .
+cp /opt/kolla/venv/lib/python3.6/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
+cp /opt/kolla/venv/lib/python3.6/share/kolla-ansible/ansible/inventory/all-in-one .
+
+#cp "$HOME"/virtualenv/python3.6.10/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
+#cp "$HOME"/virtualenv/python3.6.10/share/kolla-ansible/ansible/inventory/all-in-one .
 
 ip a | grep -Eq ': veno1.*state UP' || sudo ip link add veno0 type veth peer name veno1
 sudo ip link set veno0 up
