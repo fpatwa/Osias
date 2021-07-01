@@ -56,3 +56,37 @@ setup_bridge () {
 ############
 my_ip=$(get_vm_profile)
 setup_bridge
+
+read -r -d '' MULTINODE << EOM
+[control]
+    [control.0]
+    public = "$my_ip"
+    private = "$my_ip"
+    data = ""
+[network]
+    [network.0]
+    public = "$my_ip"
+    private = "$my_ip"
+    data = ""
+[storage]
+    [storage.0]
+    public = "$my_ip"
+    private = "$my_ip"
+    data = ""
+[compute]
+    [compute.0]
+    public = "$my_ip"
+    private = "$my_ip"
+    data = ""
+[monitor]
+    [monitor.0]
+    public = ""
+    private = ""
+    data = ""
+[variables]
+    [variables.0]
+    RAID = false
+EOM
+
+echo "$MULTINODE"
+#python3 -u deploy.py bootstrap_networking --config "$MULTINODE"
