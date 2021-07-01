@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -uxo pipefail
+set -x
 
 ############################################
 # Get VM Profile
