@@ -76,8 +76,8 @@ cp -r * "$HOME"
 "$HOME"/bootstrap_kolla.sh
 
 #ls /opt/kolla/venv/share/kolla-ansible/etc_examples/kolla/
-cp /opt/kolla/venv/lib/python3.6/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
-cp /opt/kolla/venv/lib/python3.6/share/kolla-ansible/ansible/inventory/all-in-one .
+#cp /opt/kolla/venv/lib/python3.6/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
+#cp /opt/kolla/venv/lib/python3.6/share/kolla-ansible/ansible/inventory/all-in-one .
 
 #cp "$HOME"/virtualenv/python3.6.10/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
 #cp "$HOME"/virtualenv/python3.6.10/share/kolla-ansible/ansible/inventory/all-in-one .
