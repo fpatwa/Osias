@@ -86,9 +86,18 @@ setup_bridge
 [variables]
     [variables.0]
     RAID = false
+    CEPH = "False"
+    VM_CIDR = "10.245.121.208/28"
+    VIP_IP = "10.245.121.223"
+    POOL_START = "10.245.121.209"
+    POOL_END = "10.245.121.222"
+    DNS_IP = "10.250.53.202"
 EOM
 
 #echo "$MULTINODE"
 pip3 install toml timeout_decorator
 python3 -u deploy.py bootstrap_networking --config "$MULTINODE"
 python3 -u deploy.py bootstrap_openstack --config "$MULTINODE"
+python3 -u deploy.py pre_deploy_openstack --config "$MULTINODE"
+python3 -u deploy.py deploy_openstack --config "$MULTINODE"
+
