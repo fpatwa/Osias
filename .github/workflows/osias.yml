@@ -24,6 +24,10 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
+      
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+      
       - name: Deploy OpenStack
         run: |
           source all_in_one_openstack_deployment_github.sh
