@@ -57,7 +57,7 @@ setup_bridge () {
 my_ip=$(get_vm_profile)
 setup_bridge
 
-read -r -d '' MULTINODE << EOM
+! read -r -d '' MULTINODE << EOM
 [control]
     [control.0]
     public = "$my_ip"
