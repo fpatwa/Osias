@@ -88,5 +88,6 @@ setup_bridge
     RAID = false
 EOM
 
-echo "$MULTINODE"
-#python3 -u deploy.py bootstrap_networking --config "$MULTINODE"
+#echo "$MULTINODE"
+python3 -u deploy.py bootstrap_networking --config "$MULTINODE"
+python3 -u deploy.py bootstrap_openstack --config "$MULTINODE"
