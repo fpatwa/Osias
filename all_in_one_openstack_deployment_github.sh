@@ -89,5 +89,6 @@ setup_bridge
 EOM
 
 #echo "$MULTINODE"
+pip3 install toml timeout_decorator
 python3 -u deploy.py bootstrap_networking --config "$MULTINODE"
 python3 -u deploy.py bootstrap_openstack --config "$MULTINODE"
