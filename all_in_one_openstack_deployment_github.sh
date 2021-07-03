@@ -95,9 +95,18 @@ setup_bridge
 EOM
 
 #echo "$MULTINODE"
+echo "#### DEBUG INFORMATION ####"
+id
+pwd
+ls ~/
+ls -la ~/.ssh
+ssh $my_ip ls
+echo "#### DEBUG INFORMATION END ####"
+
 pip3 install toml timeout_decorator
 python3 -u deploy.py bootstrap_networking --config "$MULTINODE"
-python3 -u deploy.py bootstrap_openstack --config "$MULTINODE"
-python3 -u deploy.py pre_deploy_openstack --config "$MULTINODE"
-python3 -u deploy.py deploy_openstack --config "$MULTINODE"
+
+#python3 -u deploy.py bootstrap_openstack --config "$MULTINODE"
+#python3 -u deploy.py pre_deploy_openstack --config "$MULTINODE"
+#python3 -u deploy.py deploy_openstack --config "$MULTINODE"
 
