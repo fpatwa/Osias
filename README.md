@@ -1,3 +1,8 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/utsa-ics/osias/badge/master)](https://www.codefactor.io/repository/github/utsa-ics/osias/overview/master) 
+[![PEP8](https://img.shields.io/badge/code%20style-pep8-orange.svg)](https://gitlab.com/utsa-ics/osias)
+[![Pipeline](https://gitlab.com/utsa-ics/deploy-openstack/badges/master/pipeline.svg?ignore_skipped=true)](https://gitlab.com/utsa-ics/deploy-openstack/-/commits/master)
+[![Gitter chat](https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-brightgreen.svg)](https://gitter.im/utsa-ics-osias/community?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
+
 # Osias (OpenStack Infrastructure As a Service)
 
 ## Mission Statement
