@@ -41,8 +41,8 @@ __EOF__
 # Configure kolla
 sudo mkdir -p /etc/kolla
 sudo chown "$USER":"$USER" /etc/kolla
-cp -r /opt/kolla/venv/share/kolla-ansible/etc_examples/kolla/* /etc/kolla
-cp /opt/kolla/venv/share/kolla-ansible/ansible/inventory/* .
+cp -r /opt/kolla/venv/share/kolla-ansible/etc_examples/kolla/* /etc/kolla || true
+cp /opt/kolla/venv/share/kolla-ansible/ansible/inventory/* . || true
 
 # Add nova config path
 mkdir -p /etc/kolla/config/

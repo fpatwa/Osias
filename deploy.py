@@ -426,7 +426,7 @@ def main():
         else:
             raise Exception(
                 "ERROR: MAAS_API_KEY and/or MAAS_URL argument not specified.\n"
-                + "If operation is specified as [reprovision_servers] then "
+                + "If operation is specified as [create_virtual_servers] then "
                 + "the optional arguments [--MAAS_URL] and [--MAAS_API_KEY] have to be set."
             )
     elif args.operation == "run_command":

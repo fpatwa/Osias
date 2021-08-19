@@ -32,6 +32,7 @@ def setup_kolla_configs(
         # HA not available
         ha_options = """
 enable_neutron_agent_ha: "no"
+enable_haproxy: "no"
 """
     else:
         ha_options = """
@@ -79,6 +80,28 @@ cinder_backup_driver: "ceph"
 nova_backend_ceph: "yes"
 #gnocchi_backend_storage: "ceph"
 """
+
+    # Default value of the network interface
+    network_interface = "eno1"
+    # Default value of tls backend
+    tls_enabled = "yes"
+    # Check if its a all in one deployment on a single
+    # node; if so then use br0 as the network interface
+    # and disable tls backend
+    if (
+        len(controller_nodes) == 1
+        and len(network_nodes) == 1
+        and len(storage_nodes) == 1
+        and len(compute_nodes) == 1
+    ):
+        if (
+            controller_nodes == network_nodes
+            and controller_nodes == storage_nodes
+            and controller_nodes == compute_nodes
+        ):
+            network_interface = "br0"
+            tls_enabled = "no"
+
     globals_file = f"""
 # Globals file is completely commented out besides these variables.
 cat >>/etc/kolla/globals.yml <<__EOF__
@@ -88,14 +111,14 @@ kolla_install_type: "source"
 openstack_release: "ussuri"
 kolla_internal_vip_address: "{kolla_internal_vip_address}"
 kolla_external_vip_address: "{kolla_external_vip_address}"
-network_interface: "eno1"
+network_interface: "{network_interface}"
 kolla_external_vip_interface: "br0"
 neutron_external_interface: "veno1"
-kolla_enable_tls_internal: "yes"
-kolla_enable_tls_external: "yes"
+kolla_enable_tls_internal: "{tls_enabled}"
+kolla_enable_tls_external: "{tls_enabled}"
 kolla_copy_ca_into_containers: "yes"
 kolla_verify_tls_backend: "no"
-kolla_enable_tls_backend: "yes"
+kolla_enable_tls_backend: "{tls_enabled}"
 openstack_cacert: /etc/pki/tls/certs/ca-bundle.crt
 keepalived_virtual_router_id: "{SUFFIX}"
 
