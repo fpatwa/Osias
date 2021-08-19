@@ -113,7 +113,19 @@ sudo cp ubuntu /etc/sudoers.d/.
 # Deploy openstack using kolla
 #
 pip3 install toml timeout_decorator
+# Configure the networking and bridge for openstack.
 python3 -u deploy.py bootstrap_networking --config "$MULTINODE"
+# Run bootstrap across the servers for installing the pre-reqs for openstack
 python3 -u deploy.py bootstrap_openstack --config "$MULTINODE"
+# Pull openstack kolla images
 python3 -u deploy.py pre_deploy_openstack --config "$MULTINODE"
+# Deploy openstack on target servers using kolla
+# 1. Run Kolla pre-setup
+# 2. Run Kolla deploy
 python3 -u deploy.py deploy_openstack --config "$MULTINODE"
+# Setup the openstack cloud with public network, images, flavors etc.
+python3 -u deploy.py post_deploy_openstack --config "$MULTINODE"
+python3 -u deploy.py test_setup --config "$MULTINODE"
+# Run refstack tests to ensure that the openstack deploy on target servers is functional
+python3 -u deploy.py test_refstack --config "$MULTINODE"
+
