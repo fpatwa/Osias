@@ -89,8 +89,8 @@ setup_bridge
     CEPH = "False"
     VM_CIDR = "${my_ip}/32"
     VIP_IP = "${my_ip}/32"
-    POOL_START = "${my_ip}/32"
-    POOL_END = "${my_ip}/32"
+    POOL_START = "${my_ip}"
+    POOL_END = "${my_ip}"
     DNS_IP = "8.8.8.8"
 EOM
 
