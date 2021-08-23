@@ -32,7 +32,6 @@ def setup_kolla_configs(
         # HA not available
         ha_options = """
 enable_neutron_agent_ha: "no"
-enable_haproxy: "no"
 """
     else:
         ha_options = """
@@ -98,9 +97,13 @@ nova_backend_ceph: "yes"
             controller_nodes == network_nodes
             and controller_nodes == storage_nodes
             and controller_nodes == compute_nodes
+            and kolla_internal_vip_address == kolla_external_vip_address
         ):
             network_interface = "br0"
             tls_enabled = "no"
+            ha_options += """
+enable_haproxy: "no"
+    """
 
     globals_file = f"""
 # Globals file is completely commented out besides these variables.
