@@ -26,7 +26,7 @@ class parser:
 
     def get_raid_option(self):
         data = parser.get_variables(self, variable="RAID")
-        if type(data) is bool:
+        if isinstance(data, bool):
             return data
         return False
 
@@ -59,14 +59,11 @@ class parser:
     def bool_check_ips_exist(self, node_type, ip_type):
         data = self.data.get(node_type)
         for key, value in data.items():
-            if value[ip_type]:
-                return True
-            else:
-                return False
+            return bool(value[ip_type])
 
 
 def convert_to_list(parm):
-    if type(parm) is str:
+    if isinstance(parm, str):
         tmpList = []
         tmpList.append(parm)
         return tmpList

@@ -22,7 +22,6 @@ class maas_virtual(maas_base):
                     f"interfaces create-bridge {server} name=br0 parent={interface_id} bridge_stp=True"
                 )
                 self._set_interface(server, "br0", public_cidr, vm_ip)
-        return
 
     def _get_pod_id(self, storage, cores, memory):
         pods = self._run_maas_command(f"pods read")

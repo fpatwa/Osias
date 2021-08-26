@@ -57,8 +57,7 @@ class ssh_tool:
 
         if output:
             return stdout
-        else:
-            return ret
+        return ret
 
     def check_access(self):
         # Check if the machine is accessible:
@@ -67,9 +66,8 @@ class ssh_tool:
             if out == 0:
                 print(f"Successfully connected to {self.ip}")
                 return True
-            else:
-                print(f"Failed to connect to {self.ip}, Retry in 20 seconds")
-                time.sleep(20)
+            print(f"Failed to connect to {self.ip}, Retry in 20 seconds")
+            time.sleep(20)
         return False
 
     def scp_to(self, file_path_local, file_path_remote="", test=True):
