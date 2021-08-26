@@ -24,7 +24,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-      
+
       - name: Deploy OpenStack
         run: |
           source all_in_one_openstack_deployment.sh

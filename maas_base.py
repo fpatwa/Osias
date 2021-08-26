@@ -70,7 +70,6 @@ class maas_base:
             self._run_maas_command(
                 f"partition mount {server} {device_id} {partition_id} mount_point='/'"
             )
-        return
 
     def _create_software_raid_for_boot(self, server_list):
         for server in server_list[:]:
@@ -91,7 +90,6 @@ class maas_base:
             self._run_maas_command(
                 f"block-device mount {server} {RAID_BOOT_ID} mount_point='/boot'"
             )
-        return
 
     def _create_software_raid_for_root(self, server_list):
         for server in server_list[:]:
@@ -111,7 +109,6 @@ class maas_base:
             self._run_maas_command(
                 f"block-device mount {server} {RAID_ROOT_ID} mount_point='/'"
             )
-        return
 
     def _delete_all_bcache(self, server_list):
         for server in server_list[:]:
@@ -130,7 +127,6 @@ class maas_base:
                     f"maas admin bcache-cache-set delete {server} {BCACHE_CACHE_SETS_ID}",
                     output=False,
                 )
-        return
 
     def _delete_all_partitions(self, server_list):
         for server in server_list[:]:
@@ -143,7 +139,6 @@ class maas_base:
                         f"maas admin partition delete {server} {device_id} {partition_id}",
                         output=False,
                     )
-        return
 
     def _delete_all_raids(self, server_list=None):
         if server_list:
@@ -157,7 +152,6 @@ class maas_base:
                 MD_DEVICES.append(raid["id"])
             for device in MD_DEVICES:
                 utils.run_cmd(f"maas admin raid delete {server} {device}", output=False)
-        return
 
     def _find_machine_ids(self):
         machine_list = self._run_maas_command(f"machines read")
@@ -173,7 +167,6 @@ class maas_base:
         for machine in server_list[:]:
             self._run_maas_command(f"machine release {machine}")
         self._waiting(server_list, "Ready")
-        return
 
     def _wipe_drives_create_software_raid(self, server_list):
         no_raid, raided_servers = self._check_for_raid(server_list)
@@ -184,7 +177,6 @@ class maas_base:
             self._delete_all_bcache(no_raid)
             print("INFO: Step 3/3 - Create Software RAID for Root")
             self._create_software_raid_for_root(no_raid)
-        return
 
     def _wipe_drives_create_osds(self, server_list):
         no_raid, raided_servers = self._check_for_raid(server_list)
@@ -197,7 +189,6 @@ class maas_base:
             self._delete_all_bcache(raided_servers)
             print("INFO: Step 4/4 - Creating Single Bootable Partition")
             self._create_single_bootable_partition(raided_servers)
-        return
 
     @timeout_decorator.timeout(2500, timeout_exception=StopIteration)
     def _waiting(self, server_list, desired_status):
@@ -231,7 +222,6 @@ class maas_base:
             else:
                 continue
         print("All servers have reached the desired state.")
-        return
 
     def deploy(self, server_list=None):
         if server_list:
@@ -248,7 +238,6 @@ class maas_base:
         for machine in server_list[:]:
             self._run_maas_command(f"machine deploy {machine}")
         self._waiting(server_list[:], "Deployed")
-        return
 
     def get_machines_info(self):
         return self._run_maas_command(f"machines read")

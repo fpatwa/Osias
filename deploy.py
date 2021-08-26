@@ -5,6 +5,7 @@ import utils
 import setup_configs
 import maas_virtual
 import maas_base
+import ast
 from osias_variables import *
 from ipaddress import IPv4Network
 
@@ -248,7 +249,6 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile):
     f = open("MULTINODE.env", "w")
     f.write(f"{multinode}")
     f.close()
-    return
 
 
 def delete_virtual_machines(servers_public_ip, maas_url, maas_api_key):
@@ -256,7 +256,6 @@ def delete_virtual_machines(servers_public_ip, maas_url, maas_api_key):
     servers = maas_virtual.maas_virtual()
     servers.set_public_ip(servers_public_ip)
     servers.delete_virtual_machines()
-    return
 
 
 def post_deploy_openstack(servers_public_ip, pool_start_ip, pool_end_ip, dns_ip):
@@ -272,7 +271,6 @@ def post_deploy_openstack(servers_public_ip, pool_start_ip, pool_end_ip, dns_ip)
         )
     else:
         utils.run_script_on_server("post_deploy_openstack.sh", servers_public_ip[0])
-    return
 
 
 def main():
@@ -300,7 +298,7 @@ def main():
         monitoring_nodes = config.get_server_ips(node_type="monitor", ip_type="private")
         servers_public_ip = config.get_all_public_ips()
         raid = config.get_raid_option()
-        ceph_enabled = eval(config.get_variables(variable="CEPH"))
+        ceph_enabled = ast.literal_eval(config.get_variables(variable="CEPH"))
         docker_registry = config.get_variables(variable="DOCKER_REGISTRY")
         docker_registry_username = config.get_variables(
             variable="DOCKER_REGISTRY_USERNAME"
@@ -419,7 +417,9 @@ def main():
             utils.run_script_on_server("test_refstack.sh", servers_public_ip[0])
     elif args.operation == "create_virtual_servers":
         if args.MAAS_URL and args.MAAS_API_KEY:
-            VM_PROFILE = utils.merge_dictionaries(VM_Profile, eval(args.VM_PROFILE))
+            VM_PROFILE = utils.merge_dictionaries(
+                VM_Profile, ast.literal_eval(args.VM_PROFILE)
+            )
             required_keys = ["vm_deployment_cidr"]
             utils.check_required_keys_not_null(required_keys, VM_PROFILE)
             create_virtual_servers(args.MAAS_URL, args.MAAS_API_KEY, VM_PROFILE)
