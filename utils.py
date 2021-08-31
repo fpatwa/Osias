@@ -24,12 +24,6 @@ class parser:
                 return data["0"][variable]
         return None
 
-    def get_raid_option(self):
-        data = parser.get_variables(self, variable="RAID")
-        if isinstance(data, bool):
-            return data
-        return False
-
     def get_all_public_ips(self):
         data = ["control", "network", "storage", "compute", "monitor"]
         ALL_PUBLIC_IPS = []

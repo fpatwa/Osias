@@ -135,7 +135,6 @@ def bootstrap_openstack(
     storage_nodes_private_ip,
     compute_nodes,
     monitoring_nodes,
-    raid,
     docker_registry,
     docker_registry_username,
     docker_registry_password,
@@ -150,7 +149,6 @@ def bootstrap_openstack(
         compute_nodes,
         monitoring_nodes,
         servers_public_ip,
-        raid,
         docker_registry,
         docker_registry_username,
         vm_cidr,
@@ -188,25 +186,23 @@ def deploy_ceph(servers_public_ip, storage_nodes_data_ip):
     utils.run_script_on_server("deploy_ceph.sh", servers_public_ip[0])
 
 
-def reprovision_servers(maas_url, maas_api_key, servers_public_ip, raid):
+def reprovision_servers(maas_url, maas_api_key, servers_public_ip):
     utils.run_cmd("maas login admin {} {}".format(maas_url, maas_api_key))
     servers = maas_base.maas_base()
-    servers.set_raid(raid)
     servers.set_public_ip(servers_public_ip)
-    if raid:
-        servers.set_raid(raid)
     servers.deploy()
 
 
-def create_virtual_servers(maas_url, maas_api_key, vm_profile):
+def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=False):
     utils.run_cmd(f"maas login admin {maas_url} {maas_api_key}")
     servers = maas_virtual.maas_virtual()
-    if "RAID" in vm_profile:
-        raid = vm_profile["RAID"]
-        servers.set_raid(raid)
+    if isinstance(ceph_enabled, str):
+        if ast.literal_eval(ceph_enabled):
+            CEPH = "true"
+        else:
+            CEPH = "false"
     else:
-        raid = "false"
-        servers.set_raid("")
+        CEPH = "false"
     server_list = []
     servers_public_ip = []
     public_IP_pool = [str(ip) for ip in IPv4Network(vm_profile["vm_deployment_cidr"])]
@@ -234,15 +230,14 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile):
     VIP_IP = str(list(IPv4Network(vm_profile["vm_deployment_cidr"]))[-1])
     POOL_START = str(list(IPv4Network(vm_profile["vm_deployment_cidr"]))[num_Servers])
     POOL_END = list(IPv4Network(vm_profile["vm_deployment_cidr"]))[-2]
-    optional_vars = f"""RAID = {raid}
-    DOCKER_REGISTRY = "{DOCKER_REGISTRY_IP}"
+    optional_vars = f"""DOCKER_REGISTRY = "{DOCKER_REGISTRY_IP}"
     DOCKER_REGISTRY_USERNAME = "{DOCKER_REGISTRY_USERNAME}"
     VM_CIDR = "{vm_profile['vm_deployment_cidr']}"
     VIP_IP = "{VIP_IP}"
     POOL_START = "{POOL_START}"
     POOL_END = "{POOL_END}"
     DNS_IP = "{vm_profile['DNS_IP']}"
-    CEPH = "{CEPH}"
+    CEPH = {CEPH}
     """
     multinode = utils.create_multinode(final_dict, optional_vars)
     print(f"Generated multinode is: {multinode}")
@@ -297,8 +292,7 @@ def main():
         compute_nodes = config.get_server_ips(node_type="compute", ip_type="private")
         monitoring_nodes = config.get_server_ips(node_type="monitor", ip_type="private")
         servers_public_ip = config.get_all_public_ips()
-        raid = config.get_raid_option()
-        ceph_enabled = ast.literal_eval(config.get_variables(variable="CEPH"))
+        ceph_enabled = config.get_variables(variable="CEPH")
         docker_registry = config.get_variables(variable="DOCKER_REGISTRY")
         docker_registry_username = config.get_variables(
             variable="DOCKER_REGISTRY_USERNAME"
@@ -314,9 +308,7 @@ def main():
             cleanup(servers_public_ip, storage_nodes_public_ip)
         elif args.operation == "reprovision_servers":
             if args.MAAS_URL and args.MAAS_API_KEY:
-                reprovision_servers(
-                    args.MAAS_URL, args.MAAS_API_KEY, servers_public_ip, raid
-                )
+                reprovision_servers(args.MAAS_URL, args.MAAS_API_KEY, servers_public_ip)
             else:
                 raise Exception(
                     "ERROR: MAAS_API_KEY and/or MAAS_URL argument not specified.\n"
@@ -327,9 +319,7 @@ def main():
             utils.copy_file_on_server("base_config.sh", servers_public_ip)
             bootstrap_networking(servers_public_ip)
         elif args.operation == "bootstrap_ceph":
-            if raid:
-                print("'Bootstrap_Ceph' is skipped due to RAID being ENABLED.")
-            elif ceph_enabled:
+            if ceph_enabled:
                 bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
             else:
                 print("'Bootstrap_Ceph' is skipped due to CEPH being DISABLED.")
@@ -341,16 +331,13 @@ def main():
                 storage_nodes_private_ip,
                 compute_nodes,
                 monitoring_nodes,
-                raid,
                 docker_registry,
                 docker_registry_username,
                 args.DOCKER_REGISTRY_PASSWORD,
                 VM_CIDR,
             )
         elif args.operation == "deploy_ceph":
-            if raid:
-                print("'Deploy_Ceph' is skipped due to RAID being ENABLED.")
-            elif ceph_enabled:
+            if ceph_enabled:
                 deploy_ceph(servers_public_ip, storage_nodes_data_ip)
             else:
                 print("'Deploy_Ceph' is skipped due to CEPH being DISABLED.")
@@ -397,13 +384,12 @@ def main():
                 storage_nodes_private_ip,
                 compute_nodes,
                 monitoring_nodes,
-                raid,
                 docker_registry,
                 docker_registry_username,
                 args.DOCKER_REGISTRY_PASSWORD,
                 VM_CIDR,
             )
-            if not raid and ceph_enabled:
+            if ceph_enabled:
                 bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
                 deploy_ceph(servers_public_ip, storage_nodes_data_ip)
             utils.run_script_on_server("pre_deploy_openstack.sh", servers_public_ip[0])
@@ -420,9 +406,12 @@ def main():
             VM_PROFILE = utils.merge_dictionaries(
                 VM_Profile, ast.literal_eval(args.VM_PROFILE)
             )
+            ceph_enabled = VM_PROFILE.get("CEPH")
             required_keys = ["vm_deployment_cidr"]
             utils.check_required_keys_not_null(required_keys, VM_PROFILE)
-            create_virtual_servers(args.MAAS_URL, args.MAAS_API_KEY, VM_PROFILE)
+            create_virtual_servers(
+                args.MAAS_URL, args.MAAS_API_KEY, VM_PROFILE, ceph_enabled
+            )
         else:
             raise Exception(
                 "ERROR: MAAS_API_KEY and/or MAAS_URL argument not specified.\n"
