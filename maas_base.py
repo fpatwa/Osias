@@ -9,7 +9,6 @@ import utils
 class maas_base:
     # machine_list is json blob from `maas machines read`
     def __init__(self):
-        self.raid_level = "raid-10"
         self.fs_type = "ext4"
 
     def _run_maas_command(self, command):
@@ -229,12 +228,8 @@ class maas_base:
         else:
             server_list = self.machine_list
         self._release(server_list[:])
-        if self.raid:
-            print("Info: Creating raid partitions.")
-            self._wipe_drives_create_software_raid(server_list)
-        else:
-            print("Info: Removing RAIDs and creating OSD's")
-            self._wipe_drives_create_osds(server_list)
+        print("Info: Removing RAIDs and creating OSD's")
+        self._wipe_drives_create_osds(server_list)
         for machine in server_list[:]:
             self._run_maas_command(f"machine deploy {machine}")
         self._waiting(server_list[:], "Deployed")

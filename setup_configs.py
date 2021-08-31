@@ -11,7 +11,6 @@ def setup_kolla_configs(
     compute_nodes,
     monitoring_nodes,
     servers_public_ip,
-    raid,
     docker_registry,
     docker_registry_username,
     vm_cidr,
@@ -46,7 +45,23 @@ docker_registry_username: "{docker_registry_username}"
 """
     else:
         docker = "# Docker Set To Docker Hub"
-    if raid or not CEPH:
+    if CEPH:
+        storage = """
+glance_backend_ceph: "yes"
+glance_backend_file: "no"
+#glance_backend_swift: "no"
+
+enable_cinder: "yes"
+#enable_cinder_backend_lvm: "no"
+
+ceph_nova_user: "cinder"
+cinder_backend_ceph: "yes"
+cinder_backup_driver: "ceph"
+
+nova_backend_ceph: "yes"
+#gnocchi_backend_storage: "ceph"
+"""
+    else:
         print("Implementing STORAGE without CEPH")
         storage = """
 glance_backend_ceph: "no"
@@ -61,22 +76,6 @@ enable_cinder: "no"
 #cinder_backup_driver: "ceph"
 
 nova_backend_ceph: "no"
-#gnocchi_backend_storage: "ceph"
-"""
-    else:
-        storage = """
-glance_backend_ceph: "yes"
-glance_backend_file: "no"
-#glance_backend_swift: "no"
-
-enable_cinder: "yes"
-#enable_cinder_backend_lvm: "no"
-
-ceph_nova_user: "cinder"
-cinder_backend_ceph: "yes"
-cinder_backup_driver: "ceph"
-
-nova_backend_ceph: "yes"
 #gnocchi_backend_storage: "ceph"
 """
 
