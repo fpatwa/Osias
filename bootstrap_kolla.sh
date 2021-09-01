@@ -29,7 +29,7 @@ __EOF__
 # Kolla specific Ansible configs
 cat > /opt/kolla/ansible.cfg <<__EOF__
 [defaults]
-strategy_plugins = /opt/kolla/venv/lib/python3.6/site-packages/ansible_mitogen/plugins/strategy
+strategy_plugins = /opt/kolla/venv/lib/python3.8/site-packages/ansible_mitogen/plugins/strategy
 strategy = mitogen_linear
 host_key_checking=False
 pipelining=True
