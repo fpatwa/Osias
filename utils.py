@@ -223,5 +223,9 @@ def check_required_keys_not_null(required_keys, input_dictionary):
             raise Value_Required_to_Proceed(key)
 
 
+def is_vm_pool_enabled(pool_start, pool_end):
+    return bool(pool_start != pool_end)
+
+
 class Value_Required_to_Proceed(ValueError):
     pass

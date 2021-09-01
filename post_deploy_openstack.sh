@@ -10,15 +10,13 @@ PUBLIC_NETWORK="${PUBLICIP%.*}.0/24"
 if [ $# -ge 1 ] && [ -n "$1" ]; then
   DNS_IP=$1
 else
-  DNS_IP="8.8.8.8"
+  echo "ERROR: No DNS Entry supplied!!!"
+  exit 1
 fi
 
-if [ $# -ge 2 ] && [ -n "$2" ]; then
+if [ $# == 3 ]; then
   POOL_START=$2
   POOL_END=$3
-else
-  POOL_START="${PUBLICIP%.*}.49"
-  POOL_END="${PUBLICIP%.*}.249"
 fi
 
 POOL_GATEWAY="${PUBLICIP%.*}.253"
@@ -51,8 +49,12 @@ openstack image create --disk-format qcow2 --container-format bare --public --fi
 openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/CirrOS.img "CirrOS-2"
 TENANT=$(openstack project list -f value -c ID --user admin)
 openstack network create --share --project "${TENANT}" --external --provider-network-type flat --provider-physical-network physnet1 public
-openstack subnet create --project "${TENANT}" --subnet-range "${PUBLIC_NETWORK}" --allocation-pool start="${POOL_START}",end="${POOL_END}" --dns-nameserver "${DNS_IP}" --gateway "${POOL_GATEWAY}" --network public public_subnet
-
+if [ $# == 3 ]; then
+  openstack subnet create --project "${TENANT}" --subnet-range "${PUBLIC_NETWORK}" --allocation-pool start="${POOL_START}",end="${POOL_END}" --dns-nameserver "${DNS_IP}" --gateway "${POOL_GATEWAY}" --network public public_subnet
+else
+  PUBLIC_NETWORK="192.168.1.0/24"
+  openstack subnet create --project "${TENANT}" --subnet-range "${PUBLIC_NETWORK}" --dns-nameserver "${DNS_IP}" --network public public_subnet
+fi
 openstack network create --project "${TENANT}" private
 openstack subnet create --project "${TENANT}" --subnet-range 192.168.100.0/24 --dns-nameserver "${DNS_IP}" --network private private_subnet
 openstack router create --enable --project "${TENANT}" pub-router

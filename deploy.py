@@ -254,18 +254,18 @@ def delete_virtual_machines(servers_public_ip, maas_url, maas_api_key):
 
 
 def post_deploy_openstack(servers_public_ip, pool_start_ip, pool_end_ip, dns_ip):
-    if pool_start_ip:
+    if not utils.is_vm_pool_enabled(pool_start_ip, pool_end_ip):
+        utils.run_script_on_server(
+            "post_deploy_openstack.sh",
+            servers_public_ip[0],
+            args=[dns_ip],
+        )
+    else:
         utils.run_script_on_server(
             "post_deploy_openstack.sh",
             servers_public_ip[0],
             args=[dns_ip, pool_start_ip, pool_end_ip],
         )
-    elif dns_ip:
-        utils.run_script_on_server(
-            "post_deploy_openstack.sh", servers_public_ip[0], args=[dns_ip]
-        )
-    else:
-        utils.run_script_on_server("post_deploy_openstack.sh", servers_public_ip[0])
 
 
 def main():
@@ -301,6 +301,14 @@ def main():
         POOL_START_IP = config.get_variables(variable="POOL_START")
         POOL_END_IP = config.get_variables(variable="POOL_END")
         DNS_IP = config.get_variables(variable="DNS_IP")
+
+        if args.operation != "create_virtual_servers":
+            if not VM_CIDR or not POOL_START_IP or not POOL_END_IP or not DNS_IP:
+                raise Exception(
+                    "ERROR: Mandatory parms in the Multinode file are missing.\n"
+                    + "Please ensure that the following parms are set to a valid value:\n"
+                    + "[VM_CIDR] and [POOL_START_IP] and [POOL_END_IP] and [DNS_IP]."
+                )
 
         cmd = "".join((args.operation, ".sh"))
 
@@ -346,11 +354,23 @@ def main():
             utils.run_cmd_on_server("echo Server is UP!", servers_public_ip)
         elif args.operation == "post_deploy_openstack":
             post_deploy_openstack(servers_public_ip, POOL_START_IP, POOL_END_IP, DNS_IP)
+        elif args.operation == "test_refstack":
+            if utils.is_vm_pool_enabled(POOL_START_IP, POOL_END_IP):
+                utils.run_script_on_server(
+                    "test_refstack.sh",
+                    servers_public_ip[0],
+                    args=[DNS_IP, "VM_POOL_ENABLED"],
+                )
+            else:
+                utils.run_script_on_server(
+                    "test_refstack.sh",
+                    servers_public_ip[0],
+                    args=[DNS_IP, "VM_POOL_DISABLED"],
+                )
         elif args.operation in [
             "pre_deploy_openstack",
             "deploy_openstack",
             "test_setup",
-            "test_refstack",
             "test_stress",
         ]:
             utils.run_script_on_server(cmd, servers_public_ip[0])
