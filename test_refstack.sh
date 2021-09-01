@@ -56,5 +56,5 @@ if [[ "$VM_POOL" == "VM_POOL_DISABLED" ]]; then
 
     refstack-client test -c etc/tempest.conf -v --test-list "/tmp/platform.2020.11-test-list.txt"
 else
-    refstack-client test -c etc/tempest.conf -v --test-list "https://refstack.openstack.org/api/v1/guidelines/2020.06/tests?target=platform&type=required&alias=true&flag=false"
+    refstack-client test -c etc/tempest.conf -v --test-list "https://refstack.openstack.org/api/v1/guidelines/2020.11/tests?target=platform&type=required&alias=true&flag=false"
 fi
