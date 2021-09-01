@@ -231,7 +231,7 @@ class maas_base:
         print("Info: Removing RAIDs and creating OSD's")
         self._wipe_drives_create_osds(server_list)
         for machine in server_list[:]:
-            self._run_maas_command(f"machine deploy {machine}")
+            self._run_maas_command(f"machine deploy {machine} distro_series='ubuntu/focal' hwe_kernel=ga-20.04")
         self._waiting(server_list[:], "Deployed")
 
     def get_machines_info(self):
