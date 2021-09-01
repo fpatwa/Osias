@@ -232,7 +232,7 @@ class maas_base:
         self._wipe_drives_create_osds(server_list)
         for machine in server_list[:]:
             self._run_maas_command(
-                f"machine deploy {machine} distro_series='ubuntu/focal' hwe_kernel=ga-20.04"
+                f"machine deploy {machine} distro_series=focal hwe_kernel=hwe-20.04"
             )
         self._waiting(server_list[:], "Deployed")
 
