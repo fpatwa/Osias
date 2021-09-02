@@ -23,7 +23,7 @@ openstack router add subnet myrouter mysubnet
 
 git clone https://opendev.org/osf/refstack-client.git
 cd refstack-client || exit
-./setup_env -t 26.0.0
+./setup_env -t 27.0.0 -p 3.8
 
 cp "$HOME"/accounts.yaml "$HOME"/refstack-client/etc/accounts.yaml
 cp "$HOME"/tempest.conf "$HOME"/refstack-client/etc/tempest.conf
