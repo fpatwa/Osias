@@ -139,9 +139,12 @@ def bootstrap_openstack(
     docker_registry_username,
     docker_registry_password,
     vm_cidr,
+    python_version,
 ):
     utils.copy_file_on_server("requirements.txt", servers_public_ip[0])
-    utils.run_script_on_server("bootstrap_kolla.sh", servers_public_ip[0])
+    utils.run_script_on_server(
+        "bootstrap_kolla.sh", servers_public_ip[0], args=[python_version]
+    )
     setup_configs.setup_kolla_configs(
         controller_nodes,
         network_nodes,
@@ -186,9 +189,9 @@ def deploy_ceph(servers_public_ip, storage_nodes_data_ip):
     utils.run_script_on_server("deploy_ceph.sh", servers_public_ip[0])
 
 
-def reprovision_servers(maas_url, maas_api_key, servers_public_ip):
+def reprovision_servers(maas_url, maas_api_key, servers_public_ip, distro):
     utils.run_cmd("maas login admin {} {}".format(maas_url, maas_api_key))
-    servers = maas_base.maas_base()
+    servers = maas_base.maas_base(distro)
     servers.set_public_ip(servers_public_ip)
     servers.deploy()
 
@@ -238,6 +241,11 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     POOL_END = "{POOL_END}"
     DNS_IP = "{vm_profile['DNS_IP']}"
     CEPH = {CEPH}
+    OPENSTACK_RELEASE = "{vm_profile['openstack_release']}"
+    PYTHON_VERSION = "{vm_profile['python_version']}"
+    TEMPEST_VERSION = "{vm_profile['tempest_version']}"
+    REFSTACK_TEST_VERSION = "{vm_profile['refstack_test_version']}"
+    MAAS_VM_DISTRO = "{vm_profile['MAAS_vm_distro']}"
     """
     multinode = utils.create_multinode(final_dict, optional_vars)
     print(f"Generated multinode is: {multinode}")
@@ -309,6 +317,11 @@ def main():
                     + "Please ensure that the following parms are set to a valid value:\n"
                     + "[VM_CIDR] and [POOL_START_IP] and [POOL_END_IP] and [DNS_IP]."
                 )
+        OPENSTACK_RELEASE = config.get_variables(variable="OPENSTACK_RELEASE")
+        PYTHON_VERSION = config.get_variables(variable="PYTHON_VERSION")
+        TEMPEST_VERSION = config.get_variables(variable="TEMPEST_VERSION")
+        REFSTACK_TEST_VERSION = config.get_variables(variable="REFSTACK_TEST_VERSION")
+        MAAS_VM_DISTRO = config.get_variables(variable="MAAS_VM_DISTRO")
 
         cmd = "".join((args.operation, ".sh"))
 
@@ -316,7 +329,9 @@ def main():
             cleanup(servers_public_ip, storage_nodes_public_ip)
         elif args.operation == "reprovision_servers":
             if args.MAAS_URL and args.MAAS_API_KEY:
-                reprovision_servers(args.MAAS_URL, args.MAAS_API_KEY, servers_public_ip)
+                reprovision_servers(
+                    args.MAAS_URL, args.MAAS_API_KEY, servers_public_ip, MAAS_VM_DISTRO
+                )
             else:
                 raise Exception(
                     "ERROR: MAAS_API_KEY and/or MAAS_URL argument not specified.\n"
@@ -343,6 +358,7 @@ def main():
                 docker_registry_username,
                 args.DOCKER_REGISTRY_PASSWORD,
                 VM_CIDR,
+                PYTHON_VERSION,
             )
         elif args.operation == "deploy_ceph":
             if ceph_enabled:
@@ -359,13 +375,25 @@ def main():
                 utils.run_script_on_server(
                     "test_refstack.sh",
                     servers_public_ip[0],
-                    args=[DNS_IP, "VM_POOL_ENABLED"],
+                    args=[
+                        DNS_IP,
+                        "VM_POOL_ENABLED",
+                        TEMPEST_VERSION,
+                        REFSTACK_TEST_VERSION,
+                        PYTHON_VERSION,
+                    ],
                 )
             else:
                 utils.run_script_on_server(
                     "test_refstack.sh",
                     servers_public_ip[0],
-                    args=[DNS_IP, "VM_POOL_DISABLED"],
+                    args=[
+                        DNS_IP,
+                        "VM_POOL_DISABLED",
+                        TEMPEST_VERSION,
+                        REFSTACK_TEST_VERSION,
+                        PYTHON_VERSION,
+                    ],
                 )
         elif args.operation in [
             "pre_deploy_openstack",
@@ -408,6 +436,7 @@ def main():
                 docker_registry_username,
                 args.DOCKER_REGISTRY_PASSWORD,
                 VM_CIDR,
+                PYTHON_VERSION,
             )
             if ceph_enabled:
                 bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)

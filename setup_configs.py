@@ -110,7 +110,6 @@ cat >>/etc/kolla/globals.yml <<__EOF__
 # Basic Options
 kolla_base_distro: "centos"
 kolla_install_type: "source"
-openstack_release: "victoria"
 kolla_internal_vip_address: "{kolla_internal_vip_address}"
 kolla_external_vip_address: "{kolla_external_vip_address}"
 network_interface: "{network_interface}"

@@ -31,6 +31,7 @@ DOCKER_REGISTRY_USERNAME = "kolla"
 CEPH = False
 
 VM_Profile = {
+    "MAAS_vm_distro": "focal hwe_kernel=hwe-20.04",
     "Number_of_VM_Servers": 3,
     "vCPU": 8,
     "RAM_in_MB": 16384,
@@ -42,4 +43,8 @@ VM_Profile = {
     "Data_CIDR": "",
     "DNS_IP": "",
     "vm_deployment_cidr": "",
+    "openstack_release": "victoria",
+    "python_version": "3.8",
+    "tempest_version": "27.0.0",
+    "refstack_test_version": "2020.11",
 }

@@ -2,6 +2,8 @@
 
 set -euxo pipefail
 
+PYTHON_VERSION=$1
+
 # Dependencies
 sudo apt-get update
 sudo apt-get -y install python3-dev libffi-dev gcc libssl-dev python3-pip python3-venv
@@ -29,7 +31,7 @@ __EOF__
 # Kolla specific Ansible configs
 cat > /opt/kolla/ansible.cfg <<__EOF__
 [defaults]
-strategy_plugins = /opt/kolla/venv/lib/python3.8/site-packages/ansible_mitogen/plugins/strategy
+strategy_plugins = /opt/kolla/venv/lib/python"${PYTHON_VERSION}"/site-packages/ansible_mitogen/plugins/strategy
 strategy = mitogen_linear
 host_key_checking=False
 pipelining=True
