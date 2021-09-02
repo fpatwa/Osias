@@ -4,7 +4,7 @@
 source "$HOME"/base_config.sh
 
 CIRROS_URL="http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
-PUBLICIP=$(/sbin/ifconfig br0 | grep 'inet ' | awk '{print $2}')
+PUBLICIP=$(/sbin/ip addr show br0 | grep 'inet ' | awk '{print $2}')
 PUBLIC_NETWORK="${PUBLICIP%.*}.0/24"
 
 if [ $# -ge 1 ] && [ -n "$1" ]; then
