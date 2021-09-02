@@ -256,7 +256,7 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
 
 def delete_virtual_machines(servers_public_ip, maas_url, maas_api_key):
     utils.run_cmd("maas login admin {} {}".format(maas_url, maas_api_key))
-    servers = maas_virtual.maas_virtual()
+    servers = maas_virtual.maas_virtual(None)
     servers.set_public_ip(servers_public_ip)
     servers.delete_virtual_machines()
 
