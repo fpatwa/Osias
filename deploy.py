@@ -196,9 +196,11 @@ def reprovision_servers(maas_url, maas_api_key, servers_public_ip, distro):
     servers.deploy()
 
 
-def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=False):
+def create_virtual_servers(
+    maas_url, maas_api_key, vm_profile, distro, ceph_enabled=False
+):
     utils.run_cmd(f"maas login admin {maas_url} {maas_api_key}")
-    servers = maas_virtual.maas_virtual()
+    servers = maas_virtual.maas_virtual(distro)
     if isinstance(ceph_enabled, str):
         if ast.literal_eval(ceph_enabled):
             CEPH = "true"
@@ -459,7 +461,11 @@ def main():
             required_keys = ["vm_deployment_cidr"]
             utils.check_required_keys_not_null(required_keys, VM_PROFILE)
             create_virtual_servers(
-                args.MAAS_URL, args.MAAS_API_KEY, VM_PROFILE, ceph_enabled
+                args.MAAS_URL,
+                args.MAAS_API_KEY,
+                VM_PROFILE,
+                MAAS_VM_DISTRO,
+                ceph_enabled,
             )
         else:
             raise Exception(

@@ -7,7 +7,6 @@ import utils
 
 
 class maas_base:
-    # machine_list is json blob from `maas machines read`
     def __init__(self, distro):
         self.fs_type = "ext4"
         self.distro = distro
