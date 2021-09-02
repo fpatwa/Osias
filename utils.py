@@ -138,8 +138,7 @@ def run_cmd(command, test=True, output=True):
     except subprocess.CalledProcessError as e:
         if test:
             raise Exception(e.output.decode()) from e
-        else:
-            print(e.output.decode())
+        print(e.output.decode())
     if output:
         print(f"\nCommand Output: \n{stdout.decode()}\n")
     return stdout
@@ -215,9 +214,9 @@ def create_new_ssh_key():
 
 def check_required_keys_not_null(required_keys, input_dictionary):
     for key in required_keys:
-        if (key in input_dictionary) and (input_dictionary[key] is not ""):
+        if (key in input_dictionary) and (input_dictionary[key] != ""):
             return True
-        elif (key in input_dictionary) and (input_dictionary[key] is ""):
+        elif (key in input_dictionary) and (input_dictionary[key] == ""):
             raise Value_Required_to_Proceed(key)
         elif key not in input_dictionary:
             raise Value_Required_to_Proceed(key)
