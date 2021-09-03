@@ -6,7 +6,9 @@ PYTHON_VERSION=$1
 
 # Dependencies
 sudo apt-get update
-sudo apt-get -y install python3-dev libffi-dev gcc libssl-dev python3-pip python3-venv containerd.io
+sudo apt-get -y install python3-dev libffi-dev gcc libssl-dev python3-pip python3-venv containerd.io docker.io
+sudo systemctl enable --now docker
+sudo usermod -aG docker "$USER"
 
 # basedir and venv
 sudo mkdir /opt/kolla
