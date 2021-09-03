@@ -85,17 +85,17 @@ setup_bridge
     data = ""
 [variables]
     [variables.0]
-    RAID = false
     CEPH = "False"
     VM_CIDR = "${my_ip}/32"
     VIP_IP = "${my_ip}/32"
     POOL_START = "${my_ip}/32"
     POOL_END = "${my_ip}/32"
     DNS_IP = "8.8.8.8"
-    openstack_release = "victoria"
-    python_version = "3.8"
-    tempest_version = "27.0.0"
-    refstack_test_version = "2020.11"
+    OPENSTACK_RELEASE = "victoria"
+    PYTHON_VERSION = "3.8"
+    TEMPEST_VERSION = "27.0.0"
+    REFSTACK_TEST_VERSION = "2020.11"
+    MAAS_VM_DISTRO = "focal hwe_kernel=hwe-20.04"
 EOM
 
 #
