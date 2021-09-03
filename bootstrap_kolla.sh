@@ -5,6 +5,10 @@ set -euxo pipefail
 PYTHON_VERSION=$1
 
 # Dependencies
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo \
+"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+$(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 sudo apt-get update
 sudo apt-get -y install python3-dev libffi-dev gcc libssl-dev python3-pip python3-venv containerd.io docker.io
 sudo systemctl enable --now docker
