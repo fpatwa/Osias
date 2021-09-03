@@ -56,3 +56,6 @@ reserved_host_memory_mb = 10240
 allow_resize_to_same_host=True
 scheduler_default_filters=AllHostsFilter
 __EOF__
+
+
+echo 'docker_apt_package: "docker.io"' >> /etc/kolla/globals.yml
