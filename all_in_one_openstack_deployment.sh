@@ -92,6 +92,10 @@ setup_bridge
     POOL_START = "${my_ip}/32"
     POOL_END = "${my_ip}/32"
     DNS_IP = "8.8.8.8"
+    openstack_release = "victoria"
+    python_version = "3.8"
+    tempest_version = "27.0.0"
+    refstack_test_version = "2020.11"
 EOM
 
 #
