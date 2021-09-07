@@ -8,6 +8,11 @@ CEPH_RELEASE="octopus"
 # Update to fetch the latest package index
 sudo apt update
 
+# Install podman
+echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_20.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_stable.gpg > /dev/null
+
+
 # Fetch most recent version of cephadm
 curl --silent --remote-name --location https://github.com/ceph/ceph/raw/$CEPH_RELEASE/src/cephadm/cephadm
 chmod +x cephadm
@@ -32,6 +37,8 @@ sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/ceph.release.gpg
 
 # Update to fetch the package index for ceph added above
 sudo apt update
+sudo apt install podman
+podman --version
 
 # Install ceph-common and cephadm packages
 sudo ./cephadm install ceph-common
