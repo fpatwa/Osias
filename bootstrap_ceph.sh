@@ -37,7 +37,7 @@ sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/ceph.release.gpg
 
 # Update to fetch the package index for ceph added above
 sudo apt update
-sudo apt install podman
+sudo apt-get --yes install podman
 podman --version
 
 # Install ceph-common and cephadm packages
