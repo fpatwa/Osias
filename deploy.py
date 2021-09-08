@@ -214,6 +214,7 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
             CEPH_RELEASE = "false"
     else:
         CEPH = "false"
+        CEPH_RELEASE = "false"
     server_list = []
     servers_public_ip = []
     public_IP_pool = [str(ip) for ip in IPv4Network(vm_profile["vm_deployment_cidr"])]
