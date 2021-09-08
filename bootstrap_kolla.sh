@@ -17,11 +17,11 @@ python3 -m venv venv
 source venv/bin/activate
 python3 -m pip install -U pip wheel
 # Update requirements file
-echo "https://tarballs.opendev.org/openstack/kolla-ansible/kolla-ansible-stable-${OPENSTACK_RELEASE}.tar.gz" >> requirements.txt
+echo "https://tarballs.opendev.org/openstack/kolla-ansible/kolla-ansible-stable-${OPENSTACK_RELEASE}.tar.gz" >> "$HOME"/requirements.txt
 python3 -m pip install -r "$HOME"/requirements.txt
 
 # General Ansible config
-sudo mkdir -p /etc/ansible
+sudo mkdir /etc/ansible
 sudo chown "$USER":"$USER" /etc/ansible
 cat > /etc/ansible/ansible.cfg <<__EOF__
 [defaults]
@@ -44,7 +44,7 @@ ansible_python_interpreter=/usr/bin/python3
 __EOF__
 
 # Configure kolla
-sudo mkdir -p /etc/kolla
+sudo mkdir /etc/kolla
 sudo chown "$USER":"$USER" /etc/kolla
 cp -r /opt/kolla/venv/share/kolla-ansible/etc_examples/kolla/* /etc/kolla || true
 cp /opt/kolla/venv/share/kolla-ansible/ansible/inventory/* . || true
