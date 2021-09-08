@@ -181,7 +181,7 @@ def bootstrap_openstack(
 
 def bootstrap_ceph(servers_public_ip, storage_nodes_data_ip):
     utils.run_script_on_server(
-        "bootstrap_ceph.sh", servers_public_ip[0], args=[storage_nodes_data_ip[0]]
+        "bootstrap_ceph.sh", servers_public_ip[0], args=[storage_nodes_data_ip[0], ceph_release]
     )
 
 
@@ -206,8 +206,10 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     if isinstance(ceph_enabled, str):
         if ast.literal_eval(ceph_enabled):
             CEPH = "true"
+            CEPH_RELEASE = "{vm_profile['ceph_release']}"
         else:
             CEPH = "false"
+            CEPH_RELEASE = "false"
     else:
         CEPH = "false"
     server_list = []
@@ -245,6 +247,7 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     POOL_END = "{POOL_END}"
     DNS_IP = "{vm_profile['DNS_IP']}"
     CEPH = {CEPH}
+    CEPH_RELEASE = {CEPH_RELEASE}
     OPENSTACK_RELEASE = "{vm_profile['openstack_release']}"
     PYTHON_VERSION = "{vm_profile['python_version']}"
     TEMPEST_VERSION = "{vm_profile['tempest_version']}"
@@ -347,7 +350,7 @@ def main():
             bootstrap_networking(servers_public_ip)
         elif args.operation == "bootstrap_ceph":
             if ceph_enabled:
-                bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
+                bootstrap_ceph(servers_public_ip, storage_nodes_data_ip, CEPH_RELEASE)
             else:
                 print("'Bootstrap_Ceph' is skipped due to CEPH being DISABLED.")
         elif args.operation == "bootstrap_openstack":
@@ -445,7 +448,7 @@ def main():
                 OPENSTACK_RELEASE,
             )
             if ceph_enabled:
-                bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
+                bootstrap_ceph(servers_public_ip, storage_nodes_data_ip, CEPH_RELEASE)
                 deploy_ceph(servers_public_ip, storage_nodes_data_ip)
             utils.run_script_on_server("pre_deploy_openstack.sh", servers_public_ip[0])
             utils.run_script_on_server("deploy_openstack.sh", servers_public_ip[0])
