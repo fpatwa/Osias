@@ -208,7 +208,7 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     if isinstance(ceph_enabled, str):
         if ast.literal_eval(ceph_enabled):
             CEPH = "true"
-            CEPH_RELEASE = f"vm_profile['ceph_release']"
+            CEPH_RELEASE = vm_profile['ceph_release']
         else:
             CEPH = "false"
             CEPH_RELEASE = "false"
@@ -250,7 +250,7 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     POOL_END = "{POOL_END}"
     DNS_IP = "{vm_profile['DNS_IP']}"
     CEPH = {CEPH}
-    CEPH_RELEASE = {CEPH_RELEASE}
+    CEPH_RELEASE = "{CEPH_RELEASE}"
     OPENSTACK_RELEASE = "{vm_profile['openstack_release']}"
     PYTHON_VERSION = "{vm_profile['python_version']}"
     TEMPEST_VERSION = "{vm_profile['tempest_version']}"
