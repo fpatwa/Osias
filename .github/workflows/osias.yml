@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        OPENSTACK_RELEASE: ["victoria","wallaby"]
+        OPENSTACK_RELEASE: ["wallaby"]
     env:
       MAAS_VM_DISTRO: "focal hwe_kernel=hwe-20.04"
       PYTHON_VERSION: "3.8"
