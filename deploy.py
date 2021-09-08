@@ -208,7 +208,7 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     if isinstance(ceph_enabled, str):
         if ast.literal_eval(ceph_enabled):
             CEPH = "true"
-            CEPH_RELEASE = "{vm_profile['ceph_release']}"
+            CEPH_RELEASE = f"vm_profile['ceph_release']"
         else:
             CEPH = "false"
             CEPH_RELEASE = "false"
