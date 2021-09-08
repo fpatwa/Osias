@@ -2,6 +2,12 @@
 
 set -x
 
+PYTHON_VERSION=$1
+TEMPEST_VERSION=$2
+MAAS_VM_DISTRO="$3 $4"
+OPENSTACK_RELEASE=$5
+
+
 ############################################
 # Get VM Profile
 ############################################
@@ -91,11 +97,11 @@ setup_bridge
     POOL_START = "${my_ip}/32"
     POOL_END = "${my_ip}/32"
     DNS_IP = "8.8.8.8"
-    OPENSTACK_RELEASE = "victoria"
-    PYTHON_VERSION = "3.8"
-    TEMPEST_VERSION = "27.0.0"
+    OPENSTACK_RELEASE = "$OPENSTACK_RELEASE"
+    PYTHON_VERSION = "$PYTHON_VERSION"
+    TEMPEST_VERSION = "$TEMPEST_VERSION"
     REFSTACK_TEST_VERSION = "2020.11"
-    MAAS_VM_DISTRO = "focal hwe_kernel=hwe-20.04"
+    MAAS_VM_DISTRO = "$MAAS_VM_DISTRO"
 EOM
 
 #

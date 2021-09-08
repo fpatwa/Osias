@@ -140,10 +140,14 @@ def bootstrap_openstack(
     docker_registry_password,
     vm_cidr,
     python_version,
+    openstack_release,
 ):
     utils.copy_file_on_server("requirements.txt", servers_public_ip[0])
+
     utils.run_script_on_server(
-        "bootstrap_kolla.sh", servers_public_ip[0], args=[python_version]
+        "bootstrap_kolla.sh",
+        servers_public_ip[0],
+        args=[python_version, openstack_release],
     )
     setup_configs.setup_kolla_configs(
         controller_nodes,
@@ -359,6 +363,7 @@ def main():
                 args.DOCKER_REGISTRY_PASSWORD,
                 VM_CIDR,
                 PYTHON_VERSION,
+                OPENSTACK_RELEASE,
             )
         elif args.operation == "deploy_ceph":
             if ceph_enabled:
@@ -437,6 +442,7 @@ def main():
                 args.DOCKER_REGISTRY_PASSWORD,
                 VM_CIDR,
                 PYTHON_VERSION,
+                OPENSTACK_RELEASE,
             )
             if ceph_enabled:
                 bootstrap_ceph(servers_public_ip, storage_nodes_data_ip)
