@@ -181,7 +181,9 @@ def bootstrap_openstack(
 
 def bootstrap_ceph(servers_public_ip, storage_nodes_data_ip):
     utils.run_script_on_server(
-        "bootstrap_ceph.sh", servers_public_ip[0], args=[storage_nodes_data_ip[0], ceph_release]
+        "bootstrap_ceph.sh",
+        servers_public_ip[0],
+        args=[storage_nodes_data_ip[0], ceph_release],
     )
 
 
