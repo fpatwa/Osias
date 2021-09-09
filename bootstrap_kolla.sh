@@ -32,6 +32,7 @@ pipelining=True
 forks=100
 interpreter_python=/usr/bin/python3
 __EOF__
+cat /etc/ansible/ansible.cfg 
 
 # Kolla specific Ansible configs
 cat > /opt/kolla/ansible.cfg <<__EOF__
@@ -44,6 +45,7 @@ forks=100
 interpreter_python=/usr/bin/python3
 ansible_python_interpreter=/usr/bin/python3
 __EOF__
+cat /opt/kolla/ansible.cfg
 
 # Configure kolla
 sudo mkdir /etc/kolla
