@@ -9,12 +9,12 @@ CEPH_RELEASE=$2
 sudo apt update
 
 # Install podman
-echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /' | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+echo "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_$(lsb_release -rs)/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
 curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_20.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_stable.gpg > /dev/null
 
 
 # Fetch most recent version of cephadm
-curl --silent --remote-name --location https://github.com/ceph/ceph/raw/$CEPH_RELEASE/src/cephadm/cephadm
+curl --silent --remote-name --location https://github.com/ceph/ceph/raw/"$CEPH_RELEASE"/src/cephadm/cephadm
 chmod +x cephadm
 
 # Add ceph package repository
@@ -22,7 +22,7 @@ chmod +x cephadm
 # and the /etc/apt/trusted.gpg.d/ceph.release.gpg file written
 # by the cephadm script does not have the correct format
 # This key file will be overwritten by the commands below
-sudo ./cephadm add-repo --release $CEPH_RELEASE
+sudo ./cephadm add-repo --release "$CEPH_RELEASE"
 
 # Manually download and install the ceph trusted key
 wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
