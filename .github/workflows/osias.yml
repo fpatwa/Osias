@@ -11,10 +11,6 @@ jobs:
       matrix:
         OPENSTACK_RELEASE: ["ussuri"]
     env:
-      MAAS_VM_DISTRO: "bionic hwe_kernel=hwe-18.04"
-      PYTHON_VERSION: "3.6"
-      TEMPEST_VERSION: "27.0.0"
-      REFSTACK_TEST_VERSION: "2020.11"
       OPENSTACK_RELEASE: ${{ matrix.OPENSTACK_RELEASE }}
     steps:
       - uses: actions/checkout@v2
@@ -27,17 +23,13 @@ jobs:
           python -m pip install --upgrade pip
       - name: Deploy OpenStack
         run: |
-          source all_in_one_openstack_deployment.sh ${{ env.PYTHON_VERSION }} ${{ env.TEMPEST_VERSION }} ${{ env.MAAS_VM_DISTRO }} ${{ env.OPENSTACK_RELEASE }}
+          source all_in_one_openstack_deployment.sh ${{ env.OPENSTACK_RELEASE }}
   Ubuntu-20-deploy-openstack:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
         OPENSTACK_RELEASE: ["wallaby"]
     env:
-      MAAS_VM_DISTRO: "focal hwe_kernel=hwe-20.04"
-      PYTHON_VERSION: "3.8"
-      TEMPEST_VERSION: "27.0.0"
-      REFSTACK_TEST_VERSION: "2020.11"
       OPENSTACK_RELEASE: ${{ matrix.OPENSTACK_RELEASE }}
     steps:
       - uses: actions/checkout@v2
@@ -50,4 +42,4 @@ jobs:
           python -m pip install --upgrade pip
       - name: Deploy OpenStack
         run: |
-          source all_in_one_openstack_deployment.sh ${{ env.PYTHON_VERSION }} ${{ env.TEMPEST_VERSION }} ${{ env.MAAS_VM_DISTRO }} ${{ env.OPENSTACK_RELEASE }}
+          source all_in_one_openstack_deployment.sh ${{ env.OPENSTACK_RELEASE }}
