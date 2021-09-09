@@ -19,19 +19,19 @@ class parser:
             raise Exception(
                 f"Openstack version <{openstack_release} not supported, please use valid release: <{osias_variables.SUPPORTED_OPENSTACK_RELEASE}>"
             )
-        self.data["PYTHON_VERSION"] = osias_variables.PYTHON_VERSION[
+        self.data["variables"]["0"]["PYTHON_VERSION"] = osias_variables.PYTHON_VERSION[
             openstack_release.lower()
         ]
-        self.data["TEMPEST_VERSION"] = osias_variables.TEMPEST_VERSION[
+        self.data[["variables"]["0"]"TEMPEST_VERSION"] = osias_variables.TEMPEST_VERSION[
             openstack_release.lower()
         ]
-        self.data["REFSTACK_TEST_VERSION"] = osias_variables.REFSTACK_TEST_VERSION[
+        self.data["variables"]["0"]["REFSTACK_TEST_VERSION"] = osias_variables.REFSTACK_TEST_VERSION[
             openstack_release.lower()
         ]
-        self.data["ANSIBLE_VERSION"] = osias_variables.ANSIBLE_VERSION[
+        self.data["variables"]["0"]["ANSIBLE_VERSION"] = osias_variables.ANSIBLE_VERSION[
             openstack_release.lower()
         ]
-        self.data["MAAS_VM_DISTRO"] = osias_variables.MAAS_VM_DISTRO[
+        self.data["variables"]["0"]["MAAS_VM_DISTRO"] = osias_variables.MAAS_VM_DISTRO[
             openstack_release.lower()
         ]
 
