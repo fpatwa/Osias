@@ -311,7 +311,6 @@ def main():
         monitoring_nodes = config.get_server_ips(node_type="monitor", ip_type="private")
         servers_public_ip = config.get_all_public_ips()
         ceph_enabled = config.get_variables(variable="CEPH")
-        CEPH_RELEASE = config.get_variables(variable="ceph_release")
         docker_registry = config.get_variables(variable="DOCKER_REGISTRY")
         docker_registry_username = config.get_variables(
             variable="DOCKER_REGISTRY_USERNAME"
@@ -329,6 +328,7 @@ def main():
                     + "[VM_CIDR] and [POOL_START_IP] and [POOL_END_IP] and [DNS_IP]."
                 )
         OPENSTACK_RELEASE = config.get_variables(variable="OPENSTACK_RELEASE")
+        CEPH_RELEASE = config.get_variables(variable="CEPH_RELEASE")
         PYTHON_VERSION = config.get_variables(variable="PYTHON_VERSION")
         TEMPEST_VERSION = config.get_variables(variable="TEMPEST_VERSION")
         REFSTACK_TEST_VERSION = config.get_variables(variable="REFSTACK_TEST_VERSION")
