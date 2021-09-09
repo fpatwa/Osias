@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 
 import argparse
-import utils
-import setup_configs
-import maas_virtual
-import maas_base
 import ast
-from osias_variables import *
 from ipaddress import IPv4Network
+
+import maas_base
+import maas_virtual
+import setup_configs
+import utils
+from osias_variables import *
 
 
 def parse_args():
@@ -141,13 +142,14 @@ def bootstrap_openstack(
     vm_cidr,
     python_version,
     openstack_release,
+    ansible_version,
 ):
     utils.copy_file_on_server("requirements.txt", servers_public_ip[0])
 
     utils.run_script_on_server(
         "bootstrap_kolla.sh",
         servers_public_ip[0],
-        args=[python_version, openstack_release],
+        args=[python_version, openstack_release, ansible_version],
     )
     setup_configs.setup_kolla_configs(
         controller_nodes,
@@ -204,7 +206,7 @@ def reprovision_servers(maas_url, maas_api_key, servers_public_ip, distro):
 
 def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=False):
     utils.run_cmd(f"maas login admin {maas_url} {maas_api_key}")
-    servers = maas_virtual.maas_virtual(vm_profile["MAAS_vm_distro"])
+    servers = maas_virtual.maas_virtual(MAAS_VM_DISTRO(vm_profile["openstack_release"]))
     if isinstance(ceph_enabled, str):
         if ast.literal_eval(ceph_enabled):
             CEPH = "true"
@@ -252,10 +254,6 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     CEPH = {CEPH}
     CEPH_RELEASE = "{CEPH_RELEASE}"
     OPENSTACK_RELEASE = "{vm_profile['openstack_release']}"
-    PYTHON_VERSION = "{vm_profile['python_version']}"
-    TEMPEST_VERSION = "{vm_profile['tempest_version']}"
-    REFSTACK_TEST_VERSION = "{vm_profile['refstack_test_version']}"
-    MAAS_VM_DISTRO = "{vm_profile['MAAS_vm_distro']}"
     """
     multinode = utils.create_multinode(final_dict, optional_vars)
     print(f"Generated multinode is: {multinode}")
@@ -333,6 +331,7 @@ def main():
         TEMPEST_VERSION = config.get_variables(variable="TEMPEST_VERSION")
         REFSTACK_TEST_VERSION = config.get_variables(variable="REFSTACK_TEST_VERSION")
         MAAS_VM_DISTRO = config.get_variables(variable="MAAS_VM_DISTRO")
+        ANSIBLE_VERSION = config.get_variables(variable="ANSIBLE_VERSION")
 
         cmd = "".join((args.operation, ".sh"))
 
@@ -371,6 +370,7 @@ def main():
                 VM_CIDR,
                 PYTHON_VERSION,
                 OPENSTACK_RELEASE,
+                ANSIBLE_VERSION,
             )
         elif args.operation == "deploy_ceph":
             if ceph_enabled:

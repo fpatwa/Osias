@@ -4,6 +4,7 @@ set -euxo pipefail
 
 PYTHON_VERSION=$1
 OPENSTACK_RELEASE=$2
+ANSIBLE_VERSION=$3
 
 # Dependencies
 sudo apt-get update
@@ -17,7 +18,8 @@ python3 -m venv venv
 source venv/bin/activate
 python3 -m pip install -U pip wheel
 # Update requirements file
-echo "https://tarballs.opendev.org/openstack/kolla-ansible/kolla-ansible-stable-${OPENSTACK_RELEASE}.tar.gz" >> "$HOME"/requirements.txt
+sed -i s/OPENSTACK_RELEASE/"${OPENSTACK_RELEASE}"/ "$HOME"/requirements.txt
+sed -i s/ANSIBLE_VERSION/"${ANSIBLE_VERSION}"/ "$HOME"/requirements.txt
 python3 -m pip install -r "$HOME"/requirements.txt
 
 # General Ansible config
