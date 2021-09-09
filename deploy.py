@@ -206,7 +206,7 @@ def reprovision_servers(maas_url, maas_api_key, servers_public_ip, distro):
 
 def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=False):
     utils.run_cmd(f"maas login admin {maas_url} {maas_api_key}")
-    servers = maas_virtual.maas_virtual(MAAS_VM_DISTRO(vm_profile["openstack_release"]))
+    servers = maas_virtual.maas_virtual(MAAS_VM_DISTRO(vm_profile["OPENSTACK_RELEASE"]))
     if isinstance(ceph_enabled, str):
         if ast.literal_eval(ceph_enabled):
             CEPH = "true"
@@ -253,7 +253,7 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     DNS_IP = "{vm_profile['DNS_IP']}"
     CEPH = {CEPH}
     CEPH_RELEASE = "{CEPH_RELEASE}"
-    OPENSTACK_RELEASE = "{vm_profile['openstack_release']}"
+    OPENSTACK_RELEASE = "{vm_profile['OPENSTACK_RELEASE']}"
     """
     multinode = utils.create_multinode(final_dict, optional_vars)
     print(f"Generated multinode is: {multinode}")
