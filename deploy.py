@@ -289,6 +289,7 @@ def main():
 
     if args.config:
         config = utils.parser(args.config)
+        print(f"CONFIG***: {config}")
         controller_nodes = config.get_server_ips(node_type="control", ip_type="private")
         network_nodes = config.get_server_ips(node_type="network", ip_type="private")
         if config.bool_check_ips_exist(node_type="storage", ip_type="data"):
