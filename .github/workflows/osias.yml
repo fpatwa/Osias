@@ -14,10 +14,10 @@ jobs:
       OPENSTACK_RELEASE: ${{ matrix.OPENSTACK_RELEASE }}
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: 3.8
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -33,10 +33,10 @@ jobs:
       OPENSTACK_RELEASE: ${{ matrix.OPENSTACK_RELEASE }}
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: 3.8
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
