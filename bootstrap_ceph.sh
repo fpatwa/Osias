@@ -3,7 +3,7 @@
 set -euxo pipefail
 
 MONITOR_IP=$1
-CEPH_RELEASE="octopus"
+CEPH_RELEASE=$2
 
 # Update to fetch the latest package index
 sudo apt update
