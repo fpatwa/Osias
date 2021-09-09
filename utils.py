@@ -22,7 +22,7 @@ class parser:
         self.data["variables"]["0"]["PYTHON_VERSION"] = osias_variables.PYTHON_VERSION[
             openstack_release.lower()
         ]
-        self.data[["variables"]["0"]"TEMPEST_VERSION"] = osias_variables.TEMPEST_VERSION[
+        self.data["variables"]["0"]["TEMPEST_VERSION"] = osias_variables.TEMPEST_VERSION[
             openstack_release.lower()
         ]
         self.data["variables"]["0"]["REFSTACK_TEST_VERSION"] = osias_variables.REFSTACK_TEST_VERSION[
