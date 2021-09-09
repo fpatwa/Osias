@@ -289,7 +289,6 @@ def main():
 
     if args.config:
         config = utils.parser(args.config)
-        print(f"CONFIG***: {config.}")
         controller_nodes = config.get_server_ips(node_type="control", ip_type="private")
         network_nodes = config.get_server_ips(node_type="network", ip_type="private")
         if config.bool_check_ips_exist(node_type="storage", ip_type="data"):
@@ -333,7 +332,9 @@ def main():
         REFSTACK_TEST_VERSION = config.get_variables(variable="REFSTACK_TEST_VERSION")
         MAAS_VM_DISTRO = config.get_variables(variable="MAAS_VM_DISTRO")
         ANSIBLE_VERSION = config.get_variables(variable="ANSIBLE_VERSION")
-
+        print(
+            f"OPENSTACK_RELEASE: {OPENSTACK_RELEASE},CEPH_RELEASE: {CEPH_RELEASE}, PYTHON_VERSION:{PYTHON_VERSION}, ANSIBLE_VERSION: {ANSIBLE_VERSION}"
+        )
         cmd = "".join((args.operation, ".sh"))
 
         if args.operation == "cleanup":
