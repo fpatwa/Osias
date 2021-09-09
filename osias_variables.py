@@ -47,7 +47,7 @@ VM_Profile = {
 SUPPORTED_OPENSTACK_RELEASE = ["ussuri", "victoria", "wallaby"]
 PYTHON_VERSION = {"ussuri": "3.8", "victoria": "3.8", "wallaby": "3.8"}
 TEMPEST_VERSION = {"ussuri": "27.0.0", "victoria": "27.0.0", "wallaby": "27.0.0"}
-ANSIBLE_VERSION = {"ussuri": "2.9", "victoria": "2.9", "wallaby": "2.10"}
+ANSIBLE_MAX_VERSION = {"ussuri": "2.10", "victoria": "2.10", "wallaby": "3.0"}
 REFSTACK_TEST_VERSION = {
     "ussuri": "2020.11",
     "victoria": "2020.11",

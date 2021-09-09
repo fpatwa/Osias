@@ -29,8 +29,8 @@ class parser:
             "REFSTACK_TEST_VERSION"
         ] = osias_variables.REFSTACK_TEST_VERSION[openstack_release.lower()]
         self.data["variables"]["0"][
-            "ANSIBLE_VERSION"
-        ] = osias_variables.ANSIBLE_VERSION[openstack_release.lower()]
+            "ANSIBLE_MAX_VERSION"
+        ] = osias_variables.ANSIBLE_MAX_VERSION[openstack_release.lower()]
         self.data["variables"]["0"]["MAAS_VM_DISTRO"] = osias_variables.MAAS_VM_DISTRO[
             openstack_release.lower()
         ]

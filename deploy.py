@@ -331,9 +331,9 @@ def main():
         TEMPEST_VERSION = config.get_variables(variable="TEMPEST_VERSION")
         REFSTACK_TEST_VERSION = config.get_variables(variable="REFSTACK_TEST_VERSION")
         MAAS_VM_DISTRO = config.get_variables(variable="MAAS_VM_DISTRO")
-        ANSIBLE_VERSION = config.get_variables(variable="ANSIBLE_VERSION")
+        ANSIBLE_MAX_VERSION = config.get_variables(variable="ANSIBLE_MAX_VERSION")
         print(
-            f"OPENSTACK_RELEASE: {OPENSTACK_RELEASE},CEPH_RELEASE: {CEPH_RELEASE}, PYTHON_VERSION:{PYTHON_VERSION}, ANSIBLE_VERSION: {ANSIBLE_VERSION}"
+            f"OPENSTACK_RELEASE: {OPENSTACK_RELEASE},CEPH_RELEASE: {CEPH_RELEASE}, PYTHON_VERSION:{PYTHON_VERSION}, ANSIBLE_MAX_VERSION: {ANSIBLE_MAX_VERSION}"
         )
         cmd = "".join((args.operation, ".sh"))
 
@@ -372,7 +372,7 @@ def main():
                 VM_CIDR,
                 PYTHON_VERSION,
                 OPENSTACK_RELEASE,
-                ANSIBLE_VERSION,
+                ANSIBLE_MAX_VERSION,
             )
         elif args.operation == "deploy_ceph":
             if ceph_enabled:

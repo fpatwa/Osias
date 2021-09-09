@@ -4,7 +4,7 @@ set -euxo pipefail
 
 PYTHON_VERSION=$1
 OPENSTACK_RELEASE=$2
-ANSIBLE_VERSION=$3
+ANSIBLE_MAX_VERSION=$3
 
 # Dependencies
 sudo apt-get update
@@ -19,7 +19,7 @@ source venv/bin/activate
 python3 -m pip install -U pip wheel
 # Update requirements file
 sed -i s/OPENSTACK_RELEASE/"${OPENSTACK_RELEASE}"/ "$HOME"/requirements.txt
-sed -i s/ANSIBLE_VERSION/"${ANSIBLE_VERSION}"/ "$HOME"/requirements.txt
+sed -i s/ANSIBLE_MAX_VERSION/"${ANSIBLE_MAX_VERSION}"/ "$HOME"/requirements.txt
 python3 -m pip install -r "$HOME"/requirements.txt
 
 # General Ansible config
