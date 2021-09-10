@@ -9,13 +9,13 @@ if ! br0_exists; then
   MY_IP=$(ip -o -4 addr list "${public_interface}" | awk '{print $4}')
   MY_GATEWAY=$(ip route show 0.0.0.0/0 dev eth0 | cut -d\  -f3)
   #
-  ip link add br0 type bridge
-  ip link set eth0 master br0
-  ip link set br0 up
-  ip addr add "$MY_IP" dev br0
+  sudo ip link add br0 type bridge
+  sudo ip link set eth0 master br0
+  sudo ip link set br0 up
+  sudo ip addr add "$MY_IP" dev br0
   #
-  route add -net 0.0.0.0 gw "$MY_GATEWAY" dev br0
-  ip route del default via "$MY_GATEWAY" dev eth0
+  sudo route add -net 0.0.0.0 gw "$MY_GATEWAY" dev br0
+  sudo ip route del default via "$MY_GATEWAY" dev eth0
   ip a
 fi
 
