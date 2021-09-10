@@ -1,7 +1,7 @@
 default:
   # Official language image. Look for the different tagged releases at:
   # https://hub.docker.com/r/library/python/tags/
-  image: python:3.8-buster
+  image: python:3.7-buster
 
 workflow:
   rules:
@@ -193,6 +193,15 @@ deploy:openstack:
     # 1. Run Kolla pre-setup
     # 2. Run Kolla deploy
     - python3 -u deploy.py deploy_openstack --config "$MULTINODE"
+
+deploy:all_in_one:
+  stage: deploy
+  image: ubuntu:18.04
+  tags: 
+    - docker
+  needs: ["python_black", "shellcheck"]
+  script:
+    - source all_in_one_openstack_deployment.sh ussuri
 
 post_deploy:openstack:
   stage: post_deploy
