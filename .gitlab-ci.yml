@@ -202,7 +202,7 @@ deploy:all_in_one:
   needs: ["python_black", "shellcheck"]
   script:
     - apt-get update
-    - apt-get install -y sudo python3.6 iproute2 vim python3-pip net-tools bridge-utils openssh-client openssh-server
+    - apt-get install -y sudo python3.6 iproute2 python3-pip net-tools bridge-utils openssh-client openssh-server
     - service ssh start
     - public_interface=$(route -n | awk '$1 == "0.0.0.0" {print $8}')
     - MY_IP=$(ip -o -4 addr list "${public_interface}" | awk '{print $4}' | cut -d/ -f1)
