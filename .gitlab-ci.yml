@@ -203,7 +203,9 @@ deploy:all_in_one:
   script:
     - apt-get update
     - apt-get install -y sudo python3.6 iproute2 vim python3-pip net-tools bridge-utils openssh-client
-    - source all_in_one_openstack_deploy_docker.sh ussuri
+    - public_interface=$(route -n | awk '$1 == "0.0.0.0" {print $8}')
+    - MY_IP=$(ip -o -4 addr list "${public_interface}" | awk '{print $4}' | cut -d/ -f1)
+    - source all_in_one_openstack_deploy_docker.sh ussuri "$MY_IP"
 
 post_deploy:openstack:
   stage: post_deploy
