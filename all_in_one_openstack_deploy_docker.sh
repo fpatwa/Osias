@@ -15,7 +15,6 @@ get_vm_profile () {
 # Main
 ############
 my_ip=$(get_vm_profile)
-setup_bridge
 
 ! read -r -d '' MULTINODE << EOM
 [control]
