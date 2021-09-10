@@ -201,6 +201,7 @@ deploy:all_in_one:
     - docker
   needs: ["python_black", "shellcheck"]
   script:
+    - apt-get update
     - apt-get install -y sudo python3.6 iproute2 vim python3-pip net-tools bridge-utils openssh-client
     - source all_in_one_openstack_deploy_docker.sh ussuri
 
