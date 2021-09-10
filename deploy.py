@@ -214,7 +214,7 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     if isinstance(ceph_enabled, str):
         if ast.literal_eval(ceph_enabled):
             CEPH = "true"
-            CEPH_RELEASE = vm_profile["ceph_release"]
+            CEPH_RELEASE = vm_profile["CEPH_RELEASE"]
         else:
             CEPH = "false"
             CEPH_RELEASE = "false"
@@ -336,9 +336,6 @@ def main():
         REFSTACK_TEST_VERSION = config.get_variables(variable="REFSTACK_TEST_VERSION")
         MAAS_VM_DISTRO = config.get_variables(variable="MAAS_VM_DISTRO")
         ANSIBLE_MAX_VERSION = config.get_variables(variable="ANSIBLE_MAX_VERSION")
-        print(
-            f"OPENSTACK_RELEASE: {OPENSTACK_RELEASE},CEPH_RELEASE: {CEPH_RELEASE}, PYTHON_VERSION:{PYTHON_VERSION}, ANSIBLE_MAX_VERSION: {ANSIBLE_MAX_VERSION}"
-        )
         cmd = "".join((args.operation, ".sh"))
 
         if args.operation == "cleanup":
