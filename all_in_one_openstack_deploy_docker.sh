@@ -2,7 +2,7 @@
 
 set -x
 
-OPENSTACK_RELEASE=$1
+OPENSTACK_RELEASE="$1"
 MY_IP="$2"
 
 ! read -r -d '' MULTINODE << EOM
