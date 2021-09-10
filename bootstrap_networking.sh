@@ -12,10 +12,10 @@ if ! br0_exists; then
   ip link add br0 type bridge
   ip link set eth0 master br0
   ip link set br0 up
-  ip addr add $MY_IP dev br0
+  ip addr add "$MY_IP" dev br0
   #
-  route add -net 0.0.0.0 gw $MY_GATEWAY dev br0
-  ip route del default via $MY_GATEWAY dev eth0
+  route add -net 0.0.0.0 gw "$MY_GATEWAY" dev br0
+  ip route del default via "$MY_GATEWAY" dev eth0
   ip a
 fi
 
