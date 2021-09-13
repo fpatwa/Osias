@@ -246,14 +246,14 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     temp_dict = utils.merge_nested_dictionaries(public_ips, internal_ips)
     final_dict = utils.merge_nested_dictionaries(temp_dict, data_ips)
     VIP_IP = str(list(IPv4Network(vm_profile["vm_deployment_cidr"]))[-1])
-    POOL_START = str(list(IPv4Network(vm_profile["vm_deployment_cidr"]))[num_Servers])
-    POOL_END = list(IPv4Network(vm_profile["vm_deployment_cidr"]))[-2]
+    POOL_START_IP = str(list(IPv4Network(vm_profile["vm_deployment_cidr"]))[num_Servers])
+    POOL_END_IP = list(IPv4Network(vm_profile["vm_deployment_cidr"]))[-2]
     optional_vars = f"""DOCKER_REGISTRY = "{DOCKER_REGISTRY_IP}"
     DOCKER_REGISTRY_USERNAME = "{DOCKER_REGISTRY_USERNAME}"
     VM_CIDR = "{vm_profile['vm_deployment_cidr']}"
     VIP_IP = "{VIP_IP}"
-    POOL_START = "{POOL_START}"
-    POOL_END = "{POOL_END}"
+    POOL_START_IP = "{POOL_START_IP}"
+    POOL_END_IP = "{POOL_END_IP}"
     DNS_IP = "{vm_profile['DNS_IP']}"
     CEPH = {CEPH}
     CEPH_RELEASE = "{CEPH_RELEASE}"
@@ -318,8 +318,8 @@ def main():
             variable="DOCKER_REGISTRY_USERNAME"
         )
         VM_CIDR = config.get_variables(variable="VM_CIDR")
-        POOL_START_IP = config.get_variables(variable="POOL_START")
-        POOL_END_IP = config.get_variables(variable="POOL_END")
+        POOL_START_IP = config.get_variables(variable="POOL_START_IP")
+        POOL_END_IP = config.get_variables(variable="POOL_END_IP")
         DNS_IP = config.get_variables(variable="DNS_IP")
 
         if args.operation != "create_virtual_servers":
