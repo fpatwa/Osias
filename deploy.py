@@ -323,6 +323,11 @@ def main():
         DNS_IP = config.get_variables(variable="DNS_IP")
 
         if args.operation != "create_virtual_servers":
+            print(f"VM_CIDR -> {VM_CIDR}")
+            print(f"POOL_START_IP -> {POOL_START_IP}")
+            print(f"POOL_END_IP -> {POOL_END_IP}")
+            print(f"DNS_IP -> {DNS_IP}")
+            
             if not VM_CIDR or not POOL_START_IP or not POOL_END_IP or not DNS_IP:
                 raise Exception(
                     "ERROR: Mandatory parms in the Multinode file are missing.\n"
