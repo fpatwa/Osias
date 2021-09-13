@@ -196,7 +196,7 @@ deploy:openstack:
 
 deploy:all_in_one:
   stage: deploy
-  image: docker:20.10.8-dind
+  image: thesoul/ubuntu-dind:docker-18.09
   tags: 
     - docker
   needs: ["python_black", "shellcheck"]
