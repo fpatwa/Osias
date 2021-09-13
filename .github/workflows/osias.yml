@@ -23,7 +23,9 @@ jobs:
           python -m pip install --upgrade pip
       - name: Deploy OpenStack Release [${{ env.OPENSTACK_RELEASE }}]
         run: |
-          source all_in_one_openstack_deployment.sh ${{ env.OPENSTACK_RELEASE }}
+          public_interface=$(route -n | awk '$1 == "0.0.0.0" {print $8}')
+          MY_IP=$(ip -o -4 addr list "${public_interface}" | awk '{print $4}' | cut -d/ -f1)
+          source all_in_one_openstack_deployment.sh ${{ env.OPENSTACK_RELEASE }} "$MY_IP"
 
   Ubuntu-20-Deploy-OpenStack:
     runs-on: ubuntu-20.04
@@ -41,4 +43,6 @@ jobs:
           python -m pip install --upgrade pip
       - name: Deploy OpenStack Release [${{ matrix.OPENSTACK_RELEASE }}]
         run: |
-          source all_in_one_openstack_deployment.sh ${{ matrix.OPENSTACK_RELEASE }}
+          public_interface=$(route -n | awk '$1 == "0.0.0.0" {print $8}')
+          MY_IP=$(ip -o -4 addr list "${public_interface}" | awk '{print $4}' | cut -d/ -f1)
+          source all_in_one_openstack_deployment.sh ${{ matrix.OPENSTACK_RELEASE }} "$MY_IP"
