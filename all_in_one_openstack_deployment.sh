@@ -35,9 +35,9 @@ MY_IP="$2"
     [variables.0]
     CEPH = "False"
     VM_CIDR = "${my_ip}/32"
-    VIP_IP = "${my_ip}/32"
-    POOL_START_IP = "${my_ip}/32"
-    POOL_END_IP = "${my_ip}/32"
+    VIP_IP = "${my_ip}"
+    POOL_START_IP = "${my_ip}"
+    POOL_END_IP = "${my_ip}"
     DNS_IP = "8.8.8.8"
     OPENSTACK_RELEASE = "$OPENSTACK_RELEASE"
 EOM
