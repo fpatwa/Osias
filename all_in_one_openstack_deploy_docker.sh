@@ -71,7 +71,7 @@ aptitude install locales
   export LANG=en_US.UTF-8
   export LANGUAGE=en_US.UTF-8
 } >> "$HOME"/.profile
-source ~/.bashrc
+source "$HOME"/.bashrc
 pip3 install toml timeout_decorator
 python3 -u deploy.py bootstrap_networking --config "$MULTINODE"
 python3 -u deploy.py bootstrap_openstack --config "$MULTINODE"
