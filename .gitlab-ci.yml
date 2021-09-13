@@ -196,7 +196,7 @@ deploy:openstack:
 
 deploy:all_in_one:
   stage: deploy
-  image: ubuntu:18.04
+  image: docker:20.10.8-dind
   tags: 
     - docker
   needs: ["python_black", "shellcheck"]
