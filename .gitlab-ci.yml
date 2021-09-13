@@ -52,10 +52,11 @@ shellcheck:
 
 python_black:
     stage: static_analysis
+    image: cytopia/black
     tags:
     - docker-runner
-    before_script:
-      - pip3 install black
+    #before_script:
+    #  - pip3 install black
     script:
         - black --check --diff --color .
 

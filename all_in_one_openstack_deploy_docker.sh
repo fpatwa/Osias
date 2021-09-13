@@ -60,9 +60,6 @@ sudo cp ubuntu /etc/sudoers.d/.
 #
 # Deploy openstack using kolla
 #
-sudo apt-get update
-sudo apt-get install locales
-sudo locale-gen en_US
 pip3 install toml timeout_decorator
 python3 -u deploy.py bootstrap_networking --config "$MULTINODE"
 python3 -u deploy.py bootstrap_openstack --config "$MULTINODE"
