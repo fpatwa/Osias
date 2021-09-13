@@ -8,23 +8,23 @@ MY_IP="$2"
 ! read -r -d '' MULTINODE << EOM
 [control]
     [control.0]
-    public = "$my_ip"
-    private = "$my_ip"
+    public = "$MY_IP"
+    private = "$MY_IP"
     data = ""
 [network]
     [network.0]
-    public = "$my_ip"
-    private = "$my_ip"
+    public = "$MY_IP"
+    private = "$MY_IP"
     data = ""
 [storage]
     [storage.0]
-    public = "$my_ip"
-    private = "$my_ip"
+    public = "$MY_IP"
+    private = "$MY_IP"
     data = ""
 [compute]
     [compute.0]
-    public = "$my_ip"
-    private = "$my_ip"
+    public = "$MY_IP"
+    private = "$MY_IP"
     data = ""
 [monitor]
     [monitor.0]
@@ -34,10 +34,10 @@ MY_IP="$2"
 [variables]
     [variables.0]
     CEPH = "False"
-    VM_CIDR = "${my_ip}/32"
-    VIP_IP = "${my_ip}"
-    POOL_START_IP = "${my_ip}"
-    POOL_END_IP = "${my_ip}"
+    VM_CIDR = "${MY_IP}/32"
+    VIP_IP = "${MY_IP}"
+    POOL_START_IP = "${MY_IP}"
+    POOL_END_IP = "${MY_IP}"
     DNS_IP = "8.8.8.8"
     OPENSTACK_RELEASE = "$OPENSTACK_RELEASE"
 EOM
