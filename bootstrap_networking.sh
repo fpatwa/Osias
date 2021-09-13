@@ -5,18 +5,37 @@ set -euxo pipefail
 # Add br0 bridge if it does not exist
 br0_exists(){ ip addr show br0 &>/dev/null; }
 if ! br0_exists; then
-  public_interface=$(route -n | awk '$1 == "0.0.0.0" {print $8}')
-  MY_IP=$(ip -o -4 addr list "${public_interface}" | awk '{print $4}')
-  MY_GATEWAY=$(ip route show 0.0.0.0/0 dev eth0 | cut -d\  -f3)
-  #
-  sudo ip link add br0 type bridge
-  sudo ip link set eth0 master br0
-  sudo ip link set br0 up
-  sudo ip addr add "$MY_IP" dev br0
-  #
-  sudo route add -net 0.0.0.0 gw "$MY_GATEWAY" dev br0
-  sudo ip route del default via "$MY_GATEWAY" dev eth0
-  ip a
+  netplan_file="50-cloud-init.yaml" # "00-installer-config.yaml"
+  # Get existing MAC address
+  mac_address=$(grep macaddress /etc/netplan/${netplan_file} |awk '{print $2}')
+  # Get the interface name (remove the ":" from the name)
+  interface_name=$(grep -A 1 ethernets /etc/netplan/${netplan_file} |grep -v ethernets |awk '{print $1}')
+  interface_name=${interface_name%:}
+  cat /etc/netplan/${netplan_file} 
+  cat /etc/hosts
+  cat /etc/resolv.conf
+  # Copy to work with a temp file
+  cp /etc/netplan/${netplan_file} /tmp/${netplan_file}
+  # Now modify the temp file to add the bridge information
+  echo -ne "    bridges:
+      br0:
+          dhcp4: true
+          interfaces:
+              - $interface_name
+          macaddress: $mac_address
+" >> /tmp/${netplan_file}
+
+  # Now copy over the modified file in the netplan directory
+  sudo mv /tmp/${netplan_file} /etc/netplan/${netplan_file}
+  # Activate the updated netplan configuration
+  sudo netplan generate
+  sleep 2
+  sudo netplan apply
+  sleep 5
+
+  # Check the final result
+  ip addr
+  cat /etc/netplan/${netplan_file}
 fi
 
 sudo sh -c "cat > /etc/rc.local <<__EOF__
