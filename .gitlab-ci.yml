@@ -52,13 +52,15 @@ shellcheck:
 
 python_black:
     stage: static_analysis
-    image: cytopia/black
+    image:
+      name: cytopia/black
+      entrypoint: ["/bin/ash", "-c"]
     tags:
     - docker-runner
     #before_script:
     #  - pip3 install black
     script:
-        - black --check --diff --color .
+        - python3 -m black --check --diff --color . 
 
 generate_cidr_for_virtual_machines:
   stage: generate_cidr
