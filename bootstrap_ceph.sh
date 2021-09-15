@@ -6,7 +6,7 @@ MONITOR_IP=$1
 CEPH_RELEASE=$2
 
 # Update to fetch the latest package index
-sudo apt update
+sudo apt-get update
 
 # Fetch most recent version of cephadm
 curl --silent --remote-name --location https://github.com/ceph/ceph/raw/"$CEPH_RELEASE"/src/cephadm/cephadm
@@ -31,7 +31,7 @@ wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
 sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/ceph.release.gpg
 
 # Update to fetch the package index for ceph added above
-sudo apt update
+sudo apt-get update
 
 # Install ceph-common and cephadm packages
 sudo ./cephadm install ceph-common

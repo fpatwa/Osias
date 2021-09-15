@@ -24,6 +24,7 @@ def setup_kolla_configs(
                 "\n\nWARNING: You are setting the VIP address to the network address, VIP is being reassigned to 254\n\n"
             )
             VIP_SUFFIX = "254"
+            kolla_external_vip_address = str(list(IPv4Network(vm_cidr))[-2])
         kolla_internal_vip_address = ".".join((internal_subnet, VIP_SUFFIX))
         SUFFIX = VIP_SUFFIX
     else:
