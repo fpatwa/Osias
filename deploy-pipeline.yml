@@ -3,12 +3,6 @@ default:
   # https://hub.docker.com/r/library/python/tags/
   image: python:3.7-buster
 
-workflow:
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-
 stages:
   - generate_cidr
   - reprovision_servers
