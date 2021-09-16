@@ -62,9 +62,9 @@ create_virtual_machines:
     - export VM_PROFILE=$(cat test/vm_profile)
     - python3 -u deploy.py create_virtual_servers --VM_PROFILE "$VM_PROFILE" --MAAS_URL "$MAAS_URL" --MAAS_API_KEY "$MAAS_API_KEY"
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($MULTINODE == "" || $MULTINODE == null)'
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && ($MULTINODE == "" || $MULTINODE == null)'
-    - if: '$CI_PIPELINE_SOURCE == "web" && ($MULTINODE == "" || $MULTINODE == null)'
+    - if: '($MULTINODE == "" || $MULTINODE == null)'
+    - if: '($MULTINODE == "" || $MULTINODE == null)'
+    - if: '($MULTINODE == "" || $MULTINODE == null)'
   artifacts:
     paths:
       - MULTINODE.env
@@ -81,9 +81,9 @@ reprovision_servers:
       when: never
     - if: '$REPROVISION_SERVERS == "false"'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($MULTINODE != "" || $MULTINODE != null)'
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && ($MULTINODE != "" || $MULTINODE != null)'
-    - if: '$CI_PIPELINE_SOURCE == "web" && ($MULTINODE != "" || $MULTINODE != null)'
+    - if: '($MULTINODE != "" || $MULTINODE != null)'
+    - if: '($MULTINODE != "" || $MULTINODE != null)'
+    - if: '($MULTINODE != "" || $MULTINODE != null)'
 
 
 bootstrap_networking:
@@ -105,9 +105,7 @@ cleanup:
   rules:
     - if: '$REPROVISION_SERVERS == "true"'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "parent_pipeline"'
 
 reboot_servers:
   stage: reboot_servers
@@ -120,9 +118,7 @@ reboot_servers:
   rules:
     - if: '$REPROVISION_SERVERS == "true"'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "parent_pipeline"'
 
 bootstrap:openstack:
   stage: bootstrap_openstack
