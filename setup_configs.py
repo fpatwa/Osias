@@ -2,6 +2,7 @@
 
 from ipaddress import IPv4Network
 import osias_variables
+import ast
 
 
 def setup_kolla_configs(
