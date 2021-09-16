@@ -25,11 +25,6 @@ example input:
 'Number_of_VM_Servers': 3, 'Public_CIDR': '10.245.121.0/24', 'Data_CIDR': '10.100.0.0/16', 'DNS_IP': '10.250.53.202'}
 """
 
-VIP_ADDRESS_SUFFIX = "250"
-DOCKER_REGISTRY_IP = "10.245.0.14"
-DOCKER_REGISTRY_USERNAME = "kolla"
-CEPH = False
-
 VM_Profile = {
     "Number_of_VM_Servers": 3,
     "vCPU": 8,

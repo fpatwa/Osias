@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from ipaddress import IPv4Network
-from osias_variables import *
+import osias_variables
 
 
 def setup_kolla_configs(
@@ -14,6 +14,8 @@ def setup_kolla_configs(
     docker_registry,
     docker_registry_username,
     vm_cidr,
+    ceph,
+    vip_address,
 ):
     internal_subnet = ".".join((controller_nodes[0].split(".")[:3]))
     if vm_cidr:
@@ -51,7 +53,7 @@ docker_registry_username: "{docker_registry_username}"
 """
     else:
         docker = "# Docker Set To Docker Hub"
-    if CEPH:
+    if ceph:
         storage = """
 glance_backend_ceph: "yes"
 glance_backend_file: "no"

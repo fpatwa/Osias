@@ -8,7 +8,7 @@ import maas_base
 import maas_virtual
 import setup_configs
 import utils
-from osias_variables import *
+import osias_variables
 
 
 def parse_args():
@@ -143,6 +143,8 @@ def bootstrap_openstack(
     python_version,
     openstack_release,
     ansible_version,
+    ceph,
+    vip_address,
 ):
     utils.copy_file_on_server("requirements.txt", servers_public_ip[0])
 
@@ -161,6 +163,8 @@ def bootstrap_openstack(
         docker_registry,
         docker_registry_username,
         vm_cidr,
+        ceph,
+        vip_address,
     )
     utils.run_script_on_server("configure_kolla.sh", servers_public_ip[0])
     ssh_priv_key, ssh_public_key = utils.create_new_ssh_key()
@@ -250,8 +254,8 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
         list(IPv4Network(vm_profile["vm_deployment_cidr"]))[num_Servers]
     )
     POOL_END_IP = list(IPv4Network(vm_profile["vm_deployment_cidr"]))[-2]
-    optional_vars = f"""DOCKER_REGISTRY = "{DOCKER_REGISTRY_IP}"
-    DOCKER_REGISTRY_USERNAME = "{DOCKER_REGISTRY_USERNAME}"
+    optional_vars = f"""DOCKER_REGISTRY = "{osias_variables.DOCKER_REGISTRY_IP}"
+    DOCKER_REGISTRY_USERNAME = "{osias_variables.DOCKER_REGISTRY_USERNAME}"
     VM_CIDR = "{vm_profile['vm_deployment_cidr']}"
     VIP_IP = "{VIP_IP}"
     POOL_START_IP = "{POOL_START_IP}"
@@ -319,22 +323,23 @@ def main():
         docker_registry_username = config.get_variables(
             variable="DOCKER_REGISTRY_USERNAME"
         )
+        VIP_ADDRESS = config.get_variables(variable="VIP_ADDRESS")
         VM_CIDR = config.get_variables(variable="VM_CIDR")
         POOL_START_IP = config.get_variables(variable="POOL_START_IP")
         POOL_END_IP = config.get_variables(variable="POOL_END_IP")
         DNS_IP = config.get_variables(variable="DNS_IP")
 
         if args.operation != "create_virtual_servers":
-            print(f"VM_CIDR -> {VM_CIDR}")
+            print(f"VIP_ADDRESS -> {VIP_ADDRESS}")
             print(f"POOL_START_IP -> {POOL_START_IP}")
             print(f"POOL_END_IP -> {POOL_END_IP}")
             print(f"DNS_IP -> {DNS_IP}")
 
-            if not VM_CIDR or not POOL_START_IP or not POOL_END_IP or not DNS_IP:
+            if not VIP_ADDRESS or not POOL_START_IP or not POOL_END_IP or not DNS_IP:
                 raise Exception(
                     "ERROR: Mandatory parms in the Multinode file are missing.\n"
                     + "Please ensure that the following parms are set to a valid value:\n"
-                    + "[VM_CIDR] and [POOL_START_IP] and [POOL_END_IP] and [DNS_IP]."
+                    + "[VIP_ADDRESS] and [POOL_START_IP] and [POOL_END_IP] and [DNS_IP]."
                 )
         OPENSTACK_RELEASE = config.get_variables(variable="OPENSTACK_RELEASE")
         CEPH_RELEASE = config.get_variables(variable="CEPH_RELEASE")
@@ -343,6 +348,7 @@ def main():
         REFSTACK_TEST_VERSION = config.get_variables(variable="REFSTACK_TEST_VERSION")
         MAAS_VM_DISTRO = config.get_variables(variable="MAAS_VM_DISTRO")
         ANSIBLE_MAX_VERSION = config.get_variables(variable="ANSIBLE_MAX_VERSION")
+
         cmd = "".join((args.operation, ".sh"))
 
         if args.operation == "cleanup":
@@ -381,6 +387,8 @@ def main():
                 PYTHON_VERSION,
                 OPENSTACK_RELEASE,
                 ANSIBLE_MAX_VERSION,
+                ceph_enabled,
+                VIP_ADDRESS,
             )
         elif args.operation == "deploy_ceph":
             if ceph_enabled:
@@ -476,7 +484,7 @@ def main():
     elif args.operation == "create_virtual_servers":
         if args.MAAS_URL and args.MAAS_API_KEY:
             VM_PROFILE = utils.merge_dictionaries(
-                VM_Profile, ast.literal_eval(args.VM_PROFILE)
+                osias_variables.VM_Profile, ast.literal_eval(args.VM_PROFILE)
             )
             ceph_enabled = VM_PROFILE.get("CEPH")
             required_keys = ["vm_deployment_cidr"]
