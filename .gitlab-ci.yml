@@ -10,7 +10,7 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "web"'
 
 stages:
-  - generate_cidr
+  - static_analysis
   - deploy_pipeline
 
 shellcheck:
@@ -36,5 +36,3 @@ deploy_pipeline:
     stage: deploy_pipeline
     trigger:
         include: deploy-pipeline.yml
-    tags:
-        - docker-runner
