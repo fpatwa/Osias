@@ -214,7 +214,9 @@ def reprovision_servers(maas_url, maas_api_key, servers_public_ip, distro):
 
 def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=False):
     utils.run_cmd(f"maas login admin {maas_url} {maas_api_key}")
-    servers = maas_virtual.maas_virtual(osias_variables.MAAS_VM_DISTRO[vm_profile["OPENSTACK_RELEASE"]])
+    servers = maas_virtual.maas_virtual(
+        osias_variables.MAAS_VM_DISTRO[vm_profile["OPENSTACK_RELEASE"]]
+    )
     if isinstance(ceph_enabled, str):
         if ast.literal_eval(ceph_enabled):
             CEPH = "true"
