@@ -40,3 +40,7 @@ deploy_pipeline:
         REPROVISION_SERVERS: "$REPROVISION_SERVERS"
     trigger:
         include: deploy-pipeline.yml
+    parallel:
+        matrix:
+          - VM_PROFILE: ["$VM_PROFILE_ALL_IN_ONE", "$VM_PROFILE_3_NODE"]
+        
