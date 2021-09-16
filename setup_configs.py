@@ -31,6 +31,7 @@ def setup_kolla_configs(
         SUFFIX = VIP_SUFFIX
     else:
         external_subnet = ".".join((servers_public_ip[0].split(".")[:3]))
+        VIP_ADDRESS_SUFFIX = vip_address.split(".")[-1]
         kolla_external_vip_address = ".".join((external_subnet, VIP_ADDRESS_SUFFIX))
         kolla_internal_vip_address = ".".join((internal_subnet, VIP_ADDRESS_SUFFIX))
         SUFFIX = VIP_ADDRESS_SUFFIX

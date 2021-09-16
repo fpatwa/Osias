@@ -256,8 +256,8 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
         list(IPv4Network(vm_profile["vm_deployment_cidr"]))[num_Servers]
     )
     POOL_END_IP = list(IPv4Network(vm_profile["vm_deployment_cidr"]))[-2]
-    optional_vars = f"""DOCKER_REGISTRY = "{osias_variables.DOCKER_REGISTRY_IP}"
-    DOCKER_REGISTRY_USERNAME = "{osias_variables.DOCKER_REGISTRY_USERNAME}"
+    optional_vars = f"""DOCKER_REGISTRY = "{vm_profile['DOCKER_REGISTRY_IP']}"
+    DOCKER_REGISTRY_USERNAME = "{vm_profile['DOCKER_REGISTRY_USERNAME']}"
     VM_CIDR = "{vm_profile['vm_deployment_cidr']}"
     VIP_IP = "{VIP_IP}"
     POOL_START_IP = "{POOL_START_IP}"
