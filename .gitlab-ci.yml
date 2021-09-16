@@ -77,6 +77,7 @@ generate_cidr_for_virtual_machines:
     paths:
       - test/vm_deployment_cidr
       - test/vm_profile
+    when: always
   rules:
     - if: '$MULTINODE == "" || $MULTINODE == null'
 
