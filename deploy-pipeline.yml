@@ -1,0 +1,40 @@
+default:
+  # Official language image. Look for the different tagged releases at:
+  # https://hub.docker.com/r/library/python/tags/
+  image: python:3.7-buster
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+stages:
+  - generate_cidr
+  - deploy_pipeline
+
+shellcheck:
+  stage: static_analysis
+  image: pipelinecomponents/shellcheck:latest
+  tags:
+    - docker-runner
+  script:
+    - |
+      find . -name .git -type d -prune -o -type f -name \*.sh -print0 |
+      xargs -0 -r -n1 shellcheck -e SC1091 -e SC2024 --color
+
+python_black:
+    stage: static_analysis
+    tags:
+    - docker-runner
+    before_script:
+      - pip3 install black
+    script:
+        - black --check --diff --color .
+
+deploy_pipeline:
+    stage: deploy_pipeline
+    trigger:
+        include: deploy-pipeline.yml
+    tags:
+        - docker-runner
