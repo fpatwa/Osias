@@ -452,7 +452,7 @@ def main():
                     STORAGE_MIN_MICROVERSION,
                     STORAGE_MAX_MICROVERSION,
                     PLACEMENT_MIN_MICROVERSION,
-                    PLACEMENT_MAX_MICROVERSION
+                    PLACEMENT_MAX_MICROVERSION,
                 ],
             )
         elif args.operation in [
