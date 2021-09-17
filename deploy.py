@@ -351,23 +351,19 @@ def main():
         REFSTACK_TEST_VERSION = config.get_variables(variable="REFSTACK_TEST_VERSION")
         MAAS_VM_DISTRO = config.get_variables(variable="MAAS_VM_DISTRO")
         ANSIBLE_MAX_VERSION = config.get_variables(variable="ANSIBLE_MAX_VERSION")
-        NOVA_MIN_MICROVERSION = osias_variables.NOVA_MIN_MICROVERSION[
-            vm_profile["OPENSTACK_RELEASE"]
-        ]
-        NOVA_MAX_MICROVERSION = osias_variables.NOVA_MAX_MICROVERSION[
-            vm_profile["OPENSTACK_RELEASE"]
-        ]
+        NOVA_MIN_MICROVERSION = osias_variables.NOVA_MIN_MICROVERSION[OPENSTACK_RELEASE]
+        NOVA_MAX_MICROVERSION = osias_variables.NOVA_MAX_MICROVERSION[OPENSTACK_RELEASE]
         STORAGE_MIN_MICROVERSION = osias_variables.STORAGE_MIN_MICROVERSION[
-            vm_profile["OPENSTACK_RELEASE"]
+            OPENSTACK_RELEASE
         ]
         STORAGE_MAX_MICROVERSION = osias_variables.STORAGE_MAX_MICROVERSION[
-            vm_profile["OPENSTACK_RELEASE"]
+            OPENSTACK_RELEASE
         ]
         PLACEMENT_MIN_MICROVERSION = osias_variables.PLACEMENT_MIN_MICROVERSION[
-            vm_profile["OPENSTACK_RELEASE"]
+            OPENSTACK_RELEASE
         ]
         PLACEMENT_MAX_MICROVERSION = osias_variables.PLACEMENT_MAX_MICROVERSION[
-            vm_profile["OPENSTACK_RELEASE"]
+            OPENSTACK_RELEASE
         ]
 
         cmd = "".join((args.operation, ".sh"))
