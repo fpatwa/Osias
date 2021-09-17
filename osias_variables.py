@@ -51,6 +51,8 @@ MAAS_VM_DISTRO = {
 # REFSTACK VARIABLES
 # https://docs.openstack.org/nova/latest/reference/api-microversion-history.html
 # https://docs.openstack.org/cinder/latest/contributor/api_microversion_history.html
+# https://docs.openstack.org/placement/latest/placement-api-microversion-history.html
+# https://docs.openstack.org/releasenotes/tempest/unreleased.html
 REFSTACK_TEST_VERSION = {
     "ussuri": "2020.11",
     "victoria": "2020.11",
