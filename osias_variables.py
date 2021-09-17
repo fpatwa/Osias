@@ -41,15 +41,49 @@ VM_Profile = {
 
 SUPPORTED_OPENSTACK_RELEASE = ["ussuri", "victoria", "wallaby"]
 PYTHON_VERSION = {"ussuri": "3.6", "victoria": "3.8", "wallaby": "3.8"}
-TEMPEST_VERSION = {"ussuri": "27.0.0", "victoria": "27.0.0", "wallaby": "27.0.0"}
 ANSIBLE_MAX_VERSION = {"ussuri": "2.10", "victoria": "2.10", "wallaby": "3.0"}
+MAAS_VM_DISTRO = {
+    "ussuri": "bionic hwe_kernel=hwe-18.04",
+    "victoria": "focal hwe_kernel=hwe-20.04",
+    "wallaby": "focal hwe_kernel=hwe-20.04",
+}
+
+# REFSTACK VARIABLES
+# https://docs.openstack.org/nova/latest/reference/api-microversion-history.html
+# https://docs.openstack.org/cinder/latest/contributor/api_microversion_history.html
 REFSTACK_TEST_VERSION = {
     "ussuri": "2020.11",
     "victoria": "2020.11",
     "wallaby": "2020.11",
 }
-MAAS_VM_DISTRO = {
-    "ussuri": "bionic hwe_kernel=hwe-18.04",
-    "victoria": "focal hwe_kernel=hwe-20.04",
-    "wallaby": "focal hwe_kernel=hwe-20.04",
+TEMPEST_VERSION = {"ussuri": "28.1.0", "victoria": "28.1.0", "wallaby": "28.1.0"}
+NOVA_MIN_MICROVERSION = {
+    "ussuri": "2.80",
+    "victoria": "2.80",
+    "wallaby": "2.80",
+}
+NOVA_MAX_MICROVERSION = {
+    "ussuri": "2.87",
+    "victoria": "2.87",
+    "wallaby": "2.88",
+}
+STORAGE_MIN_MICROVERSION = {
+    "ussuri": "3.59",
+    "victoria": "3.60",
+    "wallaby": "3.62",
+}
+STORAGE_MAX_MICROVERSION = {
+    "ussuri": "3.60",
+    "victoria": "3.62",
+    "wallaby": "3.64",
+}
+PLACEMENT_MIN_MICROVERSION = {
+    "ussuri": "1.32",
+    "victoria": "1.32",
+    "wallaby": "1.32",
+}
+PLACEMENT_MAX_MICROVERSION = {
+    "ussuri": "1.36",
+    "victoria": "1.36",
+    "wallaby": "1.36",
 }

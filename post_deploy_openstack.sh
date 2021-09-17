@@ -3,7 +3,7 @@
 # shellcheck source=/dev/null
 source "$HOME"/base_config.sh
 
-CIRROS_URL="http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+CIRROS_URL="https://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img"
 PUBLICIP=$(/sbin/ip addr show br0 | grep 'inet ' | grep brd | awk '{print $2}')
 PUBLIC_NETWORK="${PUBLICIP%.*}.0/24"
 

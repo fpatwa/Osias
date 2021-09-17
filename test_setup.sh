@@ -3,6 +3,13 @@
 # shellcheck source=/dev/null
 source "$HOME"/base_config.sh
 
+NOVA_MIN_MICROVERSION=$1
+NOVA_MAX_MICROVERSION=$2
+STORAGE_MIN_MICROVERSION=$3
+STORAGE_MAX_MICROVERSION=$4
+PLACEMENT_MIN_MICROVERSION=$5
+PLACEMENT_MAX_MICROVERSION=$6
+
 # Copy files necessary for both:
 sudo cp /etc/kolla/certificates/ca/root.crt "$HOME"/root.crt
 sudo chown "$USER":"$USER" "$HOME"/root.crt
@@ -20,6 +27,7 @@ PUBLICNETWORKNAME="$(openstack network list --external -c Name -f value)"
 URILINKV2="$(openstack endpoint list --service identity --interface public -c URL -f value)/v2.0"
 URILINKV3="$(openstack endpoint list --service identity --interface public -c URL -f value)/v3"
 REGION="$(openstack region list -c Region -f value)"
+MIN_COMPUTE_NODES="$(openstack compute service list -f value -c Host --service nova-compute | wc -l)"
 
 SERVICE_LIST="$(openstack service list)"
 
@@ -87,15 +95,16 @@ discoverability = True
 lock_path = /tmp
 
 [compute]
-min_compute_nodes = 3
-min_microversion = 2.1
-max_microversion = 2.87
+min_compute_nodes = $MIN_COMPUTE_NODES
+min_microversion = $NOVA_MIN_MICROVERSION
+max_microversion = $NOVA_MAX_MICROVERSION
 flavor_ref = 100
 flavor_ref_alt = 101
 image_ref = $CIRROSID
 image_ref_alt = $CIRROSID2
 endpoint_type = publicURL
 fixed_network_name = mynet
+build_timeout = 60
 
 [compute-feature-enabled]
 validation.run_validation = True
@@ -116,8 +125,8 @@ vnc_console = True
 #api_extensions = address-scope,router-admin-state-down-before-update,agent,agent-resources-synced,allowed-address-pairs,auto-allocated-topology,availability_zone,availability_zone_filter,default-subnetpools,dhcp_agent_scheduler,dvr,empty-string-filtering,external-net,extra_dhcp_opt,extraroute,extraroute-atomic,filter-validation,fip-port-details,flavors,floatingip-pools,ip-substring-filtering,router,ext-gw-mode,l3-ha,l3-flavors,l3-port-ip-change-not-allowed,l3_agent_scheduler,metering,multi-provider,net-mtu,net-mtu-writable,network_availability_zone,network-ip-availability,pagination,port-mac-address-regenerate,binding,binding-extended,port-security,project-id,provider,quotas,quota_details,rbac-policies,rbac-security-groups,revision-if-match,standard-attr-revisions,router_availability_zone,port-security-groups-filtering,security-group,service-type,sorting,standard-attr-description,subnet_onboard,subnet-service-types,subnet_allocation,subnetpool-prefix-ops,standard-attr-tag,standard-attr-timestamp
 
 [image]
-image_path = https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
-http_image = https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+image_path = https://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img
+http_image = https://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img
 
 #[image-feature-enabled]
 #api_v1 = False
@@ -139,16 +148,22 @@ network_for_ssh = $PUBLICNETWORKNAME
 security_group = True
 security_group_rules = True
 image_ssh_password = gocubsgo
+ssh_timeout = 60
 
-#[volume]
-#backend_names = block
-#min_microversion = 3.0
-#max_microversion = 3.59
-#volume_size = 1
+[volume]
+build_timeout = 60
+backend_names = block
+min_microversion = $STORAGE_MIN_MICROVERSION
+max_microversion = $STORAGE_MAX_MICROVERSION
+volume_size = 1
 
 [network]
 public_network_id = $PUBLICNETWORKID
 floating_network_name = $PUBLICNETWORKNAME
+
+[placement]
+min_microversion = $PLACEMENT_MIN_MICROVERSION
+max_microversion = $PLACEMENT_MAX_MICROVERSION
 
 [heat_plugin]
 minimal_instance_type = 100

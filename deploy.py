@@ -351,6 +351,20 @@ def main():
         REFSTACK_TEST_VERSION = config.get_variables(variable="REFSTACK_TEST_VERSION")
         MAAS_VM_DISTRO = config.get_variables(variable="MAAS_VM_DISTRO")
         ANSIBLE_MAX_VERSION = config.get_variables(variable="ANSIBLE_MAX_VERSION")
+        NOVA_MIN_MICROVERSION = config.get_variables(variable="NOVA_MIN_MICROVERSION")
+        NOVA_MAX_MICROVERSION = config.get_variables(variable="NOVA_MAX_MICROVERSION")
+        STORAGE_MIN_MICROVERSION = config.get_variables(
+            variable="STORAGE_MIN_MICROVERSION"
+        )
+        STORAGE_MAX_MICROVERSION = config.get_variables(
+            variable="STORAGE_MAX_MICROVERSION"
+        )
+        PLACEMENT_MIN_MICROVERSION = config.get_variables(
+            variable="PLACEMENT_MIN_MICROVERSION"
+        )
+        PLACEMENT_MAX_MICROVERSION = config.get_variables(
+            variable="PLACEMENT_MAX_MICROVERSION"
+        )
 
         cmd = "".join((args.operation, ".sh"))
 
@@ -428,10 +442,22 @@ def main():
                         PYTHON_VERSION,
                     ],
                 )
+        elif args.operation == "test_setup":
+            utils.run_script_on_server(
+                "test_setup.sh",
+                servers_public_ip[0],
+                args=[
+                    NOVA_MIN_MICROVERSION,
+                    NOVA_MAX_MICROVERSION,
+                    STORAGE_MIN_MICROVERSION,
+                    STORAGE_MAX_MICROVERSION,
+                    PLACEMENT_MIN_MICROVERSION,
+                    PLACEMENT_MAX_MICROVERSION
+                ],
+            )
         elif args.operation in [
             "pre_deploy_openstack",
             "deploy_openstack",
-            "test_setup",
             "test_stress",
         ]:
             utils.run_script_on_server(cmd, servers_public_ip[0])
