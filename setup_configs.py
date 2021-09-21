@@ -154,6 +154,8 @@ glance_enable_rolling_upgrade: "yes"
 #enable_ceilometer: "yes"
 #enable_panko: "yes"
 #enable_neutron_metering: "yes"
+enable_neutron_dvr: "yes"
+enable_neutron_qos: "yes"
 
 #enable_telegraf: "yes"
 #enable_watcher: "yes"
