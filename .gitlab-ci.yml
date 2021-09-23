@@ -57,8 +57,6 @@ python_black:
       entrypoint: ["/bin/ash", "-c"]
     tags:
     - docker-runner
-    #before_script:
-    #  - pip3 install black
     script:
         - python3 -m black --check --diff --color . 
 

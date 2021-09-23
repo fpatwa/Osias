@@ -223,10 +223,10 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
             CEPH_RELEASE = vm_profile["CEPH_RELEASE"]
         else:
             CEPH = "false"
-            CEPH_RELEASE = "false"
+            CEPH_RELEASE = None
     else:
         CEPH = "false"
-        CEPH_RELEASE = "false"
+        CEPH_RELEASE = None
     server_list = []
     servers_public_ip = []
     public_IP_pool = [str(ip) for ip in IPv4Network(vm_profile["vm_deployment_cidr"])]
@@ -251,7 +251,7 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     )
     temp_dict = utils.merge_nested_dictionaries(public_ips, internal_ips)
     final_dict = utils.merge_nested_dictionaries(temp_dict, data_ips)
-    VIP_IP = str(list(IPv4Network(vm_profile["vm_deployment_cidr"]))[-1])
+    VIP_ADDRESS = str(list(IPv4Network(vm_profile["vm_deployment_cidr"]))[-1])
     POOL_START_IP = str(
         list(IPv4Network(vm_profile["vm_deployment_cidr"]))[num_Servers]
     )
@@ -259,8 +259,7 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     optional_vars = f"""DOCKER_REGISTRY = "{vm_profile['DOCKER_REGISTRY_IP']}"
     DOCKER_REGISTRY_USERNAME = "{vm_profile['DOCKER_REGISTRY_USERNAME']}"
     VM_CIDR = "{vm_profile['vm_deployment_cidr']}"
-    VIP_IP = "{VIP_IP}"
-    VIP_ADDRESS = "{VIP_IP}"
+    VIP_ADDRESS = "{VIP_ADDRESS}"
     POOL_START_IP = "{POOL_START_IP}"
     POOL_END_IP = "{POOL_END_IP}"
     DNS_IP = "{vm_profile['DNS_IP']}"
@@ -333,16 +332,16 @@ def main():
         DNS_IP = config.get_variables(variable="DNS_IP")
 
         if args.operation != "create_virtual_servers":
-            print(f"VIP_ADDRESS -> {VIP_ADDRESS}")
-            print(f"POOL_START_IP -> {POOL_START_IP}")
-            print(f"POOL_END_IP -> {POOL_END_IP}")
-            print(f"DNS_IP -> {DNS_IP}")
-
             if not VIP_ADDRESS or not POOL_START_IP or not POOL_END_IP or not DNS_IP:
                 raise Exception(
                     "ERROR: Mandatory parms in the Multinode file are missing.\n"
                     + "Please ensure that the following parms are set to a valid value:\n"
-                    + "[VIP_ADDRESS] and [POOL_START_IP] and [POOL_END_IP] and [DNS_IP]."
+                    + "[VIP_ADDRESS]: {VIP_ADDRESS},\n"
+                    + "[POOL_START_IP]: {POOL_START_IP},\n"
+                    + "[POOL_END_IP]: {POOL_END_IP}, and\n"
+                    + "[DNS_IP]:{DNS_IP}."
+                    + "VIP address is the horizon website,\n"
+                    + "Pool start/end correlate to the floating IP's that VM's will use."
                 )
         OPENSTACK_RELEASE = config.get_variables(variable="OPENSTACK_RELEASE")
         CEPH_RELEASE = config.get_variables(variable="CEPH_RELEASE")
@@ -351,20 +350,6 @@ def main():
         REFSTACK_TEST_VERSION = config.get_variables(variable="REFSTACK_TEST_VERSION")
         MAAS_VM_DISTRO = config.get_variables(variable="MAAS_VM_DISTRO")
         ANSIBLE_MAX_VERSION = config.get_variables(variable="ANSIBLE_MAX_VERSION")
-        NOVA_MIN_MICROVERSION = osias_variables.NOVA_MIN_MICROVERSION[OPENSTACK_RELEASE]
-        NOVA_MAX_MICROVERSION = osias_variables.NOVA_MAX_MICROVERSION[OPENSTACK_RELEASE]
-        STORAGE_MIN_MICROVERSION = osias_variables.STORAGE_MIN_MICROVERSION[
-            OPENSTACK_RELEASE
-        ]
-        STORAGE_MAX_MICROVERSION = osias_variables.STORAGE_MAX_MICROVERSION[
-            OPENSTACK_RELEASE
-        ]
-        PLACEMENT_MIN_MICROVERSION = osias_variables.PLACEMENT_MIN_MICROVERSION[
-            OPENSTACK_RELEASE
-        ]
-        PLACEMENT_MAX_MICROVERSION = osias_variables.PLACEMENT_MAX_MICROVERSION[
-            OPENSTACK_RELEASE
-        ]
 
         cmd = "".join((args.operation, ".sh"))
 
@@ -443,17 +428,16 @@ def main():
                     ],
                 )
         elif args.operation == "test_setup":
-            print(f"NOVA_MIN_MICROVERSION -> {NOVA_MIN_MICROVERSION}")
             utils.run_script_on_server(
                 "test_setup.sh",
                 servers_public_ip[0],
                 args=[
-                    NOVA_MIN_MICROVERSION,
-                    NOVA_MAX_MICROVERSION,
-                    STORAGE_MIN_MICROVERSION,
-                    STORAGE_MAX_MICROVERSION,
-                    PLACEMENT_MIN_MICROVERSION,
-                    PLACEMENT_MAX_MICROVERSION,
+                    osias_variables.NOVA_MIN_MICROVERSION[OPENSTACK_RELEASE],
+                    osias_variables.NOVA_MAX_MICROVERSION[OPENSTACK_RELEASE],
+                    osias_variables.STORAGE_MIN_MICROVERSION[OPENSTACK_RELEASE],
+                    osias_variables.STORAGE_MAX_MICROVERSION[OPENSTACK_RELEASE],
+                    osias_variables.PLACEMENT_MIN_MICROVERSION[OPENSTACK_RELEASE],
+                    osias_variables.PLACEMENT_MAX_MICROVERSION[OPENSTACK_RELEASE],
                 ],
             )
         elif args.operation in [
