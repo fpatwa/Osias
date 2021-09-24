@@ -104,7 +104,7 @@ image_ref = $CIRROSID
 image_ref_alt = $CIRROSID2
 endpoint_type = publicURL
 fixed_network_name = mynet
-build_timeout = 60
+# build_timeout = 60
 
 [compute-feature-enabled]
 validation.run_validation = True
@@ -148,7 +148,7 @@ network_for_ssh = $PUBLICNETWORKNAME
 security_group = True
 security_group_rules = True
 image_ssh_password = gocubsgo
-ssh_timeout = 60
+# ssh_timeout = 60
 
 #[volume]
 #build_timeout = 60
