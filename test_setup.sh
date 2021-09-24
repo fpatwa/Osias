@@ -161,9 +161,9 @@ image_ssh_password = gocubsgo
 public_network_id = $PUBLICNETWORKID
 floating_network_name = $PUBLICNETWORKNAME
 
-[placement]
-min_microversion = $PLACEMENT_MIN_MICROVERSION
-max_microversion = $PLACEMENT_MAX_MICROVERSION
+#[placement]
+#min_microversion = $PLACEMENT_MIN_MICROVERSION
+#max_microversion = $PLACEMENT_MAX_MICROVERSION
 
 [heat_plugin]
 minimal_instance_type = 100
