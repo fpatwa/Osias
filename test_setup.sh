@@ -96,8 +96,8 @@ lock_path = /tmp
 
 [compute]
 min_compute_nodes = $MIN_COMPUTE_NODES
-min_microversion = $NOVA_MIN_MICROVERSION
-max_microversion = $NOVA_MAX_MICROVERSION
+#min_microversion = $NOVA_MIN_MICROVERSION
+#max_microversion = $NOVA_MAX_MICROVERSION
 flavor_ref = 100
 flavor_ref_alt = 101
 image_ref = $CIRROSID
@@ -150,11 +150,11 @@ security_group_rules = True
 image_ssh_password = gocubsgo
 # ssh_timeout = 60
 
-#[volume]
+[volume]
 #build_timeout = 60
 #backend_names = block
-#min_microversion = $STORAGE_MIN_MICROVERSION
-#max_microversion = $STORAGE_MAX_MICROVERSION
+min_microversion = $STORAGE_MIN_MICROVERSION
+max_microversion = $STORAGE_MAX_MICROVERSION
 #volume_size = 1
 
 [network]
