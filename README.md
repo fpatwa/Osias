@@ -204,11 +204,18 @@ Our multinode file is formatted very similar to that of Kolla, where all of thes
     - the 8th to 15th IP are floating IP's,
     - the 16th IP is used as your VIP address in the globals file and consequently, used for horizon, this network address is used for the keepalived_virtual_router_id.
 - `Data_CIDR = "{CIDR for high speed testing}"` a third nic will be created in the VM's which could be used for high speed cases.  Currently not used in CI/CD.
+#### Optional:
+- `CONTROL_NODES = <int>` specify number of controller/network nodes desired.  These will co-locate.
+- `COMPUTE_NODES = <int>` specify number of compute/storage nodes desired.  These will co-locate.
+  - Note:  If these items are not specified, there will be a maximum of 3 controller nodes created, and both controller and compute nodes will co-locate.  Only when selecting this option, will compute nodes live seperately from controller if there are a large enough number of VM's created. 
+  - Example: `Number_of_VM_Servers: 4, CONTROL_NODES: 1, COMPUTE_NODES: 3` - 4 VM's will be created, 1 will be only controller, 3 will be only compute.
+  - Example: `Number_of_VM_Servers: 4, CONTROL_NODES: 3, COMPUTE_NODES: 3` - 4 VM's will be created, 1 will be only controller, 2 will be controller/compute hyperconverged, 1 will be only compute.
+  - Example: `Number_of_VM_Servers: 4, CONTROL_NODES: 3, COMPUTE_NODES: 1` - 4 VM's will be created, 3 will be only controller, 1 will be only compute.
 
 We use a variable called VM_PROFILE which helps create the multinode file above but for testing.  Below is the format needed:
 
 ```
-{"Data_CIDR": "{DATA CIDR IF USED}", "DNS_IP": "{DNS IP}", "Number_of_VM_Servers": 3, "OPENSTACK_RELEASE": "{OPENSTACK_RELEASE}", "CEPH": "{True|False}", "CEPH_RELEASE": "{octopus|pacific|None}", "DOCKER_REGISTRY_IP": "<DOCKER IP>", "DOCKER_REGISTRY_USERNAME": "<DOCKER REGISTRY USERNAME>", "VM_CIDR" = "<POOL OF IP's served as the cidr >"}
+{"Data_CIDR": "{DATA CIDR IF USED}", "DNS_IP": "{DNS IP}", "Number_of_VM_Servers": <int>, "OPENSTACK_RELEASE": "{OPENSTACK_RELEASE}", "CEPH": "{True|False}", "CEPH_RELEASE": "{octopus|pacific|None}", "DOCKER_REGISTRY_IP": "<DOCKER IP>", "DOCKER_REGISTRY_USERNAME": "<DOCKER REGISTRY USERNAME>", "VM_CIDR": "<POOL OF IP's served as the cidr >,CONTROL_NODES: <int>, COMPUTE_NODES: <int>"}
 ```
 
 
