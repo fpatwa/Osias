@@ -54,7 +54,7 @@ MAAS_VM_DISTRO = {
 # https://docs.openstack.org/placement/latest/placement-api-microversion-history.html
 # https://docs.openstack.org/releasenotes/tempest/unreleased.html
 REFSTACK_TEST_VERSION = {
-    "ussuri": "2020.11",
+    "ussuri": "2020.06",
     "victoria": "2020.11",
     "wallaby": "2020.11",
 }
