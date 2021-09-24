@@ -267,6 +267,8 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     CEPH_RELEASE = "{CEPH_RELEASE}"
     OPENSTACK_RELEASE = "{vm_profile['OPENSTACK_RELEASE']}"
     """
+    print(f"\n\nfinal_dict: {final_dict}\n\n")
+    print(f"\n\optional_vars: {optional_vars}\n\n")
     multinode = utils.create_multinode(final_dict, optional_vars)
     print(f"Generated multinode is: {multinode}")
     f = open("MULTINODE.env", "w")
