@@ -267,9 +267,35 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     CEPH_RELEASE = "{CEPH_RELEASE}"
     OPENSTACK_RELEASE = "{vm_profile['OPENSTACK_RELEASE']}"
     """
-    print(f"\n\nfinal_dict: {final_dict}\n\n")
-    print(f"\n\optional_vars: {optional_vars}\n\n")
-    multinode = utils.create_multinode(final_dict, optional_vars)
+    if "CONTROL_NODES" in vm_profile:
+        if isinstance(vm_profile["CONTROL_NODES"], str):
+            NUM_CONTROL_NODES = int(vm_profile["CONTROL_NODES"])
+        elif isinstance(vm_profile["CONTROL_NODES"], int):
+            NUM_CONTROL_NODES = vm_profile["CONTROL_NODES"]
+        else:
+            raise Exception("Please enter an integer for CONTROL_NODES.")
+        if NUM_CONTROL_NODES > num_Servers:
+            raise Exception(
+                f"You have specified {NUM_CONTROL_NODES} control nodes, there is a maximum of {num_Servers} VM's created. Please select fewer controller nodes."
+            )
+    else:
+        NUM_CONTROL_NODES = 3
+    if "COMPUTE_NODES" in vm_profile:
+        if isinstance(vm_profile["COMPUTE_NODES"], str):
+            NUM_COMPUTE_NODES = int(vm_profile["COMPUTE_NODES"])
+        elif isinstance(vm_profile["COMPUTE_NODES"], int):
+            NUM_COMPUTE_NODES = vm_profile["COMPUTE_NODES"]
+        else:
+            raise Exception("Please enter an integer for COMPUTE_NODES.")
+        if NUM_COMPUTE_NODES > num_Servers:
+            raise Exception(
+                f"You have specified {NUM_COMPUTE_NODES} compute nodes, there is a maximum of {num_Servers} VM's created. Please select at most {num_Servers} compute nodes."
+            )
+    else:
+        NUM_COMPUTE_NODES = num_Servers
+    multinode = utils.create_multinode(
+        final_dict, optional_vars, NUM_CONTROL_NODES, NUM_COMPUTE_NODES
+    )
     print(f"Generated multinode is: {multinode}")
     f = open("MULTINODE.env", "w")
     f.write(f"{multinode}")

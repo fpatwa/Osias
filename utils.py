@@ -169,41 +169,11 @@ def run_cmd(command, test=True, output=True):
     return stdout
 
 
-def create_multinode(input_dictionary, optional_variables):
-    if "CONTROL_NODES" in optional_variables:
-        CONTROL_NODES = int(
-            [
-                item
-                for item in optional_variables.split("\n")
-                if "CONTROL_NODES" in item
-            ][0]
-            .split("=")[1]
-            .strip()
-        )
-        if CONTROL_NODES > len(input_dictionary):
-            raise Exception(
-                f"You have specified {CONTROL_NODES} control nodes, there is a maximum of {len(input_dictionary)} VM's created. Please select fewer controller nodes."
-            )
-    else:
-        CONTROL_NODES = 3
-    if "COMPUTE_NODES" in optional_variables:
-        COMPUTE_NODES = int(
-            [
-                item
-                for item in optional_variables.split("\n")
-                if "COMPUTE_NODES" in item
-            ][0]
-            .split("=")[1]
-            .strip()
-        )
-        if COMPUTE_NODES > len(input_dictionary):
-            raise Exception(
-                f"You have specified {COMPUTE_NODES} compute nodes, there is a maximum of {len(input_dictionary)} VM's created. Please select a fewer compute nodes."
-            )
-    else:
-        COMPUTE_NODES = len(input_dictionary)
-    control_items = list(islice(input_dictionary.items(), CONTROL_NODES))
-    compute_items = list(islice(input_dictionary.items(), COMPUTE_NODES))
+def create_multinode(
+    input_dictionary, optional_variables, NUM_CONTROL_NODES, NUM_COMPUTE_NODES
+):
+    control_items = list(islice(input_dictionary.items(), NUM_CONTROL_NODES))
+    compute_items = list(islice(reversed(input_dictionary.items()), NUM_COMPUTE_NODES))
     monitor_item = list(islice(input_dictionary.items(), 1))
     control_labels = ["control", "network"]
     secondary_labels = ["storage", "compute"]
@@ -222,7 +192,7 @@ def create_multinode(input_dictionary, optional_variables):
         data = \"{data}\""""
     for label in secondary_labels:
         multinode += f"\n[{label}]"
-        for i, value in reversed(list(enumerate(compute_items))):
+        for i, value in enumerate(compute_items):
             internal = value[1]["internal"]
             public = value[1]["public"]
             data = value[1]["data"]
