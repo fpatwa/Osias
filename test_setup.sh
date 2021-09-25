@@ -125,8 +125,8 @@ vnc_console = True
 #api_extensions = address-scope,router-admin-state-down-before-update,agent,agent-resources-synced,allowed-address-pairs,auto-allocated-topology,availability_zone,availability_zone_filter,default-subnetpools,dhcp_agent_scheduler,dvr,empty-string-filtering,external-net,extra_dhcp_opt,extraroute,extraroute-atomic,filter-validation,fip-port-details,flavors,floatingip-pools,ip-substring-filtering,router,ext-gw-mode,l3-ha,l3-flavors,l3-port-ip-change-not-allowed,l3_agent_scheduler,metering,multi-provider,net-mtu,net-mtu-writable,network_availability_zone,network-ip-availability,pagination,port-mac-address-regenerate,binding,binding-extended,port-security,project-id,provider,quotas,quota_details,rbac-policies,rbac-security-groups,revision-if-match,standard-attr-revisions,router_availability_zone,port-security-groups-filtering,security-group,service-type,sorting,standard-attr-description,subnet_onboard,subnet-service-types,subnet_allocation,subnetpool-prefix-ops,standard-attr-tag,standard-attr-timestamp
 
 [image]
-image_path = https://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img
-http_image = https://download.cirros-cloud.net/0.5.1/cirros-0.5.1-x86_64-disk.img
+image_path = https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+http_image = https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
 
 #[image-feature-enabled]
 #api_v1 = False
