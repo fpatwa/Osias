@@ -53,6 +53,7 @@ MAAS_VM_DISTRO = {
 # https://docs.openstack.org/cinder/latest/contributor/api_microversion_history.html
 # https://docs.openstack.org/placement/latest/placement-api-microversion-history.html
 # https://docs.openstack.org/releasenotes/tempest/unreleased.html
+REFSTACK_TEST_IMAGE="https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
 REFSTACK_TEST_VERSION = {
     "ussuri": "2020.06",
     "victoria": "2020.11",
@@ -61,7 +62,7 @@ REFSTACK_TEST_VERSION = {
 # Initial tempest version are: {"ussuri": "24.0.0", "victoria": "26.0.0", "wallaby": "27.0.0"}
 TEMPEST_VERSION = {"ussuri": "26.0.0", "victoria": "29.0.0", "wallaby": "29.0.0"}
 NOVA_MIN_MICROVERSION = {
-    "ussuri": "2.80",
+    "ussuri": "2.1",
     "victoria": "2.80",
     "wallaby": "2.80",
 }

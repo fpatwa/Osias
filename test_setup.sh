@@ -9,6 +9,7 @@ STORAGE_MIN_MICROVERSION=$3
 STORAGE_MAX_MICROVERSION=$4
 PLACEMENT_MIN_MICROVERSION=$5
 PLACEMENT_MAX_MICROVERSION=$6
+REFSTACK_TEST_IMAGE=$7
 
 # Copy files necessary for both:
 sudo cp /etc/kolla/certificates/ca/root.crt "$HOME"/root.crt
@@ -18,6 +19,10 @@ sudo chown "$USER":"$USER" "$HOME"/root.crt
 source /etc/kolla/admin-openrc.sh
 openstack flavor create --id 100 --vcpus 1 --ram 256 --disk 1 ref.nano
 openstack flavor create --id 101 --vcpus 2 --ram 512 --disk 2 ref.micro
+
+wget $REFSTACK_TEST_IMAGE -O /tmp/CirrOS.img
+openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/CirrOS.img "CirrOS"
+openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/CirrOS.img "CirrOS-2"
 
 ADMIN_PASS="$(grep 'OS_PASSWORD=' '/etc/kolla/admin-openrc.sh' | cut -d '=' -f2)"
 CIRROSID="$(openstack image list -f value -c ID --name CirrOS)"
@@ -95,9 +100,9 @@ discoverability = True
 lock_path = /tmp
 
 [compute]
-min_compute_nodes = $MIN_COMPUTE_NODES
-#min_microversion = $NOVA_MIN_MICROVERSION
-#max_microversion = $NOVA_MAX_MICROVERSION
+min_compute_nodes = 3
+min_microversion = 2.1
+max_microversion = 2.87
 flavor_ref = 100
 flavor_ref_alt = 101
 image_ref = $CIRROSID
@@ -125,8 +130,8 @@ vnc_console = True
 #api_extensions = address-scope,router-admin-state-down-before-update,agent,agent-resources-synced,allowed-address-pairs,auto-allocated-topology,availability_zone,availability_zone_filter,default-subnetpools,dhcp_agent_scheduler,dvr,empty-string-filtering,external-net,extra_dhcp_opt,extraroute,extraroute-atomic,filter-validation,fip-port-details,flavors,floatingip-pools,ip-substring-filtering,router,ext-gw-mode,l3-ha,l3-flavors,l3-port-ip-change-not-allowed,l3_agent_scheduler,metering,multi-provider,net-mtu,net-mtu-writable,network_availability_zone,network-ip-availability,pagination,port-mac-address-regenerate,binding,binding-extended,port-security,project-id,provider,quotas,quota_details,rbac-policies,rbac-security-groups,revision-if-match,standard-attr-revisions,router_availability_zone,port-security-groups-filtering,security-group,service-type,sorting,standard-attr-description,subnet_onboard,subnet-service-types,subnet_allocation,subnetpool-prefix-ops,standard-attr-tag,standard-attr-timestamp
 
 [image]
-image_path = https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
-http_image = https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img
+image_path = $REFSTACK_TEST_IMAGE
+http_image = $REFSTACK_TEST_IMAGE
 
 #[image-feature-enabled]
 #api_v1 = False
@@ -148,6 +153,7 @@ network_for_ssh = $PUBLICNETWORKNAME
 security_group = True
 security_group_rules = True
 image_ssh_password = gocubsgo
+image_alt_ssh_password = rebuildPassw0rd
 # ssh_timeout = 60
 
 #[volume]

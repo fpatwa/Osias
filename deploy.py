@@ -438,6 +438,7 @@ def main():
                     osias_variables.STORAGE_MAX_MICROVERSION[OPENSTACK_RELEASE],
                     osias_variables.PLACEMENT_MIN_MICROVERSION[OPENSTACK_RELEASE],
                     osias_variables.PLACEMENT_MAX_MICROVERSION[OPENSTACK_RELEASE],
+                    osias_variables.REFSTACK_TEST_IMAGE,
                 ],
             )
         elif args.operation in [
