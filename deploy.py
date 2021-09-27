@@ -256,9 +256,13 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
         list(IPv4Network(vm_profile["vm_deployment_cidr"]))[num_Servers]
     )
     POOL_END_IP = list(IPv4Network(vm_profile["vm_deployment_cidr"]))[-2]
-    optional_vars = f"""DOCKER_REGISTRY = "{vm_profile['DOCKER_REGISTRY_IP']}"
-    DOCKER_REGISTRY_USERNAME = "{vm_profile['DOCKER_REGISTRY_USERNAME']}"
-    VM_CIDR = "{vm_profile['vm_deployment_cidr']}"
+    if vm_profile.get("DOCKER_REGISTRY_IP"):
+        DOCKER = f"    DOCKER_REGISTRY = \"{vm_profile['DOCKER_REGISTRY_IP']}\""
+        if vm_profile.get("DOCKER_REGISTRY_USERNAME"):
+            DOCKER += "\n    DOCKER_REGISTRY_USERNAME = \"{vm_profile['DOCKER_REGISTRY_USERNAME']}\""
+    else:
+        DOCKER = ""
+    optional_vars = f"""VM_CIDR = "{vm_profile['vm_deployment_cidr']}"
     VIP_ADDRESS = "{VIP_ADDRESS}"
     POOL_START_IP = "{POOL_START_IP}"
     POOL_END_IP = "{POOL_END_IP}"
@@ -266,6 +270,7 @@ def create_virtual_servers(maas_url, maas_api_key, vm_profile, ceph_enabled=Fals
     CEPH = {CEPH}
     CEPH_RELEASE = "{CEPH_RELEASE}"
     OPENSTACK_RELEASE = "{vm_profile['OPENSTACK_RELEASE']}"
+    {DOCKER}
     """
     multinode = utils.create_multinode(final_dict, optional_vars)
     print(f"Generated multinode is: {multinode}")
