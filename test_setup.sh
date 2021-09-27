@@ -20,7 +20,7 @@ source /etc/kolla/admin-openrc.sh
 openstack flavor create --id 100 --vcpus 1 --ram 256 --disk 1 ref.nano
 openstack flavor create --id 101 --vcpus 2 --ram 512 --disk 2 ref.micro
 
-wget $REFSTACK_TEST_IMAGE -O /tmp/CirrOS.img
+wget "$REFSTACK_TEST_IMAGE" -O /tmp/CirrOS.img
 openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/CirrOS.img "CirrOS"
 openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/CirrOS.img "CirrOS-2"
 
@@ -100,9 +100,9 @@ discoverability = True
 lock_path = /tmp
 
 [compute]
-min_compute_nodes = 3
-min_microversion = 2.1
-max_microversion = 2.87
+min_compute_nodes = $MIN_COMPUTE_NODES
+min_microversion = $NOVA_MIN_MICROVERSION
+max_microversion = $NOVA_MAX_MICROVERSION
 flavor_ref = 100
 flavor_ref_alt = 101
 image_ref = $CIRROSID
