@@ -249,7 +249,7 @@ delete_virtual_machines:
     - python3 -u deploy.py delete_virtual_machines --config "$MULTINODE" --MAAS_URL "$MAAS_URL" --MAAS_API_KEY "$MAAS_API_KEY"
   rules:
    - if: '($MULTINODE == "" || $MULTINODE == null) && $VM_PROFILE != null'
-     when: always
+     when: manual
 
 release_cidr_for_virtual_machines:
   stage: release_cidr
@@ -264,4 +264,4 @@ release_cidr_for_virtual_machines:
     - echo "RELEASED $VM_DEPLOYMENT_CIDR"
   rules:
    - if: '($MULTINODE == "" || $MULTINODE == null)  && $VM_PROFILE != null'
-     when: always
+     when: manual
