@@ -5,6 +5,8 @@ set -euxo pipefail
 cd /opt/kolla
 source venv/bin/activate
 
+sudo rm -f /etc/apt/sources.list.d/docker-ce.list
+sudo rm -f /etc/apt/sources.list.d/docker.list
 kolla-ansible -i multinode bootstrap-servers
 kolla-ansible -i multinode deploy
 kolla-ansible -i multinode post-deploy
