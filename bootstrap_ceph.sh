@@ -20,7 +20,7 @@ chmod +x cephadm
 sudo ./cephadm add-repo --release "$CEPH_RELEASE"
 
 # Manually download and install the ceph trusted key
-wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
+####wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
 # Now move this new trusted key file to overwrite the file written by cephadm
 # Incorrect format:
 #   file /etc/apt/trusted.gpg.d/ceph.release.gpg
@@ -28,7 +28,7 @@ wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
 # Correct Format:
 #   file /etc/apt/trusted.gpg
 #   /etc/apt/trusted.gpg: GPG key public ring, created Tue Sep 15 20:56:41 2015
-sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/ceph.release.gpg
+####sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/ceph.release.gpg
 
 # Update to fetch the package index for ceph added above
 sudo apt-get update
