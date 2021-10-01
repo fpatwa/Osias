@@ -4,7 +4,8 @@ set -euxo pipefail
 
 cd /opt/kolla
 source venv/bin/activate
-#kolla-ansible -i multinode bootstrap-servers
+# Bootstrap server is necessary to fix some docker links, otherwise certain refstack tests will fail.
+kolla-ansible -i multinode bootstrap-servers || true
 kolla-ansible -i multinode deploy
 kolla-ansible -i multinode post-deploy
 deactivate nondestructive
