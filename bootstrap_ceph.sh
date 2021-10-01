@@ -12,23 +12,13 @@ sudo apt-get update
 curl --silent --remote-name --location https://github.com/ceph/ceph/raw/"$CEPH_RELEASE"/src/cephadm/cephadm
 chmod +x cephadm
 
-# Add ceph package repository
-# This will also download the GPG keys which currently is broken
-# and the /etc/apt/trusted.gpg.d/ceph.release.gpg file written
-# by the cephadm script does not have the correct format
-# This key file will be overwritten by the commands below
 sudo ./cephadm add-repo --release "$CEPH_RELEASE"
 
-# Manually download and install the ceph trusted key
-####wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
-# Now move this new trusted key file to overwrite the file written by cephadm
-# Incorrect format:
-#   file /etc/apt/trusted.gpg.d/ceph.release.gpg
-#   /etc/apt/trusted.gpg.d/ceph.release.gpg: PGP public key block Public-Key (old)
-# Correct Format:
-#   file /etc/apt/trusted.gpg
-#   /etc/apt/trusted.gpg: GPG key public ring, created Tue Sep 15 20:56:41 2015
-####sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/ceph.release.gpg
+if [[ "$CEPH_RELEASE" == "octopus" ]]; then
+   # Update broken ceph trusted key in octopus
+   wget -q -O- 'https://download.ceph.com/keys/release.asc' | sudo apt-key add -
+   sudo mv /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/ceph.release.gpg
+fi
 
 # Update to fetch the package index for ceph added above
 sudo apt-get update

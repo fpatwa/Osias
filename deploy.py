@@ -446,12 +446,6 @@ def main():
                     osias_variables.REFSTACK_TEST_IMAGE,
                 ],
             )
-        elif args.operation == "deploy_openstack":
-            utils.run_script_on_server(
-                "deploy_openstack.sh",
-                servers_public_ip[0],
-                args=[CEPH_RELEASE],
-            )
         elif args.operation in [
             "pre_deploy_openstack",
             "deploy_openstack",
