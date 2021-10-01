@@ -241,10 +241,7 @@ def check_required_keys_not_null(required_keys, input_dictionary):
     for key in required_keys:
         if (key in input_dictionary) and (input_dictionary[key] != ""):
             return True
-        elif (key in input_dictionary) and (input_dictionary[key] == ""):
-            raise Value_Required_to_Proceed(key)
-        elif key not in input_dictionary:
-            raise Value_Required_to_Proceed(key)
+        raise Value_Required_to_Proceed(key)
 
 
 def is_vm_pool_enabled(pool_start, pool_end):
