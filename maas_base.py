@@ -7,9 +7,9 @@ import utils
 
 
 class maas_base:
-    # machine_list is json blob from `maas machines read`
-    def __init__(self):
+    def __init__(self, distro):
         self.fs_type = "ext4"
+        self.distro = distro
 
     def _run_maas_command(self, command):
         return json.loads(utils.run_cmd(f"maas admin {command}", output=False))
@@ -231,7 +231,9 @@ class maas_base:
         print("Info: Removing RAIDs and creating OSD's")
         self._wipe_drives_create_osds(server_list)
         for machine in server_list[:]:
-            self._run_maas_command(f"machine deploy {machine}")
+            self._run_maas_command(
+                f"machine deploy {machine} distro_series={self.distro}"
+            )
         self._waiting(server_list[:], "Deployed")
 
     def get_machines_info(self):

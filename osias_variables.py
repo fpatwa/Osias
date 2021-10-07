@@ -25,11 +25,6 @@ example input:
 'Number_of_VM_Servers': 3, 'Public_CIDR': '10.245.121.0/24', 'Data_CIDR': '10.100.0.0/16', 'DNS_IP': '10.250.53.202'}
 """
 
-VIP_ADDRESS_SUFFIX = "250"
-DOCKER_REGISTRY_IP = "10.245.0.14"
-DOCKER_REGISTRY_USERNAME = "kolla"
-CEPH = False
-
 VM_Profile = {
     "Number_of_VM_Servers": 3,
     "vCPU": 8,
@@ -42,4 +37,60 @@ VM_Profile = {
     "Data_CIDR": "",
     "DNS_IP": "",
     "vm_deployment_cidr": "",
+}
+
+SUPPORTED_OPENSTACK_RELEASE = ["ussuri", "victoria", "wallaby"]
+PYTHON_VERSION = {"ussuri": "3.6", "victoria": "3.8", "wallaby": "3.8"}
+ANSIBLE_MAX_VERSION = {"ussuri": "2.10", "victoria": "2.10", "wallaby": "3.0"}
+CEPH_VERSION = {"ussuri": "pacific", "victoria": "pacific", "wallaby": "pacific"}
+MAAS_VM_DISTRO = {
+    "ussuri": "bionic hwe_kernel=hwe-18.04",
+    "victoria": "focal hwe_kernel=hwe-20.04",
+    "wallaby": "focal hwe_kernel=hwe-20.04",
+}
+
+# REFSTACK VARIABLES
+# https://docs.openstack.org/nova/latest/reference/api-microversion-history.html
+# https://docs.openstack.org/cinder/latest/contributor/api_microversion_history.html
+# https://docs.openstack.org/placement/latest/placement-api-microversion-history.html
+# https://docs.openstack.org/releasenotes/tempest/unreleased.html
+REFSTACK_TEST_IMAGE = (
+    "https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+)
+REFSTACK_TEST_VERSION = {
+    "ussuri": "2020.06",
+    "victoria": "2020.11",
+    "wallaby": "2020.11",
+}
+# Initial tempest version are: {"ussuri": "24.0.0", "victoria": "26.0.0", "wallaby": "27.0.0"}
+TEMPEST_VERSION = {"ussuri": "26.0.0", "victoria": "29.0.0", "wallaby": "29.0.0"}
+NOVA_MIN_MICROVERSION = {
+    "ussuri": "2.1",
+    "victoria": "2.80",
+    "wallaby": "2.80",
+}
+NOVA_MAX_MICROVERSION = {
+    "ussuri": "2.87",
+    "victoria": "2.87",
+    "wallaby": "2.88",
+}
+STORAGE_MIN_MICROVERSION = {
+    "ussuri": "3.59",
+    "victoria": "3.60",
+    "wallaby": "3.62",
+}
+STORAGE_MAX_MICROVERSION = {
+    "ussuri": "3.60",
+    "victoria": "3.62",
+    "wallaby": "3.64",
+}
+PLACEMENT_MIN_MICROVERSION = {
+    "ussuri": "1.32",
+    "victoria": "1.32",
+    "wallaby": "1.32",
+}
+PLACEMENT_MAX_MICROVERSION = {
+    "ussuri": "1.36",
+    "victoria": "1.36",
+    "wallaby": "1.36",
 }

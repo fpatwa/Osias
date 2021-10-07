@@ -3,8 +3,7 @@
 # shellcheck source=/dev/null
 source "$HOME"/base_config.sh
 
-CIRROS_URL="http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
-PUBLICIP=$(/sbin/ifconfig br0 | grep 'inet ' | awk '{print $2}')
+PUBLICIP=$(/sbin/ip addr show br0 | grep 'inet ' | grep brd | awk '{print $2}')
 PUBLIC_NETWORK="${PUBLICIP%.*}.0/24"
 
 if [ $# -ge 1 ] && [ -n "$1" ]; then
@@ -44,9 +43,6 @@ openstack flavor create --id 17 --vcpus 1 --ram 3072 --disk 40 mb2.small
 openstack flavor create --id 18 --vcpus 2 --ram 6144 --disk 40 mb2.medium
 openstack flavor create --id 19 --vcpus 4 --ram 12288 --disk 40 mb2.large
 
-wget $CIRROS_URL -O /tmp/CirrOS.img
-openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/CirrOS.img "CirrOS"
-openstack image create --disk-format qcow2 --container-format bare --public --file /tmp/CirrOS.img "CirrOS-2"
 TENANT=$(openstack project list -f value -c ID --user admin)
 openstack network create --share --project "${TENANT}" --external --provider-network-type flat --provider-physical-network physnet1 public
 if [ $# == 3 ]; then

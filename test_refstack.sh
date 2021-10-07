@@ -7,6 +7,9 @@ source /etc/kolla/admin-openrc.sh
 
 DNS_IP=$1
 VM_POOL=$2
+TEMPEST_VERSION=$3
+REFSTACK_TEST_VERSION=$4
+PYTHON_VERSION=$5
 
 openstack role create ResellerAdmin
 
@@ -23,7 +26,7 @@ openstack router add subnet myrouter mysubnet
 
 git clone https://opendev.org/osf/refstack-client.git
 cd refstack-client || exit
-./setup_env -t 26.0.0
+./setup_env -t "${TEMPEST_VERSION}" -p "${PYTHON_VERSION}"
 
 cp "$HOME"/accounts.yaml "$HOME"/refstack-client/etc/accounts.yaml
 cp "$HOME"/tempest.conf "$HOME"/refstack-client/etc/tempest.conf
@@ -32,7 +35,7 @@ source .venv/bin/activate
 #refstack-client test -c etc/tempest.conf -v -- --regex tempest.api.identity.v3.test_tokens.TokensV3Test.test_create_token
 
 if [[ "$VM_POOL" == "VM_POOL_DISABLED" ]]; then
-    wget "https://refstack.openstack.org/v1/guidelines/2020.11.json/tests?target=platform&type=required&alias=true&flag=false" -O /tmp/platform.2020.11-test-list.txt
+    wget "https://refstack.openstack.org/v1/guidelines/${REFSTACK_TEST_VERSION}.json/tests?target=platform&type=required&alias=true&flag=false" -O /tmp/platform."${REFSTACK_TEST_VERSION}"-test-list.txt
     
     tests=(
     tempest.api.compute.images.test_images_oneserver.ImagesOneServerTestJSON
@@ -51,10 +54,10 @@ if [[ "$VM_POOL" == "VM_POOL_DISABLED" ]]; then
     tempest.api.compute.servers.test_servers_negative.ServersNegativeTestJSON    
     )
     for test in "${tests[@]}"; do
-        sed -i "/$test/d" /tmp/platform.2020.11-test-list.txt
+        sed -i "/$test/d" /tmp/platform."${REFSTACK_TEST_VERSION}"-test-list.txt
     done
 
-    refstack-client test -c etc/tempest.conf -v --test-list "/tmp/platform.2020.11-test-list.txt"
+    refstack-client test -c etc/tempest.conf -v --test-list "/tmp/platform.${REFSTACK_TEST_VERSION}-test-list.txt"
 else
-    refstack-client test -c etc/tempest.conf -v --test-list "https://refstack.openstack.org/api/v1/guidelines/2020.06/tests?target=platform&type=required&alias=true&flag=false"
+    refstack-client test -c etc/tempest.conf -v --test-list "https://refstack.openstack.org/api/v1/guidelines/${REFSTACK_TEST_VERSION}/tests?target=platform&type=required&alias=true&flag=false"
 fi

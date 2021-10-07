@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
 from ipaddress import IPv4Network
-from osias_variables import *
+import osias_variables
+import ast
 
 
 def setup_kolla_configs(
@@ -14,15 +15,24 @@ def setup_kolla_configs(
     docker_registry,
     docker_registry_username,
     vm_cidr,
+    ceph,
+    vip_address,
 ):
     internal_subnet = ".".join((controller_nodes[0].split(".")[:3]))
     if vm_cidr:
         kolla_external_vip_address = str(list(IPv4Network(vm_cidr))[-1])
         VIP_SUFFIX = kolla_external_vip_address.split(".")[-1]
+        if VIP_SUFFIX == "255":
+            print(
+                "\n\nWARNING: You are setting the VIP address to the network address, VIP is being reassigned to 254\n\n"
+            )
+            VIP_SUFFIX = "254"
+            kolla_external_vip_address = str(list(IPv4Network(vm_cidr))[-2])
         kolla_internal_vip_address = ".".join((internal_subnet, VIP_SUFFIX))
         SUFFIX = VIP_SUFFIX
     else:
         external_subnet = ".".join((servers_public_ip[0].split(".")[:3]))
+        VIP_ADDRESS_SUFFIX = vip_address.split(".")[-1]
         kolla_external_vip_address = ".".join((external_subnet, VIP_ADDRESS_SUFFIX))
         kolla_internal_vip_address = ".".join((internal_subnet, VIP_ADDRESS_SUFFIX))
         SUFFIX = VIP_ADDRESS_SUFFIX
@@ -45,7 +55,13 @@ docker_registry_username: "{docker_registry_username}"
 """
     else:
         docker = "# Docker Set To Docker Hub"
-    if CEPH:
+    if isinstance(ceph, str):
+        if ast.literal_eval(ceph):
+            ceph = True
+        else:
+            ceph = False
+    if ceph:
+        print("Implementing STORAGE with CEPH")
         storage = """
 glance_backend_ceph: "yes"
 glance_backend_file: "no"
@@ -110,7 +126,6 @@ cat >>/etc/kolla/globals.yml <<__EOF__
 # Basic Options
 kolla_base_distro: "centos"
 kolla_install_type: "source"
-openstack_release: "ussuri"
 kolla_internal_vip_address: "{kolla_internal_vip_address}"
 kolla_external_vip_address: "{kolla_external_vip_address}"
 network_interface: "{network_interface}"
@@ -139,6 +154,8 @@ glance_enable_rolling_upgrade: "yes"
 #enable_ceilometer: "yes"
 #enable_panko: "yes"
 #enable_neutron_metering: "yes"
+#enable_neutron_dvr: "yes"
+#enable_neutron_qos: "yes"
 
 #enable_telegraf: "yes"
 #enable_watcher: "yes"

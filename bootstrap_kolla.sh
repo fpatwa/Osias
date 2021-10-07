@@ -2,17 +2,24 @@
 
 set -euxo pipefail
 
+PYTHON_VERSION=$1
+OPENSTACK_RELEASE=$2
+ANSIBLE_MAX_VERSION=$3
+
 # Dependencies
 sudo apt-get update
-sudo apt-get -y install python3-dev libffi-dev gcc libssl-dev python3-pip python3-venv
+sudo apt-get -qqy install python3-dev libffi-dev gcc libssl-dev python3-pip python3-venv
 
 # basedir and venv
-sudo mkdir /opt/kolla
+sudo mkdir -p /opt/kolla
 sudo chown "$USER":"$USER" /opt/kolla
 cd /opt/kolla
 python3 -m venv venv
 source venv/bin/activate
 python3 -m pip install -U pip wheel
+# Update requirements file
+sed -i s/OPENSTACK_RELEASE/"${OPENSTACK_RELEASE}"/ "$HOME"/requirements.txt
+sed -i s/ANSIBLE_MAX_VERSION/"${ANSIBLE_MAX_VERSION}"/ "$HOME"/requirements.txt
 python3 -m pip install -r "$HOME"/requirements.txt
 
 # General Ansible config
@@ -29,7 +36,7 @@ __EOF__
 # Kolla specific Ansible configs
 cat > /opt/kolla/ansible.cfg <<__EOF__
 [defaults]
-strategy_plugins = /opt/kolla/venv/lib/python3.6/site-packages/ansible_mitogen/plugins/strategy
+strategy_plugins = /opt/kolla/venv/lib/python${PYTHON_VERSION}/site-packages/ansible_mitogen/plugins/strategy
 strategy = mitogen_linear
 host_key_checking=False
 pipelining=True

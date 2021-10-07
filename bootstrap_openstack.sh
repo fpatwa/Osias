@@ -19,5 +19,5 @@ fi
 
 kolla-ansible -i multinode certificates
 
-# This bootstrap is necessary to prep for ceph and openstack deployment.
+# This bootstrap is necessary to prep for openstack deployment.
 kolla-ansible -i multinode bootstrap-servers
