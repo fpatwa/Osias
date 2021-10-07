@@ -1,5 +1,3 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Osias
 
 # Controls when the workflow will run
@@ -7,24 +5,44 @@ on: [push, pull_request, workflow_dispatch]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a job called "deploy-openstack"
-  deploy-openstack:
-    # The type of runner that the job will run on
+  Ubuntu-18-Deploy-OpenStack:
     runs-on: ubuntu-18.04
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    strategy:
+      matrix:
+        OPENSTACK_RELEASE: ["ussuri"]
+    env:
+      OPENSTACK_RELEASE: ${{ matrix.OPENSTACK_RELEASE }}
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-
-      - name: Set up Python 3.6
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.6
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-
-      - name: Deploy OpenStack
+      - name: Deploy OpenStack Release [${{ env.OPENSTACK_RELEASE }}]
         run: |
-          source all_in_one_openstack_deployment.sh
+          public_interface=$(route -n | awk '$1 == "0.0.0.0" {print $8}')
+          MY_IP=$(ip -o -4 addr list "${public_interface}" | awk '{print $4}' | cut -d/ -f1)
+          source all_in_one_openstack_deployment.sh ${{ env.OPENSTACK_RELEASE }} "$MY_IP"
+
+  Ubuntu-20-Deploy-OpenStack:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        OPENSTACK_RELEASE: ["victoria", "wallaby"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+      - name: Deploy OpenStack Release [${{ matrix.OPENSTACK_RELEASE }}]
+        run: |
+          public_interface=$(route -n | awk '$1 == "0.0.0.0" {print $8}')
+          MY_IP=$(ip -o -4 addr list "${public_interface}" | awk '{print $4}' | cut -d/ -f1)
+          source all_in_one_openstack_deployment.sh ${{ matrix.OPENSTACK_RELEASE }} "$MY_IP"

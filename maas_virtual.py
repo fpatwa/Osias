@@ -6,6 +6,9 @@ from ipaddress import ip_network, ip_address
 
 
 class maas_virtual(maas_base):
+    def __init__(self, distro):
+        maas_base.__init__(self, distro)
+
     def _get_public_cidr(self, vm_ip_address):
         subnets = self._run_maas_command("subnets read")
         for subnet in subnets:

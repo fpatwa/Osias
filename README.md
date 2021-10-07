@@ -15,11 +15,14 @@ Osias offers a from scratch deployment mechanism utilizing [MAAS](https://maas.i
 
 ## Versions
 * MAAS version: 2.8.2 - 2.9.0
-* Kolla-Ansible: < 11 (Usurri)
-* Ansible: < 2.10
 * Mitogen: 0.2.10
-* CephADM: octopus
-* Python 3.7
+
+
+|          |  Kolla | Python |       OS       |  Ansible  |  Ceph  |
+|----------|--------|--------|----------------|-----------|--------|
+| ussuri   |  11.x  |  3.6   |  Ubuntu 18.04  |   <2.10   | Pacific|
+| victoria |  12.x  |  3.8   |  Ubuntu 20.04  |   <2.10   | Pacific|
+| wallaby  |  13.x  |  3.8   |  Ubuntu 20.04  |   <3.0    | Pacific|
 
 ## MaaS
 
@@ -40,8 +43,8 @@ Each server in MaaS needs the following configuration:
 To bypass the use of MaaS, make sure you have
 * Ubuntu installed,
 * Passwordless sudo,
-* your br0 configured on your public nic with an IP, and
-* your gitlab SSH public key installed.
+* `br0` configured on your public nic with an IP, and
+* Your gitlab SSH public key installed.
 * Also, set `REPROVISION_SERVERS=false` variable in GitLab, so it doesn't try to access the MaaS server.
 * To deploy this code, we conduct our testing using python3.7. You can also use a python:3.7-buster docker image and manually issue the codes from the .gitlab-ci.yml, please see the `Dev Work` section below.
 
@@ -50,26 +53,27 @@ To bypass the use of MaaS, make sure you have
 This step will only occur if you have `REPROVISION_SERVERS=true` set in gitlab variables. This step will release, wait for a ready state, then begin provisioning the servers from your multinode file.  It does this by querying maas for all of the machines, and captures the machine ID based off of the IP's specified in your multinode file.
 
 ### Bootstrap Networking
-This will take your br0 and create 2 virtual interfaces (veno0 & veno1) used in kolla ansible's globals file.  neutron_external_interface will be use veno1 and kolla_external_vip_interface=br0.
+This will take br0 and create 2 virtual interfaces (veno0 & veno1) used in kolla ansible's globals file.  neutron_external_interface will be use veno1 and kolla_external_vip_interface=br0.
 
 ### (OPTIONAL) Reboot
 This stage will only happen if you are not using MaaS.
 
 ### Bootstrap OpenStack
-* Your kolla password and certificates will be generated here.  
+* Kolla password and certificates will be generated here.  
 * SSH access will be granted for the ubuntu and root user.  SSH access is necessary for the root due to cephadm.
 * Globals file will be generated
-* Your nova.conf config file will be generated here.
+* The nova.conf config file will be generated here.
 
 ### Deploy Ceph and OpenStack Pull
-* Cephadm will be configured to use your control[0] node and will be deployed.
+* Podman will be installed for cephadm
+* Cephadm will be configured to use control[0] node as the head node and will be deployed.
     * All of your ceph volumes and keyrings will be generated in this stage.
 * Kolla pre-checks and kolla pull will both run.
 
 ### Deploy OpenStack
-* Kolla runs bootstrap one more time to fix issues caused by ceph,
 * Kolla deploy, and
 * Kolla post-deploy to generate the admin-openrc.sh file
+* Openstack client will be installed
 
 ### Post deploy OpenStack
 * CirrOS will be downloaded and uploaded to OpenStack.
@@ -77,7 +81,7 @@ This stage will only happen if you are not using MaaS.
 
 ### Test Setup
 * Refstack will be configured and run in the following stages.
-    * `refstack-client test -c etc/tempest.conf -v --test-list "https://refstack.openstack.org/api/v1/guidelines/2020.06/tests?target=platform&type=required&alias=true&flag=false"`
+    * `refstack-client test -c etc/tempest.conf -v --test-list "https://refstack.openstack.org/api/v1/guidelines/2020.11/tests?target=platform&type=required&alias=true&flag=false"`
 
 ## Physical Architecture
 
@@ -127,25 +131,22 @@ Tree structure of our config files:
 ```
 
 ## Variables
-The multinode file is configured similarly to kolla's multinode file, however, it's implementation is different.  The main sections: control, network, storage, compute and monitor, all translate to kolla's multinode file where the private IP will be used.
+OSIAS' multinode file is configured similarly to kolla's multinode file, however, it's implementation is different.  The main sections: control, network, storage, compute and monitor, all translate to kolla's multinode file where the private IP will be used.
 
 In addition, the variables section in our multinode file can enable features:
-- `RAID-10 = true` (default is false) will enable RAID-10 across all of the hard drives in each of the nodes, 
 - `DOCKER_REGISTRY = "<IP ADDRESS OR FQDN>"` will enable a local docker registry in the kolla globals section
 - `DOCKER_REGISTRY_USERNAME = "kolla"` will allow you to change the docker registry username in the kolla globals section
 
-### Variables Used In Dev Work:
-- `VM_CIDR = "{VM_CIDR_VARIABLE}"` is primarily for development use. In dev, a `/28` is used where:
-    - the first 1 to, at most 7, IP's are for the dev hosts, any unused IP's are assigned to floating IP's as well,
-    - the 8th to 15th IP are floating IP's,
-    - the 16th IP is used as your VIP address in the globals file and consequently, used for horizon, this network address is used for the keepalived_virtual_router_id.
-- `VIP_IP = "{VIP_IP}"` is the 16th IP address from the CIDR used above, default value is public IP subnet with IP of 250, i.e. 172.16.123.250.
-- `POOL_START = "{FLOATING_IP_POOL_START}"` floating pool start IP used in the post_deploy_openstack, the starting IP is dynamic based on how many VM's are deployed, when a VM_CIDR is provided, this value is automatically determined, the otherwise the default value is public IP subnet with IP of 49, i.e. 172.16.123.49.
-- `POOL_END = "{FLOATING_IP_POOL_END}"` floating pool end IP used in the post_deploy_openstack, the ending IP is fixed for dev work to the 15th IP in the pool, when a VM_CIDR is provided, this value is automatically determined, otherwise, the default value is public IP subnet with IP of 249, i.e. 172.16.123.249.
-- `DNS_IP = "{DNS_IP}"` a single DNS entry can be entered, default value is `8.8.8.8`.
 
 ### Multinode File
+
 Our multinode file is formatted very similar to that of Kolla, where all of these sections will be copied over to kolla's multinode file.  However, `storage` will ALSO be used for our ceph deployment and `variables` is our own.
+
+- `POOL_START_IP = "{FLOATING_IP_POOL_START}"` floating pool start IP used in the post_deploy_openstack, the starting IP is dynamic based on how many VM's are deployed, when a VM_CIDR is provided, this value is automatically determined, the otherwise the default value is public IP subnet with IP of 49, i.e. 172.16.123.49.
+- `POOL_END_IP = "{FLOATING_IP_POOL_END}"` floating pool end IP used in the post_deploy_openstack, the ending IP is fixed for dev work to the 15th IP in the pool, when a VM_CIDR is provided, this value is automatically determined, otherwise, the default value is public IP subnet with IP of 249, i.e. 172.16.123.249.
+- `DNS_IP = "{DNS_IP}"` a single DNS entry can be entered, default value is `8.8.8.8`.
+- `VIP_ADDRESS = "{VIP_ADDRESS}"` is the 16th IP address from the CIDR used above, default value is public IP subnet with IP of 250, i.e. 172.16.123.250.  This will also the be used as horizon website.
+
 
 ```
 #public = "Internet facing IP's"
@@ -182,15 +183,32 @@ Our multinode file is formatted very similar to that of Kolla, where all of thes
     data = ""
 [variables]
     [variables.0]
-    RAID = true
-    DOCKER_REGISTRY = "172.16.0.14"
-    DOCKER_REGISTRY_USERNAME = "kolla"
-    VM_CIDR = "{VM_CIDR_VARIABLE}"
-    VIP_IP = "{VIP_IP}"
-    POOL_START = "{FLOATING_IP_POOL_START}"
-    POOL_END = "{FLOATING_IP_POOL_END}"
+    OPENSTACK_RELEASE = "{OPENSTACK_RELEASE}"
     DNS_IP = "{DNS_IP}"
+    VIP_ADDRESS = "{VIP_ADDRESS}"
+    POOL_START_IP = "{FLOATING_IP_POOL_START}"
+    POOL_END_IP = "{FLOATING_IP_POOL_END}"
+    # Optional variables
+    DOCKER_REGISTRY = "<DOCKER IP>"
+    DOCKER_REGISTRY_USERNAME = "<DOCKER REGISTRY USERNAME>"
+    CEPH = "{True|False}"
 ```
+
+
+
+### For development & MAAS created VM's
+- `VM_CIDR = "{VM_CIDR_VARIABLE}"` is primarily for development use. In dev, a `/28` is used where:
+    - the first 1 to, at most 7, IP's are for the dev hosts, any unused IP's are assigned to floating IP's as well,
+    - the 8th to 15th IP are floating IP's,
+    - the 16th IP is used as your VIP address in the globals file and consequently, used for horizon, this network address is used for the keepalived_virtual_router_id.
+- `Data_CIDR = "{CIDR for high speed testing}"` a third nic will be created in the VM's which could be used for high speed cases.  Currently not used in CI/CD.
+
+We use a variable called VM_PROFILE which helps create the multinode file above but for testing.  Below is the format needed:
+
+```
+{"Data_CIDR": "{DATA CIDR IF USED}", "DNS_IP": "{DNS IP}", "Number_of_VM_Servers": 3, "OPENSTACK_RELEASE": "{OPENSTACK_RELEASE}", "CEPH": "{True|False}", "DOCKER_REGISTRY_IP": "<DOCKER IP>", "DOCKER_REGISTRY_USERNAME": "<DOCKER REGISTRY USERNAME>", "VM_CIDR" = "<POOL OF IP's served as the cidr >"}
+```
+
 
 ### Globals file
 
@@ -199,17 +217,16 @@ Our default options are as follows below. To modify these options and choose you
 ```
 kolla_base_distro: "centos"
 kolla_install_type: "source"
-openstack_release: "ussuri"
 kolla_internal_vip_address: "ENO1 network address.250" # this address is dynamic and may change
 kolla_external_vip_address: "BR0 network address.250" # this address is dynamic and may change
 network_interface: "eno1"
 kolla_external_vip_interface: "br0"
 neutron_external_interface: "veno1"
-kolla_enable_tls_internal: "yes"
-kolla_enable_tls_external: "yes"
+kolla_enable_tls_internal: "yes" #enabled if multinode deployment, disabled if AiO
+kolla_enable_tls_external: "yes" #enabled if multinode deployment, disabled if AiO
 kolla_copy_ca_into_containers: "yes"
 kolla_verify_tls_backend: "no"
-kolla_enable_tls_backend: "yes"
+kolla_enable_tls_backend: "yes" #enabled if multinode deployment, disabled if AiO
 openstack_cacert: /etc/pki/tls/certs/ca-bundle.crt
 enable_cinder: "yes"
 enable_cinder_backend_lvm: "no"
@@ -239,11 +256,10 @@ Lastly, customize and source your variables as shown in the development_helper.s
 
 Also, it has been tested you can deploy our code inside a [LXD VM configured from MaaS](https://maas.io/docs/snap/2.9/ui/vm-host-networking#heading--lxd-setup).
 
+## TODO
+
 ### One Command, Complete Deployment
 
-To issue all of our deployment in one command, 
-`python3 -u deploy.py complete_openstack_install --config "$MULTINODE"`
+To issue all of our deployment in one command for an all-in-one dev environment: 
 
-or if you have a local docker registry:
-
-`python3 -u deploy.py complete_openstack_install --config "$MULTINODE" --DOCKER_REGISTRY_PASSWORD "$DOCKER_REGISTRY_PASSWORD"`
+`source all_in_one_openstack_deployment.sh $OPENSTACK_RELEASE`
